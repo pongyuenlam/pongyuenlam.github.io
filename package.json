@@ -1,8 +1,8 @@
 {
   "name": "javascript-programs",
   "version": "1.0.0",
-  "main": "hello.js",
   "type": "module",
+  "main": "hello.js",
   "scripts": {
     "test": "jest"
   },
