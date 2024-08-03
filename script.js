@@ -1,5 +1,5 @@
-var http = require('http');
-var fs = require('fs');
+import http from 'http';
+import fs from 'fs';
 
 var server = http.createServer(function(req, res){
     console.log('request was mde: ' + req.url);
