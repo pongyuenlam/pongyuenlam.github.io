@@ -2,18 +2,17 @@
 <html>
 <body>
 
-<h2>Fetch a JSON file with XMLHttpRequest</h2>
-<p id="demo"></p>
+<h2>Demo External JavaScript</h2>
 
-<script>
-const xmlhttp = new XMLHttpRequest();
-xmlhttp.onload = function() {
-  const myObj = JSON.parse(this.responseText);
-  document.getElementById("demo").innerHTML = myObj.name;
-}
-xmlhttp.open("GET", "json_demo.txt");
-xmlhttp.send();
-</script>
+<p id="demo">A Paragraph.</p>
+
+<button type="button" onclick="myFunction()">Try it</button>
+
+<p>This example links to "myScript.js".</p>
+<p>(myFunction is stored in "myScript.js")</p>
+
+<script src="myScript.js"></script>
 
 </body>
 </html>
+
