@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://pongyuenlam.github.io/sitemap.xml
