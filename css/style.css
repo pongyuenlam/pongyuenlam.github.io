@@ -101,6 +101,30 @@ p.tagline {
   margin-top: 0;
 }
 
+.hero {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.hero-photo {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.bio-photo {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  margin: 1rem 0 1.5rem;
+}
+
 p.lede {
   font-size: 1.1rem;
   color: var(--color-muted);
@@ -130,6 +154,31 @@ ul.link-list li {
 .card .meta {
   color: var(--color-muted);
   font-size: 0.9rem;
+}
+
+table.glossary {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5rem;
+  font-size: 0.95rem;
+}
+
+table.glossary th,
+table.glossary td {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+}
+
+table.glossary th:first-child,
+table.glossary td:first-child {
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+table.glossary .context {
+  color: var(--color-muted);
 }
 
 .placeholder {
