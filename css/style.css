@@ -186,6 +186,18 @@ table.glossary .context {
   font-style: italic;
 }
 
+pre.code-block {
+  background: #f5f5f5;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0.5rem 0 1.5rem;
+}
+
 footer.site-footer {
   border-top: 1px solid var(--color-border);
   padding: 2rem 1rem;
