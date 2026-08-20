@@ -12,13 +12,13 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>uv Quickstart | Howard Lam, PhD</title>
-<meta name="description" content="Quick reference for uv, the fast Python package and project manager, curated by Howard Lam, PhD.">
+<title>VS Code + Python Setup Guide (uv) | Howard Lam, PhD</title>
+<meta name="description" content="A complete walkthrough for setting up Visual Studio Code with Python using uv &mdash; installation, per-project workflow, Jupyter notebooks, and troubleshooting tips.">
 <link rel="canonical" href="https://pongyuenlam.github.io/links/uv.html">
 
 <meta property="og:type" content="website">
-<meta property="og:title" content="uv Quickstart | Howard Lam, PhD">
-<meta property="og:description" content="Quick reference for uv, the fast Python package and project manager, curated by Howard Lam, PhD.">
+<meta property="og:title" content="VS Code + Python Setup Guide (uv) | Howard Lam, PhD">
+<meta property="og:description" content="A complete walkthrough for setting up Visual Studio Code with Python using uv &mdash; installation, per-project workflow, Jupyter notebooks, and troubleshooting tips.">
 <meta property="og:url" content="https://pongyuenlam.github.io/links/uv.html">
 <meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
 <meta property="og:image:width" content="495">
@@ -47,25 +47,106 @@
 </header>
 
 <main>
-  <h1>uv Quickstart</h1>
-  <p class="lede">A quick reference for <a href="https://docs.astral.sh/uv/" target="_blank" rel="noopener">uv</a>, an extremely fast Python package and project manager, written in Rust.</p>
+  <h1>VS Code + Python Setup Guide with uv Package Manager</h1>
+  <p class="lede"><a href="https://astral.sh/uv" target="_blank" rel="noopener">https://astral.sh/uv</a> is a single tool that manages both Python versions and project environments, with <strong>identical commands on Mac and Windows</strong>. It removes the &ldquo;which Python is my terminal finding&rdquo; problem, and does not require users to manually manage a virtual environment.</p>
 
-  <h2>Install and initialize a project</h2>
-  <p>Install uv, then use it to install and pin a Python version and initialize a new project.</p>
-  <pre class="code-block"><code>pip install uv
-uv python install 3.12.10
-uv python pin 3.12.10
-uv init</code></pre>
+  <h2>Setup to install uv</h2>
+  <ol>
+    <li>
+      If we install uv using the official standalone installer instead of <code>pip install uv</code>, the installer doesn't depend on any pre-existing Python/pip (Python's package installer) setup. So, it works the same regardless of what's already on the machine. It also handles a technical setup step for us automatically &mdash; normally our computer needs to be told where to find the <code>uv</code> program (PATH) before we can type <code>uv</code> commands in the terminal; this installer takes care of that on its own, so we won't need to configure anything.
+      <p>As of Aug 2026, the following commands can be found via the install button on <a href="https://astral.sh/uv" target="_blank" rel="noopener">https://astral.sh/uv</a>:</p>
+      <p><strong>Mac:</strong></p>
+      <pre class="code-block"><code>curl -LsSf https://astral.sh/uv/install.sh | sh</code></pre>
+      <p><strong>Windows (PowerShell):</strong></p>
+      <pre class="code-block"><code>powershell -c "irm https://astral.sh/uv/install.ps1 | iex"</code></pre>
+      <blockquote class="callout">
+        <p>&#9888;&#65039; <strong>Close the terminal and open a brand new one</strong> right after installing, before typing any <code>uv</code> command. The installer sets up the &ldquo;where to find <code>uv</code>&rdquo; (PATH) step mentioned above, but the terminal we already have open doesn't know about that change yet &mdash; it only notices it the next time we start a new terminal. So if we type <code>uv --version</code> in that same terminal right after installing, it will say &ldquo;command not found&rdquo; even though the install actually worked. This is the single most common hiccup users hit with this step.</p>
+      </blockquote>
+    </li>
+    <li>
+      Confirm it worked (in the new terminal):
+      <pre class="code-block"><code>uv --version</code></pre>
+    </li>
+    <li>
+      Install a Python version:
+      <pre class="code-block"><code>uv python install 3.12.10</code></pre>
+    </li>
+    <li>
+      Pin it for the class project:
+      <pre class="code-block"><code>uv python pin 3.12.10</code></pre>
+      <blockquote class="callout">
+        <p><strong>Note:</strong> <code>pin</code> only sets the Python version for the folder we run it in, and any subfolders under it. Run it from our top-level projects folder so every new project automatically gets 3.12.10 too.</p>
+      </blockquote>
+    </li>
+  </ol>
 
-  <h2>Add a package</h2>
-  <p>Add a package to the project and run your script with it.</p>
-  <pre class="code-block"><code>uv add matplotlib
-uv run main.py</code></pre>
+  <h2>Setup to run a Python (.py) program</h2>
+  <ol>
+    <li>
+      Initialize the project:
+      <pre class="code-block"><code>uv init</code></pre>
+      <blockquote class="callout">
+        <p><strong>Tip:</strong> Create a new folder for each project before running this command. <code>uv init</code> uses our current folder's name as the project's name, so keeping one project per folder avoids mix-ups and keeps things organized.</p>
+      </blockquote>
+    </li>
+    <li>
+      Add packages as needed:
+      <pre class="code-block"><code>uv add matplotlib</code></pre>
+      <p>(or <code>uv add -r requirements.txt</code> to install from a requirements file)</p>
+    </li>
+    <li>
+      Run the script:
+      <pre class="code-block"><code>uv run main.py</code></pre>
+    </li>
+  </ol>
 
-  <h2>Install from requirements.txt</h2>
-  <p>Install dependencies from a requirements file and run the script.</p>
-  <pre class="code-block"><code>uv add -r requirements.txt
-uv run main.py</code></pre>
+  <p>That's it &mdash; the same two commands (<code>uv add</code>, <code>uv run</code>) work identically on every user's machine, regardless of Operating System (OS) or whatever Python setup was already there.</p>
+
+  <p><strong><code>pyproject.toml</code></strong> (created automatically by <code>uv init</code>) is the project's settings file &mdash; a simple text file that lists the project's name and the packages it needs. When we type <code>uv run main.py</code>, <code>uv</code> finds <code>pyproject.toml</code> in the current folder, locates/creates the matching Virtual Environment <code>.venv</code>, and executes the script <em>inside</em> that environment directly. This command is identical on Mac and Windows, so there is no OS branching for macOS or Windows (no <code>source .venv/bin/activate</code> vs <code>.venv\Scripts\activate</code>). Learn more about the <code>.toml</code> format at <a href="https://langstop.com/what-is-toml" target="_blank" rel="noopener">What is TOML? &mdash; Tom's Obvious Minimal Language Explained</a>.</p>
+
+  <p><strong>VS Code's &#9654; Run/Debug button:</strong> The <code>.venv</code> folder is created automatically the first time we run <code>uv add</code> or <code>uv run</code> &mdash; just running <code>uv init</code> by itself doesn't create it yet. Once <code>.venv</code> exists, VS Code's Python extension auto-detects it in <strong>Select Interpreter</strong>. Clicking &#9654; Run or Debug then runs our code using that environment directly &mdash; we don't need to do anything extra first.</p>
+
+  <p><strong>VS Code's integrated Terminal:</strong> if a user types plain <code>python</code>/<code>pip</code> there, VS Code auto-activates the selected <code>.venv</code> for them silently when the terminal opens &mdash; but to keep things fully consistent, we can just always type <code>uv add ...</code> / <code>uv run ...</code> instead. It works the same whether or not the terminal happened to auto-activate anything.</p>
+
+  <h2>Setup to run a Jupyter Notebook (.ipynb) program</h2>
+
+  <p>A <code>.ipynb</code> file (short for &ldquo;IPython Notebook&rdquo;) is a Jupyter notebook &mdash; a document that mixes runnable code cells with text and their output, unlike a plain <code>.py</code> script which is just code. Learn more in the <a href="https://jupyter-notebook.readthedocs.io/en/stable/notebook.html" target="_blank" rel="noopener">official Jupyter Notebook documentation</a>.</p>
+
+  <p>A Jupyter notebook runs inside the same uv-managed project as a <code>.py</code> script, so steps 1 and 2 (<code>uv init</code> and <code>uv add</code>) from <strong>Setup to run a Python (.py) program</strong> above still apply first &mdash; a notebook needs an existing project (and its <code>.venv</code>) to attach to. Step 3 (<code>uv run main.py</code>) doesn't apply here, since we run notebook cells directly instead, as shown below.</p>
+
+  <p>Before opening a <code>.ipynb</code> file, make sure the <strong>Jupyter</strong> extension is installed in VS Code. Open the Extensions view (the square icon in the left sidebar), search for &ldquo;Jupyter&rdquo; (published by Microsoft), and click <strong>Install</strong>. This extension is what lets VS Code open and run notebook cells at all &mdash; without it, <code>.ipynb</code> files won't open as notebooks.</p>
+
+  <p>When we open a notebook cell for the first time, VS Code's Jupyter extension may show a prompt like:</p>
+
+  <blockquote class="callout quote">
+    <p>Running cells with '... (3.12.10)' requires the ipykernel package.<br>
+    Command: '.../.venv/bin/python -m pip install ipykernel -U --force-reinstall'</p>
+  </blockquote>
+
+  <p><strong>Don't run that command as shown &mdash; it will fail with <code>No module named pip</code>.</strong> <code>uv</code>-created virtual environments deliberately don't include <code>pip</code>; <code>uv</code> replaces it for installing packages. Instead, install <code>ipykernel</code> the same way as any other package:</p>
+  <pre class="code-block"><code>uv add ipykernel</code></pre>
+  <p>Then re-select the kernel in the notebook's top-right kernel picker (pick the project's interpreter again) and run the cell. A kernel is just the engine behind the scenes that actually runs our notebook's code &mdash; picking it here tells the notebook to use our project's <code>.venv</code> instead of some other Python installation.</p>
+
+  <h2>General tips</h2>
+  <ul>
+    <li><strong>Always use VS Code's own built-in Terminal &mdash; no need to open a separate Terminal (Mac) or Command Prompt (Windows) app.</strong> We'll still need to type commands into VS Code's terminal and read what it shows us, such as the <code>uv --version</code> check or any error messages.</li>
+    <li><strong>Restart VS Code once</strong> right after installing uv and Python. VS Code remembers the list of Python versions it found the last time it looked, so it won't notice the new one we have just installed until we restart VS Code. Afterwards, we can click the gear icon (&#9881;) at the bottom-left corner of VS Code, choose &ldquo;Command Palette&rdquo; from the menu that appears, and type &ldquo;Python: Select Interpreter&rdquo;.</li>
+  </ul>
+
+  <h2>Summary checklist for users</h2>
+  <ul class="checklist">
+    <li><input type="checkbox" disabled> Install uv (Mac: <code>curl -LsSf https://astral.sh/uv/install.sh | sh</code> / Windows: <code>powershell -c "irm https://astral.sh/uv/install.ps1 | iex"</code>)</li>
+    <li><input type="checkbox" disabled> <strong>Close and reopen the terminal</strong> before running any <code>uv</code> command</li>
+    <li><input type="checkbox" disabled> <code>uv --version</code> (confirm it's found)</li>
+    <li><input type="checkbox" disabled> <code>uv python install 3.12.10</code></li>
+    <li><input type="checkbox" disabled> <code>uv python pin 3.12.10</code> (run this from our top-level projects folder)</li>
+    <li><input type="checkbox" disabled> <code>uv init</code> (once per project, inside its own new folder &mdash; the folder name becomes the project name)</li>
+    <li><input type="checkbox" disabled> <code>uv add &lt;package&gt;</code> to install packages</li>
+    <li><input type="checkbox" disabled> <code>uv run main.py</code> to run a <code>.py</code> script</li>
+    <li><input type="checkbox" disabled> Running a <code>.ipynb</code> notebook instead? Install the <strong>Jupyter</strong> extension in VS Code first</li>
+    <li><input type="checkbox" disabled> If VS Code prompts for <code>ipykernel</code>, run <code>uv add ipykernel</code> (not the suggested pip command), then re-select the kernel</li>
+    <li><input type="checkbox" disabled> Fully quit and reopen VS Code after installing uv/Python, then use the gear icon (&#9881;) &rarr; Command Palette &rarr; &ldquo;Python: Select Interpreter&rdquo; to confirm the <code>.venv</code> interpreter is selected</li>
+  </ul>
 </main>
 
 <footer class="site-footer">
@@ -80,5 +161,32 @@ uv run main.py</code></pre>
     </ul>
   </div>
 </footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', 'Copy code to clipboard');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', 'Copied to clipboard');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', 'Copy code to clipboard');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
 </body>
 </html>
