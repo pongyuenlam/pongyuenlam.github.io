@@ -108,6 +108,22 @@
 
   <p><strong>VS Code's integrated Terminal:</strong> if a user types plain <code>python</code>/<code>pip</code> there, VS Code auto-activates the selected <code>.venv</code> for them silently when the terminal opens &mdash; but to keep things fully consistent, we can just always type <code>uv add ...</code> / <code>uv run ...</code> instead. It works the same whether or not the terminal happened to auto-activate anything.</p>
 
+  <h2>Windows troubleshooting</h2>
+
+  <p><strong>Getting a &ldquo;running scripts is disabled on this system&rdquo; error?</strong> This happens on some Windows machines where PowerShell blocks scripts from running by default, which stops VS Code's terminal from activating our project's <code>.venv</code>:</p>
+
+  <blockquote class="callout quote">
+    <p>.venv\Scripts\activate : File C:\Users\pongyuenlam\Documents\.venv\Scripts\Activate.ps1 cannot be loaded because running scripts is disabled on this system. For more information, see about_Execution_Policies at <a href="https://go.microsoft.com/fwlink/?LinkID=135170" target="_blank" rel="noopener">https:/go.microsoft.com/fwlink/?LinkID=135170</a>.<br>
+    At line:1 char:1<br>
+    + .venv\Scripts\activate<br>
+    + ~~~~~~~~~~~~~~~~~~~~~~<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;+ CategoryInfo          : SecurityError: (:) [], PSSecurityException<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;+ FullyQualifiedErrorId : UnauthorizedAccess</p>
+  </blockquote>
+
+  <p>Run the following once in PowerShell, then try again:</p>
+  <pre class="code-block"><code>Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned</code></pre>
+
   <h2>Setup to run a Jupyter Notebook (.ipynb) program</h2>
 
   <p>A <code>.ipynb</code> file (short for &ldquo;IPython Notebook&rdquo;) is a Jupyter notebook &mdash; a document that mixes runnable code cells with text and their output, unlike a plain <code>.py</code> script which is just code. Learn more in the <a href="https://jupyter-notebook.readthedocs.io/en/stable/notebook.html" target="_blank" rel="noopener">official Jupyter Notebook documentation</a>.</p>
