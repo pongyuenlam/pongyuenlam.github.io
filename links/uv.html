@@ -62,6 +62,21 @@
       <blockquote class="callout">
         <p>&#9888;&#65039; <strong>Close the terminal and open a brand new one</strong> right after installing, before typing any <code>uv</code> command. The installer sets up the &ldquo;where to find <code>uv</code>&rdquo; (PATH) step mentioned above, but the terminal we already have open doesn't know about that change yet &mdash; it only notices it the next time we start a new terminal. So if we type <code>uv --version</code> in that same terminal right after installing, it will say &ldquo;command not found&rdquo; even though the install actually worked. This is the single most common hiccup users hit with this step.</p>
       </blockquote>
+      <p>Here's what a successful install looks like, for reference (the username and version number will differ on your machine):</p>
+      <blockquote class="callout quote">
+        <p>downloading uv 0.12.9 (x86_64-pc-windows-msvc)<br>
+        installing to C:\Users\Howard\.local\bin<br>
+        &nbsp;&nbsp;uv.exe<br>
+        &nbsp;&nbsp;uvx.exe<br>
+        &nbsp;&nbsp;uvw.exe<br>
+        everything's installed!<br>
+        <br>
+        To add C:\Users\Howard\.local\bin to your PATH, either restart your shell or run:<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;set Path=C:\Users\Howard\.local\bin;%Path%&nbsp;&nbsp;&nbsp;(cmd)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;$env:Path = &quot;C:\Users\Howard\.local\bin;$env:Path&quot;&nbsp;&nbsp;&nbsp;(powershell)</p>
+      </blockquote>
+      <p>&ldquo;everything's installed!&rdquo; confirms the install itself succeeded. The PATH note right after it is the installer describing the exact hiccup in the callout above &mdash; it's telling us the new <code>uv</code> command won't be found in <em>this</em> terminal until we either start a fresh one, or manually run one of the two commands shown for our shell. Simplest is to just close this terminal and open a new one, then continue to step 2 below.</p>
     </li>
     <li>
       Confirm it worked (in the new terminal):
@@ -123,6 +138,19 @@
 
   <p>Run the following once in PowerShell, then try again:</p>
   <pre class="code-block"><code>Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned</code></pre>
+
+  <p><strong>Getting an &ldquo;is not recognized&rdquo; error right after installing?</strong> (On a Chinese-language Windows PowerShell, this shows as &ldquo;无法将&lsquo;uv&rsquo;项识别为 cmdlet、函数、脚本文件或可运行程序的名称&rdquo;.) This means the terminal doesn't know about <code>uv</code> yet &mdash; almost always because it was already open before (or during) the install. The installer updates the system PATH, but a terminal that's already open won't notice until a new one starts:</p>
+
+  <blockquote class="callout quote">
+    <p>uv : 无法将&ldquo;uv&rdquo;项识别为 cmdlet、函数、脚本文件或可运行程序的名称。请检查名称的拼写，如果包括路径，请确保路径正确，然后再试一次。<br>
+    所在位置 行:1 字符: 1<br>
+    + uv --version<br>
+    + ~~<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;+ CategoryInfo          : ObjectNotFound: (uv:String) [], CommandNotFoundException<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;+ FullyQualifiedErrorId : CommandNotFoundException</p>
+  </blockquote>
+
+  <p><strong>Fix:</strong> Fully close VS Code (not just the terminal tab), then reopen it and try <code>uv --version</code> again in a brand-new terminal. If it still fails after a full restart, re-run the install command from <strong>Setup to install uv</strong> above, then fully quit and reopen VS Code once more.</p>
 
   <h2>Setup to run a Jupyter Notebook (.ipynb) program</h2>
 
