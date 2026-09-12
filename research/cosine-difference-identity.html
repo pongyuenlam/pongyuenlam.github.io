@@ -92,19 +92,31 @@
 
   <h2>Computing PQ&sup2;</h2>
 
-  <p>P = (cos&beta;, sin&beta;) and Q = (cos&alpha;, sin&alpha;). PQ is the hypotenuse of a right triangle whose legs are the horizontal and vertical gaps between the two points (Exhibit F).</p>
+  <p>Q = (cos&alpha;, sin&alpha;) and P = (cos&beta;, sin&beta;), both measured from C. Dropping each point straight down to the baseline gives cos&alpha; and cos&beta; (how far right of C), and straight up from the baseline gives sin&alpha; and sin&beta; (how high above C). PQ is then the hypotenuse of a small right triangle whose legs are the gaps between those coordinates: cos&alpha; &minus; cos&beta; and sin&beta; &minus; sin&alpha; (Exhibit F).</p>
 
   <figure class="exhibit">
-    <svg viewBox="0 0 320 220" role="img" aria-labelledby="exF-title exF-desc">
+    <svg viewBox="0 0 320 320" role="img" aria-labelledby="exF-title exF-desc">
       <title id="exF-title">Exhibit F</title>
-      <desc id="exF-desc">A right triangle with horizontal leg cos alpha minus cos beta, vertical leg sin beta minus sin alpha, and hypotenuse PQ.</desc>
-      <polygon points="40,180 240,180 240,60" fill="none" stroke="#1d4ed8" stroke-width="3"/>
-      <polygon points="240,180 232,180 232,172 240,172" fill="none" stroke="#1a1a1a" stroke-width="1"/>
-      <text x="140" y="198" font-size="12" fill="#b91c1c" text-anchor="middle" font-weight="600">cos&alpha; &minus; cos&beta;</text>
-      <text x="252" y="120" font-size="12" fill="#16a34a" font-weight="600">sin&beta; &minus; sin&alpha;</text>
-      <text x="118" y="112" font-size="13" fill="#1d4ed8" text-anchor="middle" font-weight="600">PQ</text>
+      <desc id="exF-desc">Points C, Q at angle alpha, and P at angle beta, with cos alpha, cos beta marked along the baseline and sin alpha, sin beta marked as heights. A small right triangle at top has horizontal leg cos alpha minus cos beta, vertical leg sin beta minus sin alpha, and hypotenuse PQ.</desc>
+      <line x1="60" y1="260" x2="200.95" y2="208.70" stroke="#1d4ed8" stroke-width="2"/>
+      <line x1="60" y1="260" x2="86.05" y2="112.28" stroke="#1d4ed8" stroke-width="2"/>
+      <line x1="200.95" y1="260" x2="200.95" y2="208.70" stroke="#16a34a" stroke-width="2"/>
+      <line x1="86.05" y1="260" x2="86.05" y2="112.28" stroke="#1d4ed8" stroke-width="2"/>
+      <path d="M 86.05 208.70 L 86.05 112.28 L 200.95 208.70 Z" fill="none" stroke="#b91c1c" stroke-width="3"/>
+      <path d="M 90 260 A 30 30 0 0 0 88.19 249.74" fill="none" stroke="#16a34a" stroke-width="1"/>
+      <text x="100" y="253" font-size="11" fill="#16a34a">&alpha;</text>
+      <line x1="60" y1="270" x2="86.05" y2="270" stroke="#1d4ed8" stroke-width="2"/>
+      <text x="73" y="284" font-size="12" fill="#1d4ed8" text-anchor="middle" font-weight="600">cos &beta;</text>
+      <line x1="60" y1="288" x2="200.95" y2="288" stroke="#16a34a" stroke-width="2"/>
+      <text x="130" y="302" font-size="12" fill="#16a34a" text-anchor="middle" font-weight="600">cos &alpha;</text>
+      <text x="206" y="238" font-size="12" fill="#16a34a" font-weight="600">sin &alpha;</text>
+      <text x="40" y="185" font-size="12" fill="#1d4ed8" font-weight="600" text-anchor="end">sin &beta;</text>
+      <text x="153" y="149" font-size="13" fill="#b91c1c" text-anchor="middle" font-weight="600">PQ</text>
+      <text x="45" y="264" font-size="13" fill="#1a1a1a" text-anchor="end" font-weight="600">C</text>
+      <text x="208" y="205" font-size="13" fill="#1a1a1a" font-weight="600">Q</text>
+      <text x="78" y="102" font-size="13" fill="#1a1a1a" text-anchor="end" font-weight="600">P</text>
     </svg>
-    <figcaption><strong>Exhibit F.</strong> The legs are the coordinate gaps between P and Q; the hypotenuse is the chord PQ.</figcaption>
+    <figcaption><strong>Exhibit F.</strong> Q sits at angle &alpha; and P at angle &beta;. The green segments (cos&alpha;, sin&alpha;) are Q&rsquo;s coordinates; the blue segments (cos&beta;, sin&beta;) are P&rsquo;s. The red triangle&rsquo;s legs are the gaps between them, with hypotenuse PQ.</figcaption>
   </figure>
 
   <p>By the Pythagorean theorem:</p>
