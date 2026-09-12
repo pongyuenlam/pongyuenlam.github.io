@@ -13,12 +13,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Law of Cosines | Howard Lam, PhD</title>
-<meta name="description" content="A plain-English introduction to the Law of Cosines, supporting the derivation of cosine similarity in Howard Lam's NLP research note.">
+<meta name="description" content="A step-by-step, plain-English proof of the Law of Cosines using only the Pythagorean theorem &mdash; and how it leads to the cosine similarity formula used in sentence-similarity search.">
 <link rel="canonical" href="https://pongyuenlam.github.io/research/law-of-cosines.html">
 
 <meta property="og:type" content="article">
 <meta property="og:title" content="The Law of Cosines">
-<meta property="og:description" content="A plain-English introduction to the Law of Cosines, supporting the derivation of cosine similarity in Howard Lam's NLP research note.">
+<meta property="og:description" content="A step-by-step, plain-English proof of the Law of Cosines using only the Pythagorean theorem &mdash; and how it leads to the cosine similarity formula used in sentence-similarity search.">
 <meta property="og:url" content="https://pongyuenlam.github.io/research/law-of-cosines.html">
 <meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
 <meta property="og:image:width" content="495">
@@ -50,7 +50,139 @@
   <h1>The Law of Cosines</h1>
   <p class="paper-meta">A supplementary explainer for the &ldquo;Generalizing beyond unit vectors: the Law of Cosines&rdquo; section of <a href="/research/nlp-foundations.html">Natural Language Processing: Foundations and Applications without Hallucination from Generative AI</a>.</p>
 
-  <p class="placeholder">Content coming soon.</p>
+  <p>The Law of Cosines (also called the <em>cosine rule</em>) is a fact about triangles: it relates the length of one side to the other two sides and the angle between them. In <a href="/research/nlp-foundations.html">the research note</a>, it is the step that lets us go from a special case &mdash; comparing vectors of length 1 &mdash; to the general cosine similarity formula used for sentence vectors of any length. This page proves the Law of Cosines from scratch, using nothing but the Pythagorean theorem and basic right-triangle trigonometry, then shows how it leads directly to that formula.</p>
+
+  <h2>The cosine rule</h2>
+
+  <p>Take any triangle with sides of length <em>a</em>, <em>b</em>, and <em>c</em>, and let &theta; be the angle between sides <em>b</em> and <em>c</em> (Exhibit A). The Law of Cosines states:</p>
+
+  <p style="text-align:center">a&sup2; = b&sup2; + c&sup2; &minus; 2bc&nbsp;cos(&theta;)</p>
+
+  <figure class="exhibit">
+    <svg viewBox="0 0 360 260" role="img" aria-labelledby="exA-title exA-desc">
+      <title id="exA-title">Exhibit A</title>
+      <desc id="exA-desc">A triangle with sides a, b, and c, and angle theta between sides b and c.</desc>
+      <polygon points="40,230 300,230 290,50" fill="none" stroke="#1d4ed8" stroke-width="3"/>
+      <path d="M 70 230 A 30 30 0 0 0 64.35 212.47" fill="none" stroke="#5a5a5a" stroke-width="1"/>
+      <text x="82" y="222" font-size="12" fill="#5a5a5a">&theta;</text>
+      <text x="170" y="250" font-size="13" fill="#1d4ed8" text-anchor="middle" font-weight="600">b</text>
+      <text x="308" y="145" font-size="13" fill="#1d4ed8" font-weight="600">a</text>
+      <text x="150" y="132" font-size="13" fill="#1d4ed8" text-anchor="middle" font-weight="600">c</text>
+    </svg>
+    <figcaption><strong>Exhibit A &mdash; A general triangle.</strong> Sides <em>a</em>, <em>b</em>, and <em>c</em>, with &theta; the angle between <em>b</em> and <em>c</em>.</figcaption>
+  </figure>
+
+  <p>Notice that when &theta; = 90&deg;, cos(90&deg;) = 0 and the last term disappears, leaving a&sup2; = b&sup2; + c&sup2; &mdash; the Pythagorean theorem. The Law of Cosines is the Pythagorean theorem&rsquo;s generalization to triangles that don&rsquo;t have a right angle.</p>
+
+  <h2>Proving it: drop a perpendicular</h2>
+
+  <p>The proof needs only one construction: from the vertex where sides <em>a</em> and <em>b</em> meet, drop a perpendicular line down onto side <em>c</em> (or its extension), meeting it at a point we&rsquo;ll call F. This splits side <em>c</em> into two pieces &mdash; a piece <em>e</em> next to &theta;, and the remaining piece <em>c &minus; e</em> &mdash; and creates a new segment <em>d</em>, the length of the perpendicular itself (Exhibit B).</p>
+
+  <figure class="exhibit">
+    <svg viewBox="0 0 360 260" role="img" aria-labelledby="exB-title exB-desc">
+      <title id="exB-title">Exhibit B</title>
+      <desc id="exB-desc">The same triangle with a perpendicular dropped from the vertex of a and b onto side c, splitting c into e and c minus e, and creating segment d.</desc>
+      <line x1="40" y1="230" x2="300" y2="230" stroke="#9ca3af" stroke-width="2.5"/>
+      <line x1="300" y1="230" x2="290" y2="50" stroke="#9ca3af" stroke-width="2.5"/>
+      <line x1="40" y1="230" x2="211.2" y2="106.7" stroke="#1d4ed8" stroke-width="3"/>
+      <line x1="211.2" y1="106.7" x2="290" y2="50" stroke="#16a34a" stroke-width="3"/>
+      <line x1="211.2" y1="106.7" x2="300" y2="230" stroke="#b91c1c" stroke-width="3"/>
+      <polygon points="211.2,106.7 217.7,102.0 222.4,108.5 215.9,113.2" fill="none" stroke="#1a1a1a" stroke-width="1"/>
+      <path d="M 70 230 A 30 30 0 0 0 64.35 212.47" fill="none" stroke="#5a5a5a" stroke-width="1"/>
+      <text x="82" y="222" font-size="12" fill="#5a5a5a">&theta;</text>
+      <text x="170" y="250" font-size="13" fill="#9ca3af" text-anchor="middle" font-weight="600">b</text>
+      <text x="308" y="145" font-size="13" fill="#9ca3af" font-weight="600">a</text>
+      <text x="112" y="158" font-size="13" fill="#1d4ed8" text-anchor="middle" font-weight="600">e</text>
+      <text x="262" y="66" font-size="13" fill="#16a34a" text-anchor="middle" font-weight="600">c &minus; e</text>
+      <text x="272" y="164" font-size="13" fill="#b91c1c" font-weight="600">d</text>
+    </svg>
+    <figcaption><strong>Exhibit B &mdash; Dropping a perpendicular.</strong> The perpendicular from the a&ndash;b vertex meets side <em>c</em> at F, splitting it into <em>e</em> and <em>c &minus; e</em>, with <em>d</em> the length of the perpendicular. The small square at F marks the right angle.</figcaption>
+  </figure>
+
+  <blockquote class="callout">
+    <p><strong>Quick refresher.</strong> In a right triangle, for an angle &theta;: cos(&theta;) = adjacent &divide; hypotenuse, and sin(&theta;) = opposite &divide; hypotenuse.</p>
+  </blockquote>
+
+  <p>In the small right triangle formed by the a&ndash;b vertex, F, and the &theta; vertex, the hypotenuse is <em>b</em>, the side adjacent to &theta; is <em>e</em>, and the side opposite &theta; is <em>d</em>. So:</p>
+
+  <p style="text-align:center">e / b = cos(&theta;) &nbsp;&rArr;&nbsp; e = b&nbsp;cos(&theta;)<br>d / b = sin(&theta;) &nbsp;&rArr;&nbsp; d = b&nbsp;sin(&theta;)</p>
+
+  <p>Now look at the other small right triangle formed by F, the a&ndash;b vertex, and the a&ndash;c vertex. Its two shorter sides are <em>(c &minus; e)</em> and <em>d</em>, and its hypotenuse is <em>a</em> &mdash; so the Pythagorean theorem gives:</p>
+
+  <p style="text-align:center">(c &minus; e)&sup2; + d&sup2; = a&sup2;</p>
+
+  <p>Substituting e = b&nbsp;cos(&theta;) and d = b&nbsp;sin(&theta;):</p>
+
+  <p style="text-align:center">
+    (c &minus; b&nbsp;cos&theta;)&sup2; + (b&nbsp;sin&theta;)&sup2; = a&sup2;<br>
+    c&sup2; &minus; 2bc&nbsp;cos&theta; + b&sup2;cos&sup2;&theta; + b&sup2;sin&sup2;&theta; = a&sup2;<br>
+    c&sup2; &minus; 2bc&nbsp;cos&theta; + b&sup2;(cos&sup2;&theta; + sin&sup2;&theta;) = a&sup2;
+  </p>
+
+  <p>Since cos&sup2;(&theta;) + sin&sup2;(&theta;) always equals 1 (the same fact used in the research note&rsquo;s Exhibit 6), this collapses to:</p>
+
+  <p style="text-align:center">c&sup2; &minus; 2bc&nbsp;cos&theta; + b&sup2; = a&sup2; &nbsp;&nbsp;&mdash;&nbsp;&nbsp; that is, &nbsp;&nbsp; <strong>a&sup2; = b&sup2; + c&sup2; &minus; 2bc&nbsp;cos&theta;</strong></p>
+
+  <p>That&rsquo;s the Law of Cosines, built from nothing more than a dropped perpendicular, the definitions of sine and cosine, and the Pythagorean theorem.</p>
+
+  <h2>From triangle sides to vectors</h2>
+
+  <p>To use this for sentence similarity, we reinterpret <em>b</em> and <em>c</em> as vectors sharing a common starting point (the origin), rather than as plain lengths. The third side, <em>a</em>, becomes the vector connecting their tips: a = c &minus; b (Exhibit C) &mdash; exactly the setup used in the research note&rsquo;s own derivation.</p>
+
+  <figure class="exhibit">
+    <svg viewBox="0 0 380 260" role="img" aria-labelledby="exC-title exC-desc">
+      <title id="exC-title">Exhibit C</title>
+      <desc id="exC-desc">Vectors b and c drawn from a common origin, with vector a equal to c minus b forming the third side of the triangle, from the tip of b to the tip of c.</desc>
+      <defs>
+        <marker id="mb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1d4ed8"/></marker>
+        <marker id="mc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/></marker>
+        <marker id="ma" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16a34a"/></marker>
+      </defs>
+      <path d="M 85 220 A 35 35 0 0 0 78.56 199.77" fill="none" stroke="#5a5a5a" stroke-width="1"/>
+      <text x="95" y="211" font-size="12" fill="#5a5a5a">&theta;</text>
+      <line x1="50" y1="220" x2="300" y2="220" stroke="#1d4ed8" stroke-width="3" marker-end="url(#mb)"/>
+      <line x1="50" y1="220" x2="290" y2="50" stroke="#b91c1c" stroke-width="3" marker-end="url(#mc)"/>
+      <line x1="300" y1="220" x2="290" y2="50" stroke="#16a34a" stroke-width="3" marker-end="url(#ma)"/>
+      <text x="175" y="240" font-size="13" fill="#1d4ed8" text-anchor="middle" font-weight="600">b</text>
+      <text x="150" y="128" font-size="13" fill="#b91c1c" text-anchor="middle" font-weight="600">c</text>
+      <text x="304" y="135" font-size="13" fill="#16a34a" font-weight="600">a = c &minus; b</text>
+    </svg>
+    <figcaption><strong>Exhibit C &mdash; Sides as vectors.</strong> b and c share the origin; a = c &minus; b is the vector from the tip of b to the tip of c.</figcaption>
+  </figure>
+
+  <p>Writing each vector by its coordinates, b = [b1, b2] and c = [c1, c2], gives:</p>
+
+  <p style="text-align:center">a = c &minus; b = [c1 &minus; b1, c2 &minus; b2]</p>
+
+  <h2>Cosine similarity from the cosine rule</h2>
+
+  <p>Now combine two ways of writing |a|&sup2;. The Law of Cosines gives one:</p>
+
+  <p style="text-align:center">|a|&sup2; = |b|&sup2; + |c|&sup2; &minus; 2|b||c|cos(&theta;)</p>
+
+  <p>and the coordinates of a = c &minus; b give another, since the squared length of a vector is just the sum of its squared coordinates:</p>
+
+  <p style="text-align:center">|a|&sup2; = (c1 &minus; b1)&sup2; + (c2 &minus; b2)&sup2;</p>
+
+  <p>Setting these equal and solving for the cosine term:<sup><a id="ref1" href="#en1">1</a></sup></p>
+
+  <p style="text-align:center">
+    2|b||c|cos&theta; = |b|&sup2; + |c|&sup2; &minus; |c &minus; b|&sup2;<br>
+    2|b||c|cos&theta; = (b1&sup2;+b2&sup2;) + (c1&sup2;+c2&sup2;) &minus; &#91;(c1&minus;b1)&sup2; + (c2&minus;b2)&sup2;&#93;<br>
+    2|b||c|cos&theta; = (b1&sup2;+b2&sup2;) + (c1&sup2;+c2&sup2;) &minus; &#91;(c1&sup2;&minus;2c1b1+b1&sup2;) + (c2&sup2;&minus;2c2b2+b2&sup2;)&#93;<br>
+    2|b||c|cos&theta; = 2c1b1 + 2c2b2
+  </p>
+
+  <p>Dividing both sides by 2 and then by |b||c| leaves:</p>
+
+  <p style="text-align:center"><strong>cos(&theta;) = (c1b1 + c2b2) / (|b| &times; |c|) = (b &middot; c) / (|b| &times; |c|)</strong></p>
+
+  <p>This is exactly the cosine similarity formula from the research note&rsquo;s &ldquo;Generalizing beyond unit vectors: the Law of Cosines&rdquo; section: the dot product of two vectors, divided by the product of their lengths. Everything above followed from one construction (a dropped perpendicular) and two facts you likely already knew: the Pythagorean theorem, and what sine and cosine mean in a right triangle.</p>
+
+  <h2>Endnotes</h2>
+  <ol class="endnotes">
+    <li id="en1">This component-based route from the Law of Cosines to the cosine similarity formula follows Yarun, &ldquo;How Exactly Cosine Similarity Measures the Similarity? Maths behind and Usage in Python,&rdquo; <em>Towards Data Science</em>, September 27, 2020, accessed December 3, 2025, <a href="https://towardsdatascience.com/cosine-similarity-how-does-it-measure-the-similarity-maths-behind-and-usage-in-python-50ad30aad7db/" target="_blank" rel="noopener">towardsdatascience.com</a>. <a class="backlink" href="#ref1">&#8617;</a></li>
+  </ol>
 
   <p><a href="/research/nlp-foundations.html">&larr; Back to the research note</a></p>
 </main>
