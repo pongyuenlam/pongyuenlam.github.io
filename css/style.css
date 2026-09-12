@@ -300,3 +300,66 @@ footer.site-footer ul {
   flex-wrap: wrap;
   margin: 0.5rem 0 0;
 }
+
+/* Long-form paper pages */
+
+p.paper-meta {
+  color: var(--color-muted);
+  font-size: 0.95rem;
+  margin-top: 0;
+}
+
+blockquote:not(.callout) {
+  margin: 1.5rem 0;
+  padding-left: 1rem;
+  border-left: 3px solid var(--color-border);
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+blockquote:not(.callout) cite {
+  display: block;
+  margin-top: 0.5rem;
+  font-style: normal;
+  font-size: 0.9rem;
+}
+
+figure.exhibit {
+  background: #f5f5f5;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin: 1.5rem 0;
+  text-align: center;
+}
+
+figure.exhibit svg {
+  max-width: 100%;
+  height: auto;
+}
+
+figure.exhibit figcaption {
+  text-align: left;
+  font-size: 0.9rem;
+  color: var(--color-muted);
+  margin-top: 0.75rem;
+}
+
+sup a {
+  text-decoration: none;
+}
+
+ol.endnotes {
+  font-size: 0.9rem;
+  color: var(--color-muted);
+  padding-left: 1.4rem;
+}
+
+ol.endnotes li {
+  margin-bottom: 0.6rem;
+}
+
+ol.endnotes a.backlink {
+  margin-left: 0.3rem;
+  text-decoration: none;
+}

@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NLP Foundations Without Hallucination | Howard Lam, PhD</title>
+<meta name="description" content="A visual, non-technical guide to how AI measures meaning with vectors and cosine similarity &mdash; and how sentence-similarity retrieval can build a chatbot that never hallucinates.">
+<link rel="canonical" href="https://pongyuenlam.github.io/research/nlp-foundations.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="Natural Language Processing: Foundations and Applications without Hallucination from Generative AI">
+<meta property="og:description" content="A visual, non-technical guide to how AI measures meaning with vectors and cosine similarity &mdash; and how sentence-similarity retrieval can build a chatbot that never hallucinates.">
+<meta property="og:url" content="https://pongyuenlam.github.io/research/nlp-foundations.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="Howard Lam, PhD">
+
+<link rel="stylesheet" href="/css/style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ScholarlyArticle",
+  "headline": "Natural Language Processing: Foundations and Applications without Hallucination from Generative AI",
+  "description": "A research note that builds sentence similarity from first principles — keyword matching, vectors, the dot product, the Pythagorean theorem, and cosine similarity — then uses it to design a chatbot architecture that cannot hallucinate.",
+  "author": {
+    "@type": "Person",
+    "name": "Pong Yuen Lam",
+    "email": "pongyuenlam@gmail.com",
+    "url": "https://pongyuenlam.github.io/",
+    "affiliation": {
+      "@type": "CollegeOrUniversity",
+      "name": "City University of Hong Kong"
+    }
+  },
+  "datePublished": "2026-09",
+  "url": "https://pongyuenlam.github.io/research/nlp-foundations.html",
+  "sameAs": "https://doi.org/10.2139/ssrn.7384558",
+  "isBasedOn": "https://doi.org/10.2139/ssrn.7384558",
+  "inLanguage": "en"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="/">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/biography.html">Biography</a></li>
+        <li><a href="/research.html">Research</a></li>
+        <li><a href="/cases.html">Cases</a></li>
+        <li><a href="/books.html">Books</a></li>
+        <li><a href="/ai-programs.html">AI Programs</a></li>
+        <li><a href="/links/">Links</a></li>
+        <li><a href="/glossary/">Glossary</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1>Natural Language Processing: Foundations and Applications without Hallucination from Generative AI</h1>
+  <p class="paper-meta">Pong Yuen Lam, City University of Hong Kong &middot; Working paper, September 2026 &middot; Cite as: Lam, Pong Yuen (2026), &ldquo;Natural Language Processing: Foundations and Applications without Hallucination from Generative AI&rdquo;. Available at SSRN: <a href="https://doi.org/10.2139/ssrn.7384558" target="_blank" rel="noopener">https://doi.org/10.2139/ssrn.7384558</a>.</p>
+
+  <blockquote class="callout">
+    <p><strong>Abstract.</strong> This research note takes readers on a visual, step-by-step journey into how AI reads the meaning behind words, not just the words themselves. Using algebra and geometry, it builds sentence similarity in five steps: contrasting keyword matching with meaning matching; representing sentences as vectors of numbers; deriving the dot product from the Pythagorean theorem; generalizing to cosine similarity via the Law of Cosines; and extending the idea from two dimensions to the hundreds used by embedding models that power modern semantic search, chatbots, and AI agents.</p>
+    <p>The note&rsquo;s central payoff is a chatbot architecture without hallucination from generative AI. Large language models (LLMs) generate text word by word&mdash;the mechanism behind their fluent but sometimes fabricated answers. A system built on sentence similarity works differently: it is <strong>selective</strong>, not <strong>generative</strong>. It returns only a sentence that already exists in a verified document or says &ldquo;I don&rsquo;t know&rdquo; when no candidate clears a similarity threshold. This differs from retrieval-augmented generation (RAG), which narrows hallucination but does not eliminate it, since the LLM still combines retrieved text with pre-trained knowledge.</p>
+    <p>By opening this black box with plain English and visuals rather than code, the note equips non-technical readers to engage critically with the AI systems they rely on: what these systems are trained on and why a system that always answers, however unrelated the question, should be treated with caution. In high-stakes fields, the AI systems worth trusting are not the ones that always have an answer, but the ones that know when to say &ldquo;I don&rsquo;t know.&rdquo;</p>
+  </blockquote>
+
+  <h2>Introduction</h2>
+
+  <blockquote>
+    <p>&ldquo;You shall know a word by the company it keeps.&rdquo;</p>
+    <cite>J. R. Firth, linguist, 1957.<sup><a id="ref1" href="#en1">1</a></sup></cite>
+  </blockquote>
+
+  <p>Have you ever wondered how a chatbot knows that &ldquo;Which company designs iPhone?&rdquo; is best answered by &ldquo;Apple designs iPhone&rdquo; &mdash; and not &ldquo;I love to eat apple&rdquo; or &ldquo;Both Apple and Orange are fruits&rdquo;? The answer is not magic. This note takes readers on a visual, step-by-step journey to see how AI reads the meaning behind words, not just the words themselves. By the end, readers will understand <strong>sentence similarity</strong>: the idea that lets us find, from a list of candidate sentences, the one with the meaning that best matches the question being asked &mdash; and how this same idea lets us restrict an AI&rsquo;s response to a sentence from a fixed list, or from a specific document the user provides.<sup><a id="ref2" href="#en2">2</a></sup></p>
+
+  <p>Because the answer is &ldquo;selected&rdquo; from this list of candidate sentences, rather than being &ldquo;generated&rdquo; by a large language model (LLM), it removes any chance of hallucination &mdash; the tendency of LLMs to produce plausible-sounding but false information that is difficult for a human to verify. As of 2026, there is still &ldquo;no guarantee that the text produced by an LLM accurately reflected the real world&hellip; As a result, when presented with an input prompt, the model might generate text that appeared plausible but was not rooted in reality or factual information.&rdquo;<sup><a id="ref3" href="#en3">3</a></sup></p>
+
+  <p>Business leaders increasingly rely on AI tools that seem to understand what they mean, not just the words they type. This note opens that black box, using algebra and geometry so that readers can engage confidently with the systems that power modern search, chatbots, and AI agents &mdash; and understand, conceptually, what they are using and what they are getting, before relying on AI&rsquo;s output to make important decisions. The research note uses plain English and visuals throughout, so no technical or programming background is needed to follow along.</p>
+
+  <p>The central insight of this note is that modern AI does not rely on matching words; it relies on matching meaning.<sup><a id="ref4" href="#en4">4</a></sup> The phrase &ldquo;Is this item in stock?&rdquo; can achieve a high similarity score with &ldquo;Do you currently have this available?&rdquo; despite sharing almost no common words. In contrast, &ldquo;When does the store open?&rdquo; and &ldquo;When does the store close?&rdquo; have a low similarity score, even though four of the five words are the same in both sentences. This capability &ndash; representing sentences as a list of numbers (vectors) &ndash; is the breakthrough that transformed natural language processing. Meaning, it turns out, has a geometry.</p>
+
+  <p>This note builds up the idea of sentence similarity in five steps. We begin by contrasting keyword matching with meaning matching, using simple example sentences to show how a computer can represent a sentence&rsquo;s words as a list of numbers (a vector). We then develop the mathematics behind comparing two vectors, starting from the dot product and the Pythagorean theorem. Building on this, we derive cosine similarity, a single number that measures how closely two sentences match in meaning. Next, we extend this simple idea from two dimensions to hundreds, showing how it underlies the embedding models that power modern semantic search, chatbots, and AI agents. An embedding turns a word&rsquo;s meaning into a list of numbers, chosen so that words with similar meanings end up with similar numbers.<sup><a id="ref5" href="#en5">5</a></sup> Finally, we show how this same idea can build a chatbot that never hallucinates, and why that matters for high-stakes fields such as medicine, law, and education. &ldquo;For example, a system that prescribes exactly the right medications 90% of the time but confabulates in one case out of 10 is unacceptably unsafe to be used on its own.&rdquo;<sup><a id="ref6" href="#en6">6</a></sup></p>
+
+  <p>For simplicity, this note refers to all such items &mdash; words, phrases, and questions alike &mdash; as &ldquo;sentences.&rdquo;</p>
+
+  <h2>Foundations</h2>
+
+  <h3>Meaning of a word / sentence</h3>
+
+  <p>For decades, search engines and early chatbots<sup><a id="ref7" href="#en7">7</a></sup> matched queries by looking for overlapping keywords. This approach breaks down exactly where it matters most: when a customer phrases a question in their own words rather than the company&rsquo;s &mdash; as the examples above show, matching words is neither necessary nor sufficient for matching meaning.</p>
+
+  <p>Consider two sentences: &ldquo;I am using Apple iPhone&rdquo; and &ldquo;Apple is a healthy fruit.&rdquo; The same word, &ldquo;Apple,&rdquo; carries two different meanings here &mdash; a brand in the first sentence and a fruit in the second. If we use only one number in a computer to represent the word &ldquo;Apple,&rdquo; the computer can only capture one of its two meanings. So, if a word can have two meanings, we need two numbers to represent that word in a computer. For example, [1,1] might mean Apple as a fruit and [1,2] might mean Apple as a brand. That is, we use a list of two numbers (or two dimensions) to represent one word Apple with two meanings.</p>
+
+  <p><strong>One number, one meaning. Two meanings need two numbers &mdash; and real language needs hundreds.</strong></p>
+
+  <h3>Representing a sentence as a list of numbers</h3>
+
+  <p>Consider two short sentences: &ldquo;Apple iPhone&rdquo; and &ldquo;Apple&rdquo;. Counting how often each word, &ldquo;Apple&rdquo; and &ldquo;iPhone&rdquo; appears gives:</p>
+
+  <table class="glossary">
+    <thead><tr><th>Sentence</th><th>Apple</th><th>iPhone</th></tr></thead>
+    <tbody>
+      <tr><td>Sentence 1: &ldquo;Apple iPhone&rdquo;</td><td>1</td><td>1</td></tr>
+      <tr><td>Sentence 2: &ldquo;Apple&rdquo;</td><td>1</td><td>0</td></tr>
+    </tbody>
+  </table>
+
+  <p>We can plot each sentence as an arrow from the origin [0, 0]: x-axis for the frequency of &ldquo;Apple,&rdquo; y-axis for the frequency of &ldquo;iPhone&rdquo; (Exhibit 1). Sentence 1 becomes [0, 0] to [1, 1] and Sentence 2 becomes [0, 0] to [1, 0]. The angle between these two arrows is 45&deg;, and the cosine of 45&deg; is 0.71. This cosine value &mdash; <em>cosine similarity</em> &mdash; is our measure of how similar two sentences are.<sup><a id="ref8" href="#en8">8</a></sup></p>
+
+  <figure class="exhibit">
+    <svg viewBox="0 0 360 260" role="img" aria-labelledby="ex1-title ex1-desc">
+      <title id="ex1-title">Exhibit 1</title>
+      <desc id="ex1-desc">Sentence 1 &quot;Apple iPhone&quot; at [1,1] and Sentence 2 &quot;Apple&quot; at [1,0], plotted as arrows from the origin, 45 degrees apart, cosine similarity 0.71.</desc>
+      <defs>
+        <marker id="ax1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9ca3af"/></marker>
+        <marker id="bl1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1d4ed8"/></marker>
+        <marker id="rd1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/></marker>
+      </defs>
+      <line x1="35" y1="230" x2="235" y2="230" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#ax1)"/>
+      <line x1="50" y1="245" x2="50" y2="35" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#ax1)"/>
+      <text x="35" y="16" font-size="10" fill="#5a5a5a" text-anchor="start">Frequency of &#8220;Apple&#8221; &#8594;</text>
+      <text x="14" y="150" font-size="10" fill="#5a5a5a" text-anchor="middle" transform="rotate(-90 14 150)">Frequency of &#8220;iPhone&#8221;</text>
+      <text x="46" y="243" font-size="9" fill="#9ca3af" text-anchor="end">0</text>
+      <text x="140" y="243" font-size="9" fill="#9ca3af" text-anchor="middle">1</text>
+      <text x="46" y="150" font-size="9" fill="#9ca3af" text-anchor="end">1</text>
+      <path d="M 80 230 A 30 30 0 0 0 71.2 218.8" fill="none" stroke="#5a5a5a" stroke-width="1"/>
+      <text x="88" y="221" font-size="10" fill="#5a5a5a">45&#176;</text>
+      <line x1="50" y1="230" x2="138" y2="230" stroke="#b91c1c" stroke-width="3" marker-end="url(#rd1)"/>
+      <line x1="50" y1="230" x2="138" y2="142" stroke="#1d4ed8" stroke-width="3" marker-end="url(#bl1)"/>
+      <text x="142" y="138" font-size="10" fill="#1d4ed8">Sentence 1: &#8220;Apple iPhone&#8221; [1, 1]</text>
+      <text x="142" y="234" font-size="10" fill="#b91c1c">Sentence 2: &#8220;Apple&#8221; [1, 0]</text>
+      <text x="95" y="202" font-size="11" fill="#1a1a1a" font-weight="600">cos(45&#176;) = 0.71</text>
+    </svg>
+    <figcaption><strong>Exhibit 1 &mdash; Sentence vectors and cosine similarity.</strong> The two arrows are 45&deg; apart, and the cosine of 45&deg; equals 0.71. A single number now stands in for something as slippery as meaning.</figcaption>
+  </figure>
+
+  <h3>Represent sentences from their list of numbers in two dimensions, based on word frequencies</h3>
+
+  <p>If we add a third sentence, &ldquo;Apple Apple Apple,&rdquo; we will have the following table.</p>
+
+  <table class="glossary">
+    <thead><tr><th>Sentence</th><th>Apple</th><th>iPhone</th></tr></thead>
+    <tbody>
+      <tr><td>Sentence 1: &ldquo;Apple iPhone&rdquo;</td><td>1</td><td>1</td></tr>
+      <tr><td>Sentence 2: &ldquo;Apple&rdquo;</td><td>1</td><td>0</td></tr>
+      <tr><td>Sentence 3: &ldquo;Apple Apple Apple&rdquo;</td><td>3</td><td>0</td></tr>
+    </tbody>
+  </table>
+
+  <p>Sentence 3 has the list of numbers (vector) of [3, 0] &mdash; three times as long as Sentence 2&rsquo;s [1, 0], but pointing in exactly the same direction (Exhibit 2).</p>
+
+  <p>Similarity between any two sentences depends only on the angle between them in Exhibit 2, not their length: the cosine similarity between Sentence 2 (Apple) and Sentence 3 (Apple Apple Apple) is 1, a perfect match, because repeating the same word three times does not change what a sentence means.</p>
+
+  <figure class="exhibit">
+    <svg viewBox="0 0 560 260" role="img" aria-labelledby="ex2-title ex2-desc">
+      <title id="ex2-title">Exhibit 2</title>
+      <desc id="ex2-desc">Sentence 2 &quot;Apple&quot; [1,0] and Sentence 3 &quot;Apple Apple Apple&quot; [3,0] point in the same direction, so their cosine similarity is 1, even though Sentence 3&#39;s arrow is three times as long.</desc>
+      <defs>
+        <marker id="ax2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9ca3af"/></marker>
+        <marker id="bl2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1d4ed8"/></marker>
+        <marker id="rd2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/></marker>
+        <marker id="pu2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7c3aed"/></marker>
+      </defs>
+      <line x1="35" y1="230" x2="330" y2="230" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#ax2)"/>
+      <line x1="50" y1="245" x2="50" y2="35" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#ax2)"/>
+      <text x="35" y="16" font-size="10" fill="#5a5a5a" text-anchor="start">Frequency of &#8220;Apple&#8221; &#8594;</text>
+      <text x="14" y="150" font-size="10" fill="#5a5a5a" text-anchor="middle" transform="rotate(-90 14 150)">Frequency of &#8220;iPhone&#8221;</text>
+      <path d="M 80 230 A 30 30 0 0 0 71.2 218.8" fill="none" stroke="#5a5a5a" stroke-width="1"/>
+      <text x="88" y="221" font-size="10" fill="#5a5a5a">45&#176;</text>
+      <line x1="50" y1="230" x2="290" y2="230" stroke="#7c3aed" stroke-width="3" marker-end="url(#pu2)"/>
+      <line x1="50" y1="230" x2="138" y2="230" stroke="#b91c1c" stroke-width="3" marker-end="url(#rd2)"/>
+      <line x1="50" y1="230" x2="138" y2="142" stroke="#1d4ed8" stroke-width="3" marker-end="url(#bl2)"/>
+      <text x="142" y="138" font-size="10" fill="#1d4ed8">Sentence 1: &#8220;Apple iPhone&#8221; [1, 1]</text>
+      <text x="142" y="222" font-size="10" fill="#b91c1c">Sentence 2: &#8220;Apple&#8221; [1, 0]</text>
+      <text x="294" y="226" font-size="10" fill="#7c3aed">Sentence 3: &#8220;Apple Apple Apple&#8221; [3, 0]</text>
+    </svg>
+    <figcaption><strong>Exhibit 2 &mdash; Direction, not length.</strong> Sentence 2 and Sentence 3 point in exactly the same direction &mdash; the angle between them is 0&deg;, and the cosine of 0&deg; equals 1 &mdash; even though Sentence 3&rsquo;s arrow is three times as long as Sentence 2&rsquo;s. Sentence 1&rsquo;s arrow, meanwhile, is 45&deg; from both, so its cosine similarity with each of them is 0.71.</figcaption>
+  </figure>
+
+  <p>Two further cases sit at the extremes. When two sentences are identical, their vectors point in exactly the same direction, the angle between them is 0&deg;, and cosine(0&deg;) = 1 (Exhibit 3). When two sentences share no words at all &mdash; for example &ldquo;Apple&rdquo; [1, 0] and &ldquo;iPhone&rdquo; [0, 1] &mdash; their vectors are perpendicular, the angle is 90&deg;, and cosine(90&deg;) = 0: no similarity at all (Exhibit 4). Same meaning, same direction. Nothing in common, no direction in common.</p>
+
+  <figure class="exhibit">
+    <svg viewBox="0 0 320 240" role="img" aria-labelledby="ex3-title ex3-desc">
+      <title id="ex3-title">Exhibit 3</title>
+      <desc id="ex3-desc">Two identical sentences, both &quot;Apple iPhone&quot; at [1,1], point in exactly the same direction. Angle 0 degrees, cosine similarity 1.</desc>
+      <defs>
+        <marker id="ax3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9ca3af"/></marker>
+        <marker id="bl3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1d4ed8"/></marker>
+        <marker id="rd3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/></marker>
+      </defs>
+      <line x1="35" y1="210" x2="200" y2="210" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#ax3)"/>
+      <line x1="50" y1="225" x2="50" y2="35" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#ax3)"/>
+      <text x="60" y="30" font-size="11" fill="#1a1a1a" font-weight="600">Angle = 0&#176;, cos(0&#176;) = 1</text>
+      <line x1="50" y1="210" x2="140" y2="120" stroke="#1d4ed8" stroke-width="4" marker-end="url(#bl3)"/>
+      <line x1="54" y1="206" x2="144" y2="116" stroke="#b91c1c" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#rd3)"/>
+      <text x="150" y="118" font-size="10" fill="#1d4ed8">Sentence 1: &#8220;Apple iPhone&#8221; [1, 1]</text>
+      <text x="150" y="134" font-size="10" fill="#b91c1c">Sentence 2 (identical, overlapping)</text>
+    </svg>
+    <figcaption><strong>Exhibit 3 &mdash; Identical sentences.</strong> The two arrows overlap perfectly (the red arrow is offset slightly here only so both remain visible). This is the highest possible similarity score.</figcaption>
+  </figure>
+
+  <figure class="exhibit">
+    <svg viewBox="0 0 300 240" role="img" aria-labelledby="ex4-title ex4-desc">
+      <title id="ex4-title">Exhibit 4</title>
+      <desc id="ex4-desc">Sentence &quot;Apple&quot; [1,0] and sentence &quot;iPhone&quot; [0,1] are perpendicular, 90 degrees apart, cosine similarity 0.</desc>
+      <defs>
+        <marker id="ax4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9ca3af"/></marker>
+        <marker id="bl4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1d4ed8"/></marker>
+        <marker id="rd4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/></marker>
+      </defs>
+      <line x1="35" y1="210" x2="200" y2="210" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#ax4)"/>
+      <line x1="50" y1="225" x2="50" y2="35" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#ax4)"/>
+      <text x="60" y="30" font-size="11" fill="#1a1a1a" font-weight="600">cos(90&#176;) = 0: no similarity at all</text>
+      <path d="M60,210 L60,200 L50,200" fill="none" stroke="#5a5a5a" stroke-width="1"/>
+      <line x1="50" y1="210" x2="140" y2="210" stroke="#1d4ed8" stroke-width="3" marker-end="url(#bl4)"/>
+      <line x1="50" y1="210" x2="50" y2="120" stroke="#b91c1c" stroke-width="3" marker-end="url(#rd4)"/>
+      <text x="150" y="214" font-size="10" fill="#1d4ed8">Sentence 1: &#8220;Apple&#8221; [1, 0]</text>
+      <text x="54" y="115" font-size="10" fill="#b91c1c">Sentence 2: &#8220;iPhone&#8221; [0, 1]</text>
+    </svg>
+    <figcaption><strong>Exhibit 4 &mdash; No overlap.</strong> The two sentences share no words at all and their arrows point in unrelated directions, 90&deg; apart.</figcaption>
+  </figure>
+
+  <h3>Calculate the angle between two sentences (vectors) with the dot product</h3>
+
+  <p>The <em>dot product</em> is the basic mathematical operation for comparing two vectors: multiply their corresponding entries and add the results. For a vector v = [1, 2], the dot product of v with itself is:</p>
+
+  <p style="text-align:center"><em>v &middot; v</em> = [1, 2] &middot; [1, 2] = 1&times;1 + 2&times;2 = 1 + 4 = 5.<sup><a id="ref9" href="#en9">9</a></sup></p>
+
+  <p><strong>Same number, two routes.</strong> For the vector v = [1, 2], treating 1 and 2 as the two shorter sides of a right triangle gives 1&sup2; + 2&sup2; = 5 &mdash; matching v &middot; v = 5 exactly. This is not a coincidence: the dot product of a vector with itself always equals the square of its length, precisely because of the Pythagorean theorem (Exhibit 5).<sup><a id="ref10" href="#en10">10</a></sup></p>
+
+  <figure class="exhibit">
+    <svg viewBox="0 0 360 200" role="img" aria-labelledby="ex5-title ex5-desc">
+      <title id="ex5-title">Exhibit 5</title>
+      <desc id="ex5-desc">A visual proof of the Pythagorean theorem. A 7 by 7 square, side 3 plus 4, is dissected two ways: on the left into a 4 by 4 square, a 3 by 3 square, and four 3-4-5 right triangles; on the right into the same four triangles arranged around one tilted 5 by 5 square. Both large squares have equal area, so 3 squared plus 4 squared equals 5 squared.</desc>
+      <rect x="10" y="10" width="140" height="140" fill="none" stroke="#1a1a1a" stroke-width="1.5"/>
+      <rect x="10" y="10" width="80" height="80" fill="#bfdbfe" stroke="#1a1a1a" stroke-width="1"/>
+      <rect x="90" y="90" width="60" height="60" fill="#fde68a" stroke="#1a1a1a" stroke-width="1"/>
+      <polygon points="90,10 150,10 150,90" fill="#86efac" stroke="#1a1a1a" stroke-width="1"/>
+      <polygon points="90,10 90,90 150,90" fill="#86efac" stroke="#1a1a1a" stroke-width="1"/>
+      <polygon points="10,90 90,90 10,150" fill="#86efac" stroke="#1a1a1a" stroke-width="1"/>
+      <polygon points="90,90 90,150 10,150" fill="#86efac" stroke="#1a1a1a" stroke-width="1"/>
+      <text x="50" y="7" font-size="10" fill="#1a1a1a" text-anchor="middle">4</text>
+      <text x="120" y="7" font-size="10" fill="#1a1a1a" text-anchor="middle">3</text>
+      <text x="4" y="54" font-size="10" fill="#1a1a1a" text-anchor="middle">4</text>
+      <text x="4" y="123" font-size="10" fill="#1a1a1a" text-anchor="middle">3</text>
+      <text x="128" y="54" font-size="10" fill="#1a1a1a" text-anchor="middle" font-weight="600">5</text>
+      <text x="52" y="126" font-size="10" fill="#1a1a1a" text-anchor="middle" font-weight="600">5</text>
+      <text x="80" y="178" font-size="10" fill="#5a5a5a" text-anchor="middle">3&sup2; + 4&sup2; + 4(3&times;4/2)</text>
+
+      <text x="280" y="7" font-size="12" fill="#1a1a1a" text-anchor="middle" font-weight="700">=</text>
+      <rect x="210" y="10" width="140" height="140" fill="none" stroke="#1a1a1a" stroke-width="1.5"/>
+      <polygon points="210,10 290,10 210,70" fill="#86efac" stroke="#1a1a1a" stroke-width="1"/>
+      <polygon points="350,10 290,10 350,90" fill="#86efac" stroke="#1a1a1a" stroke-width="1"/>
+      <polygon points="350,150 350,90 270,150" fill="#86efac" stroke="#1a1a1a" stroke-width="1"/>
+      <polygon points="210,150 270,150 210,70" fill="#86efac" stroke="#1a1a1a" stroke-width="1"/>
+      <polygon points="290,10 350,90 270,150 210,70" fill="#93c5fd" stroke="#1a1a1a" stroke-width="1"/>
+      <text x="280" y="82" font-size="11" fill="#1a1a1a" text-anchor="middle" font-weight="600">5</text>
+      <text x="280" y="178" font-size="10" fill="#5a5a5a" text-anchor="middle">5&sup2; + 4(3&times;4/2)</text>
+    </svg>
+    <figcaption><strong>Exhibit 5 &mdash; The Pythagorean theorem.</strong> Two squares of equal size, (3+4)&sup2;, dissected two different ways. The left square divides into a 4&times;4 square, a 3&times;3 square, and four 3-4-5 triangles. The right square divides into a single tilted 5&times;5 square and the same four triangles. Since both equal (3+4)&sup2;, the triangle areas cancel, leaving 3&sup2; + 4&sup2; = 5&sup2;.</figcaption>
+  </figure>
+
+  <h2>From Dot Product to Cosine Similarity</h2>
+
+  <h3>Unit vectors and rotation</h3>
+
+  <p>Consider a vector of length 1 that makes an angle &theta; with the x-axis: u = [cos(&theta;), sin(&theta;)]. The dot product of u with itself is cos&sup2;(&theta;) + sin&sup2;(&theta;), which always equals 1 &mdash; again by the Pythagorean theorem,<sup><a id="ref11" href="#en11">11</a></sup> since cos(&theta;) and sin(&theta;) are the two shorter sides of a right triangle with hypotenuse 1.</p>
+
+  <p>Now suppose two unit vectors, u and v, sit at angles &beta; and &alpha; respectively, so that the angle between them is &theta; = &beta; &minus; &alpha; (Exhibit 6). Their dot product works out to:</p>
+
+  <p style="text-align:center"><em>u &middot; v</em> = cos(&beta;)cos(&alpha;) + sin(&beta;)sin(&alpha;) = cos(&beta; &minus; &alpha;) = cos(&theta;).</p>
+
+  <p>This is the <em>cosine difference identity</em>,<sup><a id="ref12" href="#en12">12</a></sup> and it confirms that the dot product of two unit vectors equals the cosine of the angle between them.</p>
+
+  <figure class="exhibit">
+    <svg viewBox="0 0 320 260" role="img" aria-labelledby="ex6-title ex6-desc">
+      <title id="ex6-title">Exhibit 6</title>
+      <desc id="ex6-desc">Two unit vectors u and v at angles beta and alpha from the x-axis. The angle between them is theta, equal to beta minus alpha. Their dot product equals cosine of theta.</desc>
+      <defs>
+        <marker id="ax6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9ca3af"/></marker>
+        <marker id="bl6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1d4ed8"/></marker>
+        <marker id="gr6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16a34a"/></marker>
+      </defs>
+      <text x="18" y="145" font-size="11" fill="#1a1a1a" font-weight="600">&beta; = &alpha; + &theta;</text>
+      <path d="M 200 220 A 150 150 0 0 0 50 70" fill="none" stroke="#c4c4c4" stroke-width="1" stroke-dasharray="3 3"/>
+      <line x1="35" y1="220" x2="215" y2="220" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#ax6)"/>
+      <line x1="50" y1="235" x2="50" y2="50" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#ax6)"/>
+      <path d="M 90 220 A 40 40 0 0 0 66.9 183.75" fill="none" stroke="#1d4ed8" stroke-width="1"/>
+      <text x="66" y="200" font-size="10" fill="#1d4ed8">&beta;</text>
+      <path d="M 75 220 A 25 25 0 0 0 72.66 209.4" fill="none" stroke="#16a34a" stroke-width="1"/>
+      <text x="72" y="217" font-size="10" fill="#16a34a">&alpha;</text>
+      <path d="M 104.4 194.6 A 60 60 0 0 0 75.4 165.6" fill="none" stroke="#5a5a5a" stroke-width="1"/>
+      <text x="98" y="182" font-size="10" fill="#5a5a5a">&theta;</text>
+      <line x1="50" y1="220" x2="185.9" y2="156.6" stroke="#16a34a" stroke-width="3" marker-end="url(#gr6)"/>
+      <line x1="50" y1="220" x2="113.4" y2="84.1" stroke="#1d4ed8" stroke-width="3" marker-end="url(#bl6)"/>
+      <text x="118" y="78" font-size="10" fill="#1d4ed8">u = [cos &beta;, sin &beta;]</text>
+      <text x="190" y="153" font-size="10" fill="#16a34a">v = [cos &alpha;, sin &alpha;]</text>
+    </svg>
+    <figcaption><strong>Exhibit 6 &mdash; Unit vectors and the cosine difference identity.</strong> Because both vectors have length 1, their dot product reduces to cos(&beta;)cos(&alpha;) + sin(&beta;)sin(&alpha;), which equals cos(&theta;) &mdash; the geometric fact that cosine similarity relies on.</figcaption>
+  </figure>
+
+  <h3>Generalizing beyond unit vectors: the Law of Cosines</h3>
+
+  <p>Real sentence vectors are rarely unit length, so we need a general formula. Consider two vectors, b and c, and the vector connecting their tips, a = c &minus; b. The Law of Cosines states that:</p>
+
+  <p style="text-align:center">|a|&sup2; = |b|&sup2; + |c|&sup2; &minus; 2|b||c|cos(&theta;)</p>
+
+  <p>Expanding |a|&sup2; = |c &minus; b|&sup2; and cancelling matching terms on both sides leaves 2|b||c|cos(&theta;) equal to twice the dot product of b and c, so that:</p>
+
+  <p style="text-align:center">cos(&theta;) = (b &middot; c) / (|b| &times; |c|)</p>
+
+  <p>This is the cosine similarity formula used throughout modern AI systems: the dot product of two vectors, divided by the product of their lengths.<sup><a id="ref13" href="#en13">13</a></sup> It generalizes the simple 45&deg;, 90&deg;, and 0&deg; examples above to any pair of vectors, of any length, in any number of dimensions.</p>
+
+  <h2>From Two Words to Real Language: Embeddings at Scale</h2>
+
+  <p>Our examples so far used only two dimensions &mdash; the frequency of &ldquo;Apple&rdquo; and the frequency of &ldquo;iPhone.&rdquo; Two numbers are a toy example. Hundreds are a language. Modern <em>embedding</em> models convert an entire sentence into a vector of several hundred numbers instead of just two or three, trained so that sentences with similar meaning point in similar directions and cosine similarity between them is high, exactly as in our two-dimensional examples.<sup><a id="ref14" href="#en14">14</a></sup></p>
+
+  <p>This capability comes with two limits. First, an embedding model&rsquo;s sense of &ldquo;similar&rdquo; reflects the data it was trained on; it may perform unevenly on industries or writing styles it has seen less of. Second, unlike our two-number &ldquo;Apple/iPhone&rdquo; example, no individual one of a several-hundred-number vector can be inspected and explained on its own &mdash; the meaning lives in the pattern across all of them together, not in any single entry.</p>
+
+  <h2>Avoiding Hallucination: A Practical Payoff</h2>
+
+  <h3>A chatbot that never hallucinates</h3>
+
+  <p>This mechanism underlies a simple but useful business application: a question-and-answer chatbot. It compares a user&rsquo;s question to each candidate sentence in a reference list, ranks them by how close they are in meaning, and returns the closest match as the answer &mdash; but only if its similarity score clears a preset threshold, for example, 0.5. Asking &ldquo;Which company designs iPhone?&rdquo; correctly returns &ldquo;Apple designs iPhone&rdquo; as the best match, since its similarity score is higher than the threshold and is the highest among three sentences.</p>
+
+  <p>User question: &ldquo;Which company designs iPhone?&rdquo;</p>
+
+  <table class="glossary">
+    <thead><tr><th>Candidate sentence in the reference list</th><th>Similarity score</th></tr></thead>
+    <tbody>
+      <tr><td>1. &ldquo;I love to eat apple&rdquo;</td><td>0.43</td></tr>
+      <tr><td>2. &ldquo;Apple designs iPhone&rdquo;</td><td><strong>0.85</strong></td></tr>
+      <tr><td>3. &ldquo;Both Apple and Orange are fruits&rdquo;</td><td>0.45</td></tr>
+    </tbody>
+  </table>
+
+  <p>Asking an unrelated question, such as &ldquo;Where is Hong Kong?&rdquo; correctly returns no answer at all, rather than guessing, because no candidate sentence&rsquo;s score reaches the threshold of 0.5. This same mechanism, applied at far larger scale, is what allows a chatbot or an AI agent to route a query to the right knowledge, retrieve the right document, or recognize that a request falls outside what it can help with.</p>
+
+  <p>This threshold is not a minor implementation detail &mdash; it is what stands between this approach and a well-known failure mode called hallucination, where an AI system produces a fluent, confident-sounding answer that is nonetheless wrong or entirely invented. A system built on cosine similarity can be made to recognize the limits of its own knowledge: if no candidate sentence clears the similarity threshold, it says so, rather than forcing a plausible-sounding guess. It is a system built to say nothing rather than say something wrong. For business leaders deploying AI tools, this is a practical takeaway: a well-designed system should be able to say &ldquo;I don&rsquo;t know&rdquo; &mdash; and a system that always produces an answer, no matter how unrelated the question, is one to be wary of.</p>
+
+  <h3>Why not just build an FAQ?</h3>
+
+  <p>Traditionally, a frequently asked questions (FAQ) list pairs each question with a ready-made answer. Applying this to the example above, we would not simply store three plain sentences; instead, someone would need to manually create and check a list of questions and answers to ensure accuracy. For example:</p>
+
+  <blockquote class="callout quote">
+    <p>FAQ 1: What do you love to eat?<br>Answer 1: I love to eat apple.<br><br>
+    FAQ 2: Which company designs iPhone?<br>Answer 2: Apple designs iPhone.<br><br>
+    FAQ 3: Are both Apple and Orange fruits?<br>Answer 3: Both Apple and Orange are fruits.</p>
+  </blockquote>
+
+  <p>The author proposes skipping this manual work. Instead, we can go straight to the three plain sentences and calculate their similarity scores against the user&rsquo;s question to find the most similar sentence &mdash; in other words, the best answer to the user&rsquo;s question. This sentence-similarity approach is very different from how a generative AI system like ChatGPT actually produces an answer, as the next section shows.</p>
+
+  <h3>How generative AI is different</h3>
+
+  <p>Generative AI systems such as ChatGPT are trained on large volumes of data and then use a transformer architecture<sup><a id="ref15" href="#en15">15</a></sup> to generate text one word at a time, as in the following example. The transformer architecture itself is beyond the scope of this research note and is left for a future note.</p>
+
+  <blockquote class="callout quote">
+    <p>I wake<br>I wake up<br>I wake up in<br>I wake up in the<br>I wake up in the middle<br>I wake up in the middle of<br>I wake up in the middle of the<br>I wake up in the middle of the night</p>
+  </blockquote>
+
+  <p>Similarly, if the user enters &ldquo;What is the capital of China?&rdquo;, ChatGPT will generate and give:</p>
+
+  <blockquote class="callout quote"><p>What is the capital of China? Beijing</p></blockquote>
+
+  <p>This word-by-word process is powerful and flexible, but it also means ChatGPT can generate fluent, confident-sounding text even when it does not actually know the correct answer &mdash; which is exactly how hallucination happens. It isn&rsquo;t retrieving an answer. It&rsquo;s predicting one, word by word &mdash; and it can do that just as confidently when it&rsquo;s wrong.</p>
+
+  <h3>Why hallucination happens, and how to avoid it</h3>
+
+  <p>We saw above that a system built on sentence similarity avoids hallucination simply by refusing to guess when no candidate sentence is similar enough. It is worth understanding why hallucination happens in the first place, so readers can recognize the risk in other AI tools they use.</p>
+
+  <p>First, a large language model (LLM) has a training cutoff date, so it cannot know about events or facts after that date. Second, even when an LLM searches the internet for additional information, what it finds may still be incomplete or unreliable. Third, ChatGPT&rsquo;s underlying approach is fundamentally probabilistic: it generates an answer by predicting the next most likely word, based on a probability distribution shaped by a parameter called temperature, which the user can set. If, instead, a user provides a specific list of sentences &mdash; or simply a document for the AI to read and break into sentences &mdash; hallucination can be avoided entirely. The sentence-similarity approach described above will only ever return one of the provided sentences, or tell the user that no answer is available if no sentence&rsquo;s similarity score exceeds a threshold, such as 0.5, set by the user.</p>
+
+  <p>When a user provides information for an LLM to read before it generates an answer, this is known as retrieval-augmented generation (RAG).<sup><a id="ref16" href="#en16">16</a></sup> The LLM reads the information the user provides and combines it with what it learned during training to produce an answer &mdash; there is no guarantee that this answer is correct, and it is not easy for the user to verify its correctness. The answer a user receives from RAG is still &ldquo;generated&rdquo; by the LLM. &ldquo;Certain legal research providers have touted methods such as retrieval-augmented generation (RAG) as &lsquo;eliminating&rsquo; or &lsquo;avoid[ing]&rsquo; hallucinations, or guaranteeing &lsquo;hallucination-free&rsquo; legal citations.&rdquo;<sup><a id="ref17" href="#en17">17</a></sup> Researchers at Stanford found that AI research tools made by LexisNexis (Lexis+ AI) and Thomson Reuters (Westlaw AI-Assisted Research and Ask Practical Law AI) each hallucinated between 17% and 33% of the time.<sup><a id="ref18" href="#en18">18</a></sup></p>
+
+  <p>Retrieval narrows the guesswork. It does not remove it. For critical applications such as medicine, law, and education, we cannot afford mistakes. In healthcare, for example, side effects are already checked and documented by pharmaceutical companies in verified, approved materials. Doctors and nurses do not need an LLM to &ldquo;generate&rdquo; an answer at all &mdash; they can simply run any question they have against the sentences in that verified, approved document using sentence similarity. Finally, there is no reason to limit the system to returning only the single most similar sentence; it could instead return, say, the top three most similar sentences. The system could even let users choose how many sentences before or after a match to display, or show the entire paragraph in which that sentence appears.</p>
+
+  <h2>Conclusion</h2>
+
+  <p>This note opens with the idea that a word is known by the company it keeps.<sup><a id="ref19" href="#en19">19</a></sup> Having worked through vectors, the dot product, the Pythagorean theorem, and cosine similarity, the mechanism behind &ldquo;AI understanding meaning&rdquo; looks less like magic and more like geometry. The mechanics are simple. The scale is not.</p>
+
+  <p>Three ideas carry this argument. Representing sentences as vectors turns meaning into something that can be computed mathematically. The dot product and the Pythagorean theorem give us the tools to measure the angle and the length of these vectors. Cosine similarity combines them into a single, general-purpose number for comparing any two pieces of text, regardless of length or exact wording.</p>
+
+  <p>The same arithmetic that separates &ldquo;Apple iPhone&rdquo; from &ldquo;Apple&rdquo; at a 45&deg; angle also powers the semantic search, chatbots, and AI agents that businesses increasingly rely on. Understanding this does not require becoming a data scientist. It equips readers, instead, to ask sharper questions about the AI systems they use: what the system was trained on, why it sometimes retrieves a surprising match, and where its judgment about &ldquo;similar enough&rdquo; may not match their own. That is the payoff of opening this black box: not technical mastery, but the ability to engage with AI&rsquo;s capabilities, and its limits, from a position of understanding.</p>
+
+  <p>This same geometry also delivers a very practical payoff: a chatbot that never hallucinates &mdash; and the reason lies in a distinction worth making explicit. A chatbot built on sentence similarity is <strong>selective</strong>, not <strong>generative</strong>: every possible answer must already exist in a document a human has previously written and verified, and the system can only select from that fixed list, never invent new text. The threshold is simply the mechanism that decides whether a candidate from that verified list is close enough to use; if nothing qualifies, the system can say &ldquo;I don&rsquo;t know&rdquo; instead of guessing. A generative AI system, by contrast, has no such list and no equivalent circuit breaker &mdash; it produces its answer one word at a time, sampling from a probability distribution over what word is likely to come next, optimized for fluency rather than for truth. It will keep generating confident-sounding words even when it has no reliable basis for them, because fluency and correctness are separate properties, and the model only guarantees the first.</p>
+
+  <p>This may be the more important lesson of this note: the systems business leaders can trust are not necessarily the ones that always have an answer, but the ones that know when to say, &ldquo;I don&rsquo;t know.&rdquo; In high-stakes fields such as medicine, being wrong is too high a price to pay. While a human should always have the final say on whether an AI&rsquo;s answer is reasonable,<sup><a id="ref20" href="#en20">20</a></sup> that human judgment only works if the AI does not hallucinate in the first place, confusing the very judgment it is meant to support.</p>
+
+  <h2>Endnotes</h2>
+  <ol class="endnotes">
+    <li id="en1">J. R. Firth, &ldquo;A Synopsis of Linguistic Theory, 1930&ndash;1955,&rdquo; in <em>Studies in Linguistic Analysis</em> (Oxford: Philological Society, 1957), 11. <a class="backlink" href="#ref1">&#8617;</a></li>
+    <li id="en2">Patrick Lewis et al., &ldquo;Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks,&rdquo; in <em>Advances in Neural Information Processing Systems 33</em>, ed. H. Larochelle et al. (Red Hook, NY: Curran Associates, 2020), 9459&ndash;9474. <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a> <a class="backlink" href="#ref2">&#8617;</a></li>
+    <li id="en3">Sampsa Samila and Pascual Berrone, &ldquo;OpenAI and the Large Language Model Market,&rdquo; IESE Business School, Product IES941-PDF-ENG (Harvard Business Publishing, May 28, 2023), p.23. <a class="backlink" href="#ref3">&#8617;</a></li>
+    <li id="en4">Tom&aacute;s Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeff Dean, &ldquo;Distributed Representations of Words and Phrases and Their Compositionality,&rdquo; in <em>Advances in Neural Information Processing Systems 26</em>, ed. C. J. C. Burges et al. (Red Hook, NY: Curran Associates, 2013), 3111&ndash;3119. <a href="https://papers.nips.cc/paper_files/paper/2013/hash/9aa42b31882ec039965f3c4923ce901b-Abstract.html" target="_blank" rel="noopener">papers.nips.cc</a> <a class="backlink" href="#ref4">&#8617;</a></li>
+    <li id="en5">Dan Jurafsky and James H. Martin, &ldquo;Vector Semantics and Embeddings,&rdquo; in <em>Speech and Language Processing</em>, 3rd ed. (draft, Stanford University, n.d.), accessed July 4, 2026, <a href="https://web.stanford.edu/~jurafsky/slp3/6.pdf" target="_blank" rel="noopener">web.stanford.edu/~jurafsky/slp3/6.pdf</a> <a class="backlink" href="#ref5">&#8617;</a></li>
+    <li id="en6">Andrew McAfee, Daniel Rock, and Erik Brynjolfsson, &ldquo;How to Capitalize on Generative AI,&rdquo; <em>Harvard Business Review</em>, November&ndash;December 2023, Reprint S23061. <a class="backlink" href="#ref6">&#8617;</a></li>
+    <li id="en7">Joseph Weizenbaum, &ldquo;ELIZA&mdash;A Computer Program for the Study of Natural Language Communication Between Man and Machine,&rdquo; <em>Communications of the ACM</em> 9, no. 1 (January 1966): 36&ndash;45, <a href="https://doi.org/10.1145/365153.365168" target="_blank" rel="noopener">doi.org/10.1145/365153.365168</a> <a class="backlink" href="#ref7">&#8617;</a></li>
+    <li id="en8">Gerard Salton, Andrew K. C. Wong, and Chung-Shu Yang, &ldquo;A Vector Space Model for Automatic Indexing,&rdquo; <em>Communications of the ACM</em> 18, no. 11 (November 1975): 613&ndash;620, <a href="https://doi.org/10.1145/361219.361220" target="_blank" rel="noopener">doi.org/10.1145/361219.361220</a> <a class="backlink" href="#ref8">&#8617;</a></li>
+    <li id="en9">Gilbert Strang, <em>Introduction to Linear Algebra</em>, 5th ed. (Wellesley, MA: Wellesley-Cambridge Press; Beijing: Tsinghua University Press, 2019), 13. <a class="backlink" href="#ref9">&#8617;</a></li>
+    <li id="en10">Gilbert Strang, <em>Introduction to Linear Algebra</em>, 5th ed. (Wellesley, MA: Wellesley-Cambridge Press; Beijing: Tsinghua University Press, 2019), 13. <a class="backlink" href="#ref10">&#8617;</a></li>
+    <li id="en11">Euclid, <em>Elements</em>, Book I, Proposition 47, in <em>Euclid: The Thirteen Books of the Elements</em>, trans. Thomas L. Heath, 2nd ed. (New York: Dover Publications, 1956), 349&ndash;350. <a href="https://www.perseus.tufts.edu/hopper/text?doc=Perseus:text:1999.01.0086:book%3D1:type%3DProp:number%3D47" target="_blank" rel="noopener">perseus.tufts.edu</a> <a class="backlink" href="#ref11">&#8617;</a></li>
+    <li id="en12">Daniel Zwillinger, ed., <em>CRC Standard Mathematical Tables and Formulas</em>, 33rd ed. (Boca Raton, FL: CRC Press, 2018), s.v. &ldquo;trigonometric addition formulas.&rdquo; <a class="backlink" href="#ref12">&#8617;</a></li>
+    <li id="en13">Nils Reimers and Iryna Gurevych, &ldquo;Sentence-BERT: Sentence Embeddings Using Siamese BERT-Networks,&rdquo; in <em>Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)</em> (Hong Kong: Association for Computational Linguistics, 2019), 3982&ndash;3992. <a class="backlink" href="#ref13">&#8617;</a></li>
+    <li id="en14">Nils Reimers and Iryna Gurevych, &ldquo;Sentence-BERT: Sentence Embeddings Using Siamese BERT-Networks,&rdquo; in <em>Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)</em> (Hong Kong: Association for Computational Linguistics, 2019), 3982&ndash;3992. <a class="backlink" href="#ref14">&#8617;</a></li>
+    <li id="en15">Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, &#321;ukasz Kaiser, and Illia Polosukhin, &ldquo;Attention Is All You Need,&rdquo; in <em>Advances in Neural Information Processing Systems 30</em>, ed. I. Guyon et al. (Red Hook, NY: Curran Associates, 2017), 5998&ndash;6008, <a href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener">arxiv.org/abs/1706.03762</a> <a class="backlink" href="#ref15">&#8617;</a></li>
+    <li id="en16">Patrick Lewis et al., &ldquo;Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks,&rdquo; in <em>Advances in Neural Information Processing Systems 33</em>, ed. H. Larochelle et al. (Red Hook, NY: Curran Associates, 2020), 9459&ndash;9474. <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a> <a class="backlink" href="#ref16">&#8617;</a></li>
+    <li id="en17">Varun Magesh, Faiz Surani, Matthew Dahl, Mirac Suzgun, Christopher D. Manning, and Daniel E. Ho, &ldquo;Hallucination-Free? Assessing the Reliability of Leading AI Legal Research Tools,&rdquo; <em>Journal of Empirical Legal Studies</em> (2025), <a href="https://doi.org/10.1111/jels.12413" target="_blank" rel="noopener">doi.org/10.1111/jels.12413</a> <a class="backlink" href="#ref17">&#8617;</a></li>
+    <li id="en18">Varun Magesh, Faiz Surani, Matthew Dahl, Mirac Suzgun, Christopher D. Manning, and Daniel E. Ho, &ldquo;Hallucination-Free? Assessing the Reliability of Leading AI Legal Research Tools,&rdquo; <em>Journal of Empirical Legal Studies</em> (2025), <a href="https://doi.org/10.1111/jels.12413" target="_blank" rel="noopener">doi.org/10.1111/jels.12413</a> <a class="backlink" href="#ref18">&#8617;</a></li>
+    <li id="en19">J. R. Firth, &ldquo;A Synopsis of Linguistic Theory, 1930&ndash;1955,&rdquo; in <em>Studies in Linguistic Analysis</em> (Oxford: Philological Society, 1957), 11. <a class="backlink" href="#ref19">&#8617;</a></li>
+    <li id="en20">Andrew McAfee, Daniel Rock, and Erik Brynjolfsson, &ldquo;How to Capitalize on Generative AI,&rdquo; <em>Harvard Business Review</em>, November&ndash;December 2023, Reprint S23061. <a class="backlink" href="#ref20">&#8617;</a></li>
+  </ol>
+
+  <p><a href="/research.html">&larr; Back to Research</a></p>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+</body>
+</html>
