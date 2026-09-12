@@ -50,7 +50,123 @@
   <h1>The Cosine Difference Identity</h1>
   <p class="paper-meta">A supplementary explainer for Exhibit 6 of <a href="/research/nlp-foundations.html">Natural Language Processing: Foundations and Applications without Hallucination from Generative AI</a>.</p>
 
-  <p class="placeholder">Content coming soon.</p>
+  <p>The cosine difference identity says that for any two angles &beta; and &alpha;:</p>
+
+  <p style="text-align:center"><strong>cos(&beta;)cos(&alpha;) + sin(&beta;)sin(&alpha;) = cos(&beta; &minus; &alpha;)</strong></p>
+
+  <p>This page proves it using nothing but a circle of radius 1, the distance between two points, and the Pythagorean theorem &mdash; the same building blocks used throughout the research note. Howard originally walked through this proof in a short Chinese-language video: <a href="https://www.youtube.com/watch?v=aTbNKn-BIaU" target="_blank" rel="noopener">watch it on YouTube</a>.</p>
+
+  <h2>Setting up the picture</h2>
+
+  <p>Draw a circle of radius 1 centered at C, and mark four points on it (Exhibit E): B at angle 0, Q at angle &alpha;, A at angle &beta; &minus; &alpha;, and P at angle &beta; &mdash; all measured from B, going counterclockwise.</p>
+
+  <figure class="exhibit">
+    <svg viewBox="0 0 300 310" role="img" aria-labelledby="exE-title exE-desc">
+      <title id="exE-title">Exhibit E</title>
+      <desc id="exE-desc">A unit circle centered at C with four points on it: B at angle 0, Q at angle alpha, A at angle beta minus alpha, and P at angle beta. The angle from Q to P equals the angle from B to A, both equal to beta minus alpha. The chord PQ and the chord AB are marked as equal in length.</desc>
+      <circle cx="150" cy="150" r="100" fill="none" stroke="#9ca3af" stroke-width="2"/>
+      <line x1="150" y1="150" x2="250" y2="150" stroke="#9ca3af" stroke-width="2"/>
+      <line x1="150" y1="150" x2="243.97" y2="115.80" stroke="#1d4ed8" stroke-width="2"/>
+      <line x1="150" y1="150" x2="200" y2="63.40" stroke="#7c3aed" stroke-width="2"/>
+      <line x1="150" y1="150" x2="167.36" y2="51.52" stroke="#16a34a" stroke-width="2"/>
+      <path d="M 167.36 51.52 L 243.97 115.80" fill="none" stroke="#1d4ed8" stroke-width="3"/>
+      <path d="M 250 150 L 200 63.40" fill="none" stroke="#7c3aed" stroke-width="3" stroke-dasharray="6 4"/>
+      <path d="M 185 150 A 35 35 0 0 0 182.89 138.03" fill="none" stroke="#5a5a5a" stroke-width="1"/>
+      <text x="196" y="146" font-size="11" fill="#5a5a5a">&alpha;</text>
+      <path d="M 201.68 131.19 A 55 55 0 0 0 159.55 95.84" fill="none" stroke="#1d4ed8" stroke-width="1"/>
+      <text x="196" y="100" font-size="11" fill="#1d4ed8">&beta;&minus;&alpha;</text>
+      <path d="M 225 150 A 75 75 0 0 0 187.5 85.05" fill="none" stroke="#7c3aed" stroke-width="1" stroke-dasharray="3 2"/>
+      <text x="222" y="114" font-size="11" fill="#7c3aed">&beta;&minus;&alpha;</text>
+      <text x="150" y="168" font-size="13" fill="#1a1a1a" text-anchor="middle" font-weight="600">C</text>
+      <text x="258" y="154" font-size="13" fill="#1a1a1a" font-weight="600">B</text>
+      <text x="254" y="114" font-size="13" fill="#1d4ed8" font-weight="600">Q</text>
+      <text x="208" y="56" font-size="13" fill="#7c3aed" font-weight="600">A</text>
+      <text x="161" y="42" font-size="13" fill="#16a34a" text-anchor="end" font-weight="600">P</text>
+      <line x1="20" y1="266" x2="40" y2="266" stroke="#1d4ed8" stroke-width="3"/>
+      <text x="46" y="270" font-size="12" fill="#1d4ed8">chord PQ</text>
+      <line x1="20" y1="286" x2="40" y2="286" stroke="#7c3aed" stroke-width="3" stroke-dasharray="6 4"/>
+      <text x="46" y="290" font-size="12" fill="#7c3aed">chord AB</text>
+    </svg>
+    <figcaption><strong>Exhibit E &mdash; Two equal central angles.</strong> The angle from Q to P (blue arc) and the angle from B to A (purple arc) are both &beta; &minus; &alpha;. C, B, Q, P, and A all sit on the unit circle.</figcaption>
+  </figure>
+
+  <p>Angle BCQ = &alpha; and angle BCP = &beta;, so the angle between Q and P is &beta; &minus; &alpha;. A was placed, by construction, exactly &beta; &minus; &alpha; away from B &mdash; the same angular distance. Rotating the whole picture clockwise by &alpha; turns Q into B (since &alpha; &minus; &alpha; = 0) and turns P into A (since &beta; &minus; &alpha; is exactly A&rsquo;s angle). A rotation doesn&rsquo;t change distances between points, so the chord PQ and the chord AB must be equal:</p>
+
+  <p style="text-align:center"><strong>PQ = AB</strong></p>
+
+  <h2>Computing PQ&sup2;</h2>
+
+  <p>P = (cos&beta;, sin&beta;) and Q = (cos&alpha;, sin&alpha;). PQ is the hypotenuse of a right triangle whose legs are the horizontal and vertical gaps between the two points (Exhibit F).</p>
+
+  <figure class="exhibit">
+    <svg viewBox="0 0 320 220" role="img" aria-labelledby="exF-title exF-desc">
+      <title id="exF-title">Exhibit F</title>
+      <desc id="exF-desc">A right triangle with horizontal leg cos alpha minus cos beta, vertical leg sin beta minus sin alpha, and hypotenuse PQ.</desc>
+      <polygon points="40,180 240,180 240,60" fill="none" stroke="#1d4ed8" stroke-width="3"/>
+      <polygon points="240,180 232,180 232,172 240,172" fill="none" stroke="#1a1a1a" stroke-width="1"/>
+      <text x="140" y="198" font-size="12" fill="#b91c1c" text-anchor="middle" font-weight="600">cos&alpha; &minus; cos&beta;</text>
+      <text x="252" y="120" font-size="12" fill="#16a34a" font-weight="600">sin&beta; &minus; sin&alpha;</text>
+      <text x="118" y="112" font-size="13" fill="#1d4ed8" text-anchor="middle" font-weight="600">PQ</text>
+    </svg>
+    <figcaption><strong>Exhibit F.</strong> The legs are the coordinate gaps between P and Q; the hypotenuse is the chord PQ.</figcaption>
+  </figure>
+
+  <p>By the Pythagorean theorem:</p>
+
+  <p style="text-align:center">
+    PQ&sup2; = (cos&alpha; &minus; cos&beta;)&sup2; + (sin&beta; &minus; sin&alpha;)&sup2;<br>
+    = (cos&alpha;)&sup2; + (cos&beta;)&sup2; &minus; 2cos&alpha;cos&beta; + (sin&beta;)&sup2; + (sin&alpha;)&sup2; &minus; 2sin&beta;sin&alpha;<br>
+    = [(cos&alpha;)&sup2; + (sin&alpha;)&sup2;] + [(cos&beta;)&sup2; + (sin&beta;)&sup2;] &minus; 2cos&alpha;cos&beta; &minus; 2sin&beta;sin&alpha;<br>
+    = 1 + 1 &minus; 2cos&alpha;cos&beta; &minus; 2sin&beta;sin&alpha;<br>
+    = 2 &minus; 2cos&alpha;cos&beta; &minus; 2sin&beta;sin&alpha;
+  </p>
+
+  <p>(The two bracketed terms each equal 1, since every point on the circle satisfies cos&sup2; + sin&sup2; = 1 &mdash; see Exhibit D on the <a href="/research/law-of-cosines.html">Law of Cosines</a> page.)</p>
+
+  <h2>Computing AB&sup2;</h2>
+
+  <p>B = (1, 0) and A = (cos(&beta;&minus;&alpha;), sin(&beta;&minus;&alpha;)). The same idea gives AB as the hypotenuse of another right triangle (Exhibit G).</p>
+
+  <figure class="exhibit">
+    <svg viewBox="0 0 320 220" role="img" aria-labelledby="exG-title exG-desc">
+      <title id="exG-title">Exhibit G</title>
+      <desc id="exG-desc">A right triangle with horizontal leg 1 minus cosine of beta minus alpha, vertical leg sine of beta minus alpha, and hypotenuse AB.</desc>
+      <polygon points="40,180 240,180 240,60" fill="none" stroke="#7c3aed" stroke-width="3"/>
+      <polygon points="240,180 232,180 232,172 240,172" fill="none" stroke="#1a1a1a" stroke-width="1"/>
+      <text x="140" y="198" font-size="12" fill="#b91c1c" text-anchor="middle" font-weight="600">1 &minus; cos(&beta;&minus;&alpha;)</text>
+      <text x="252" y="120" font-size="12" fill="#16a34a" font-weight="600">sin(&beta;&minus;&alpha;)</text>
+      <text x="118" y="112" font-size="13" fill="#7c3aed" text-anchor="middle" font-weight="600">AB</text>
+    </svg>
+    <figcaption><strong>Exhibit G.</strong> The legs are the coordinate gaps between B and A; the hypotenuse is the chord AB.</figcaption>
+  </figure>
+
+  <p style="text-align:center">
+    AB&sup2; = (1 &minus; cos(&beta;&minus;&alpha;))&sup2; + sin&sup2;(&beta;&minus;&alpha;)<br>
+    = 1 + cos&sup2;(&beta;&minus;&alpha;) &minus; 2cos(&beta;&minus;&alpha;) + sin&sup2;(&beta;&minus;&alpha;)<br>
+    = 1 + [cos&sup2;(&beta;&minus;&alpha;) + sin&sup2;(&beta;&minus;&alpha;)] &minus; 2cos(&beta;&minus;&alpha;)<br>
+    = 1 + 1 &minus; 2cos(&beta;&minus;&alpha;)<br>
+    = 2 &minus; 2cos(&beta;&minus;&alpha;)
+  </p>
+
+  <h2>Putting it together</h2>
+
+  <p>Since PQ = AB, squaring both sides gives PQ&sup2; = AB&sup2;:</p>
+
+  <p style="text-align:center">2 &minus; 2cos&alpha;cos&beta; &minus; 2sin&beta;sin&alpha; = 2 &minus; 2cos(&beta;&minus;&alpha;)</p>
+
+  <p>Cancel the 2 on each side, then divide both sides by &minus;2:</p>
+
+  <p style="text-align:center">
+    &minus;2cos&alpha;cos&beta; &minus; 2sin&beta;sin&alpha; = &minus;2cos(&beta;&minus;&alpha;)<br>
+    <strong>cos&alpha;cos&beta; + sin&beta;sin&alpha; = cos(&beta; &minus; &alpha;) = cos&theta;</strong>
+  </p>
+
+  <p>That&rsquo;s the cosine difference identity used in the research note&rsquo;s Exhibit 6 &mdash; proved from a circle, a rotation, and the Pythagorean theorem, without assuming the identity itself anywhere along the way.</p>
+
+  <h2>Endnotes</h2>
+  <ol class="endnotes">
+    <li id="en1">This proof (restricted to angles under 90&deg; for simplicity) is adapted from &ldquo;Sum and Difference Identities,&rdquo; in <em>Precalculus</em> (OpenStax), LibreTexts. <a href="https://math.libretexts.org/Bookshelves/Precalculus/Precalculus_1e_(OpenStax)/07%3A_Trigonometric_Identities_and_Equations/7.02%3A_Sum_and_Difference_Identities" target="_blank" rel="noopener">math.libretexts.org</a>.</li>
+  </ol>
 
   <p><a href="/research/nlp-foundations.html">&larr; Back to the research note</a></p>
 </main>
