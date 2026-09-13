@@ -107,6 +107,9 @@
       <blockquote class="callout">
         <p><strong>Tip:</strong> Create a new folder for each project before running this command. <code>uv init</code> uses our current folder's name as the project's name, so keeping one project per folder avoids mix-ups and keeps things organized.</p>
       </blockquote>
+      <blockquote class="callout">
+        <p><strong>Tip:</strong> If the current folder happens to sit under another folder (a parent folder) that is already a uv project, run <code>uv init --no-workspace</code> instead. Otherwise, <code>uv init</code> may treat the current folder as a member of the parent folder's project workspace. In other words, <code>--no-workspace</code> tells uv that we do not want to use the parent folder's workspace. Since uv automatically shares downloaded packages across all our projects behind the scenes, without duplicating them on disk, there's no need to nest projects inside each other to save space. So it's simplest to keep every project folder on its own, rather than inside another folder that is itself a uv project or workspace.</p>
+      </blockquote>
     </li>
     <li>
       Add packages as needed:
