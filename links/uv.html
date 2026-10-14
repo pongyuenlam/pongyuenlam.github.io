@@ -157,7 +157,16 @@
     &nbsp;&nbsp;&nbsp;&nbsp;+ FullyQualifiedErrorId : CommandNotFoundException</p>
   </blockquote>
 
-  <p><strong>Fix:</strong> Fully close VS Code (not just the terminal tab), then reopen it and try <code>uv --version</code> again in a brand-new terminal. If it still fails after a full restart, re-run the install command from <strong>Setup to install uv</strong> above, then fully quit and reopen VS Code once more.</p>
+  <p><strong>Fix:</strong> Fully close VS Code (not just the terminal tab), then reopen it and try <code>uv --version</code> again in a brand-new terminal.</p>
+
+  <p>If it still fails, the official installer may not have worked on that computer. This is common on school or company PCs, where some settings are locked. Install uv with <strong>one</strong> of these commands instead, in PowerShell opened from the Windows Start menu (search for &ldquo;PowerShell&rdquo;):</p>
+  <p><strong>Option 1: Windows Package Manager (winget)</strong></p>
+  <pre class="code-block"><code>winget install --id=astral-sh.uv -e</code></pre>
+  <p><strong>Option 2: pip (only if Python is already installed on the computer)</strong></p>
+  <pre class="code-block"><code>pip install uv</code></pre>
+  <p>Then fully quit and reopen VS Code once more, and check that it worked:</p>
+  <pre class="code-block"><code>uv --version</code></pre>
+  <p>If it shows a version number, such as <code>uv 0.12.9</code>, uv is ready. Continue with step 3 of <strong>Setup to install uv</strong> above.</p>
 
   <h2>Setup to run a Jupyter Notebook (.ipynb) program</h2>
 
@@ -180,7 +189,7 @@
 
   <h2>General tips</h2>
   <ul>
-    <li><strong>Always use VS Code's own built-in Terminal &mdash; no need to open a separate Terminal (Mac) or Command Prompt (Windows) app.</strong> We'll still need to type commands into VS Code's terminal and read what it shows us, such as the <code>uv --version</code> check or any error messages.</li>
+    <li><strong>Always use VS Code's own built-in Terminal &mdash; no need to open a separate Terminal (Mac) or Command Prompt (Windows) app.</strong> We'll still need to type commands into VS Code's terminal and read what it shows us, such as the <code>uv --version</code> check or any error messages. (The one exception is the Windows &ldquo;is not recognized&rdquo; fix under <strong>Windows troubleshooting</strong>, which uses PowerShell opened from the Start menu instead.)</li>
     <li><strong>Restart VS Code once</strong> right after installing uv and Python. VS Code remembers the list of Python versions it found the last time it looked, so it won't notice the new one we have just installed until we restart VS Code. Afterwards, we can click the gear icon (&#9881;) at the bottom-left corner of VS Code, choose &ldquo;Command Palette&rdquo; from the menu that appears, and type &ldquo;Python: Select Interpreter&rdquo;.</li>
   </ul>
 
