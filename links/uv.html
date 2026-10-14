@@ -62,6 +62,9 @@
       <blockquote class="callout">
         <p>&#9888;&#65039; <strong>Close the terminal and open a brand new one</strong> right after installing, before typing any <code>uv</code> command. The installer sets up the &ldquo;where to find <code>uv</code>&rdquo; (PATH) step mentioned above, but the terminal we already have open doesn't know about that change yet &mdash; it only notices it the next time we start a new terminal. So if we type <code>uv --version</code> in that same terminal right after installing, it will say &ldquo;command not found&rdquo; even though the install actually worked. This is the single most common hiccup users hit with this step.</p>
       </blockquote>
+      <blockquote class="callout">
+        <p>&#128161; <strong>Using Windows and still stuck?</strong> If <code>uv --version</code> still shows &ldquo;is not recognized&rdquo; even after opening a new terminal, see <a href="#windows-troubleshooting">Windows troubleshooting</a> below. It has step-by-step fixes, including other ways to install uv when the command above doesn't work on our Windows computer.</p>
+      </blockquote>
       <p>Here's what a successful install looks like, for reference (the username and version number will differ on your machine):</p>
       <blockquote class="callout quote">
         <p>downloading uv 0.12.9 (x86_64-pc-windows-msvc)<br>
@@ -130,7 +133,7 @@
 
   <p><strong>VS Code's integrated Terminal:</strong> if a user types plain <code>python</code>/<code>pip</code> there, VS Code auto-activates the selected <code>.venv</code> for them silently when the terminal opens &mdash; but to keep things fully consistent, we can just always type <code>uv add ...</code> / <code>uv run ...</code> instead. It works the same whether or not the terminal happened to auto-activate anything.</p>
 
-  <h2>Windows troubleshooting</h2>
+  <h2 id="windows-troubleshooting">Windows troubleshooting</h2>
 
   <p><strong>Getting a &ldquo;running scripts is disabled on this system&rdquo; error?</strong> This happens on some Windows machines where PowerShell blocks scripts from running by default, which stops VS Code's terminal from activating our project's <code>.venv</code>:</p>
 
