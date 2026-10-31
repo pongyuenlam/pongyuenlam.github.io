@@ -105,7 +105,7 @@
   <h2>Setup to run a Python (.py) program</h2>
   <ol>
     <li>
-      Initialize the project:
+      Initialize the project &mdash; run this once per folder:
       <pre class="code-block"><code>uv init</code></pre>
       <blockquote class="callout">
         <p><strong>Tip:</strong> Create a new folder for each project before running this command. <code>uv init</code> uses our current folder's name as the project's name, so keeping one project per folder avoids mix-ups and keeps things organized.</p>
@@ -115,7 +115,7 @@
       </blockquote>
     </li>
     <li>
-      Add packages as needed:
+      Add packages as needed &mdash; run this each time you need one:
       <pre class="code-block"><code>uv add matplotlib</code></pre>
       <p>(or <code>uv add -r requirements.txt</code> to install from a requirements file)</p>
     </li>
