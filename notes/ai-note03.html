@@ -157,7 +157,6 @@
   <h3>Step 2: choose the Python version for this folder</h3>
   <pre class="code-block"><code>uv python install 3.12.10
 uv python pin 3.12.10</code></pre>
-  <p>&ldquo;Pin&rdquo; simply means &ldquo;save this choice for this folder.&rdquo;</p>
   <ul>
     <li>The first line downloads Python 3.12.10 onto your computer. You do this once; other projects can reuse the same copy later.</li>
     <li>The second line tells this folder to use Python 3.12.10, and saves that choice in a small file called <code>.python-version</code>. Anyone &mdash; or any program &mdash; who opens this folder later will use the same version.</li>
@@ -196,8 +195,8 @@ uv add -r requirements.txt</code></pre>
     go straight to running your program.
   </p>
   <p>
-    If the packages stay the same, edit <code>main.py</code> and then type
-    <code>uv run main.py</code> again.
+    If the packages stay the same and you only want to change the program, edit
+    <code>main.py</code> and type <code>uv run main.py</code> again.
   </p>
   <p>
     I think a good habit is to keep every package in <code>requirements.txt</code>. When you add a
