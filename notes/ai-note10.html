@@ -76,6 +76,38 @@
     second, your face looks as if it is wearing lipstick continuously.
   </p>
 
+  <h2>Why this program is longer than the one for a photo</h2>
+  <p>
+    The lipstick note ran 14 lines. This one runs 35. The lipstick logic itself is unchanged: the
+    same 12 lip points, the same cherry red, the same filling of the lips. What grows is the cost
+    of working <em>live</em> instead of on a file.
+  </p>
+  <ul>
+    <li>
+      <strong>There is a loop.</strong> A photo is opened once. A camera keeps delivering frames,
+      so the program needs a loop, a way to show each frame, a way to stop, and a way to release
+      the camera. That is about 8 lines, and note09 already explained them.
+    </li>
+    <li>
+      <strong>Speed matters.</strong> A photo can take a whole second; a frame cannot, or the next
+      one is already late and the video stutters. Hence the quarter-size copy and the points scaled
+      back up &mdash; about 6 lines.
+    </li>
+    <li>
+      <strong>There is no file to draw on.</strong> The photo note used <code>ImageDraw</code>, which
+      fills a shape with a see-through colour in one line. A live frame is a grid of numbers in
+      memory, and OpenCV has no matching one-line fill, so the colour is applied by building a mask
+      and mixing it in &mdash; about 12 lines.
+    </li>
+    <li>
+      <strong>Two colour orders.</strong> OpenCV keeps colours blue-first; the AI library wants
+      red-first. The flip and the conversion back cost a line each.
+    </li>
+  </ul>
+  <p>
+    So the extra length is not the make-up. It is the price of keeping up with a moving face.
+  </p>
+
   <h2>How the program works</h2>
 
   <h3>1. Load three libraries</h3>
@@ -107,7 +139,7 @@ small = 0.25</code></pre>
   <p>
     <code>small</code> is a speed setting. Finding a face is the slow part of this program, so it
     is done on a copy of the frame shrunk to one quarter of the width and height. A
-    1280 &times; 720 frame is searched as 320 &times; 180, which is 16 times fewer pixels. Without
+    1920 &times; 1080 frame is searched as 480 &times; 270, which is 16 times fewer pixels. Without
     that trick, each frame would take too long to process and the video would stutter instead of
     run smoothly.
   </p>
@@ -183,16 +215,42 @@ for face_landmarks in face_landmarks_list:
   <pre class="code-block"><code>alpha = (mask / 255 * strength)[:, :, None]
 img = (img * (1 - alpha) + np.array(color_lip) * alpha).astype(np.uint8)</code></pre>
   <p>
-    <code>alpha</code> is how much lip colour each pixel gets. Dividing the mask by 255 turns white
-    into 1 and black into 0, and multiplying by <code>strength</code> caps the lips at 0.47. So
-    alpha is 0.47 inside the lips, 0 outside, and in between at the softened edge.
-    <code>[:, :, None]</code> repeats that one number across all three colour values of a pixel,
-    so blue, green and red each get the same amount of cherry.
+    <strong>What alpha is.</strong> <code>alpha</code> is simply the mask turned into a number
+    between 0 and 1. Dividing by 255 turns pure white (255) into 1 and pure black (0) into 0;
+    multiplying by <code>strength</code> lowers the white to 0.47. So on the lips alpha is 0.47,
+    away from them it is 0, and the blurred grey edge lands somewhere in between.
+  </p>
+  <pre class="code-block"><code>img.shape                      # (1080, 1920, 3)   rows, columns, colour values
+alpha.shape                    # (1080, 1920)      rows, columns
+alpha[:, :, None].shape        # (1080, 1920, 1)   rows, columns, 1</code></pre>
+  <p>
+    <strong>Start from the frame.</strong> Take a frame 1920 pixels wide and 1080 tall, the usual
+    size for a webcam at full high definition. NumPy stores it as <code>(1080, 1920, 3)</code>: 1080
+    rows, 1920 pixels in each row, and 3 numbers in each pixel &mdash; one for blue, one for green,
+    one for red.
   </p>
   <p>
-    The last line mixes every pixel at once: new pixel = old pixel &times; (1 &minus; alpha) +
-    cherry &times; alpha. On the lips that is 53% of your own lips plus 47% cherry; away from the
-    lips alpha is 0, so the pixel is untouched.
+    <strong>Now look at alpha.</strong> It has the shape <code>(1080, 1920)</code>: 1080 rows and
+    1920 columns, with one number in each pixel and no colour values.
+  </p>
+  <p>
+    <strong>What <code>None</code> adds.</strong> The square brackets hold three parts, split by
+    the two commas: the first <code>:</code> takes every row, the second <code>:</code> takes every
+    column, and <code>None</code> adds a third layer holding exactly 1 number. The shape becomes
+    <code>(1080, 1920, 1)</code>.
+  </p>
+  <p>
+    <strong>Why that is enough.</strong> NumPy has a fixed rule for shapes that do not match: where
+    one side has a 1, it repeats that value until the other side is matched. So the 1 is stretched
+    to 3, and each pixel's single number is used three times &mdash; once for blue, once for green,
+    once for red.
+  </p>
+  <p>
+    <strong>The last line.</strong> It applies one formula to every pixel of the frame at once:
+    new pixel = old pixel &times; (1 &minus; alpha) + cherry &times; alpha. On the lips, alpha is
+    0.47, so each pixel becomes 53% of your own lips plus 47% cherry &mdash; the natural shading of
+    your lips still shows through, which is why the result reads as make-up rather than paint.
+    Away from the lips, alpha is 0, so the old pixel passes through untouched.
   </p>
 
   <h3>8. Show the frame, and stop with q</h3>
@@ -279,9 +337,8 @@ uv run face06.py</code></pre>
 
   <h2>What comes next</h2>
   <p>
-    Change the colour in one line and you have a different shade; change the two loops and you can
-    paint the eyebrows or draw a line on the lips. The face is already found in every frame, so any
-    make-up effect is now a matter of what you do with the landmarks.
+    Change the colour in one line and you have a different shade. The face is already found in
+    every frame, so any make-up effect is now a matter of what you do with the landmarks.
   </p>
 </main>
 
