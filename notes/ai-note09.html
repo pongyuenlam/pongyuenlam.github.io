@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to get live video from your webcam? | Howard Lam, PhD</title>
+<meta name="description" content="A 10-line program that opens the camera and shows live video in a window, explained for non-technical readers.">
+<link rel="canonical" href="https://pongyuenlam.github.io/notes/ai-note09.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to get live video from your webcam?">
+<meta property="og:description" content="A 10-line program that opens the camera and shows live video in a window, explained for non-technical readers.">
+<meta property="og:url" content="https://pongyuenlam.github.io/notes/ai-note09.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:alt" content="Howard Lam, PhD">
+
+<link rel="stylesheet" href="../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "How to get live video from your webcam?",
+  "description": "A 10-line program that opens the camera and shows live video in a window, explained for non-technical readers.",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-01",
+  "dateModified": "2026-11-01",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/notes/ai-note09.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../biography.html">Biography</a></li>
+        <li><a href="../research.html">Research</a></li>
+        <li><a href="../cases.html">Cases</a></li>
+        <li><a href="../books.html">Books</a></li>
+        <li><a href="../ai-programs.html">AI Notes</a></li>
+        <li><a href="../links/">Links</a></li>
+        <li><a href="../glossary/">Glossary</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1>How to get live video from your webcam?</h1>
+  <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 1, 2026 &middot; 4 min read</p>
+
+  <p>
+    The camera on your computer is the starting point for anything that has to look at the real
+    world and then act on it. The lipstick example shows how: a video is many still frames
+    arriving one after another. Find the face in each frame, put lipstick on it, and
+    show that frame before moving on to the next. Do that for every frame, and the result is a
+    moving face with lipstick on it.
+  </p>
+  <p>
+    The program below is the foundation: 10 lines that open your webcam and show the live video in
+    a window, until you press <code>q</code> or <code>Q</code>. It contains no AI. It only gets
+    frames from the camera and shows them, deliberately, so that the camera part is clear before
+    AI is added on top.
+  </p>
+
+  <h2>What your eye sees and what the program sees</h2>
+  <p>
+    Your eye sees a smooth moving image. The program sees a long series of separate frames, each
+    replacing the one before so quickly that the change is invisible.
+  </p>
+
+  <h2>How the program works</h2>
+
+  <h3>1. Turn on the camera</h3>
+  <pre class="code-block"><code>import cv2
+cap = cv2.VideoCapture(0)</code></pre>
+  <p>
+    <code>cv2</code> is <strong>OpenCV</strong> (Open Source Computer Vision), the library used
+    throughout this series to open photos and video. The first line loads it.
+  </p>
+  <p>
+    The second line connects to a camera and keeps that connection in <code>cap</code>, short for
+    capture. The <code>0</code> means the first camera on the computer, which is usually the built-in
+    webcam. On a Mac, the computer asks for permission the first time you run it; on Windows, check
+    that camera access is allowed in Settings if nothing appears.
+  </p>
+
+  <h3>2. Read one frame at a time</h3>
+  <pre class="code-block"><code>while True:
+    ret, img = cap.read()
+    cv2.imshow("Frame", img)</code></pre>
+  <p>
+    The first line starts a loop that never stops by itself, because <code>True</code> is always
+    true. Everything indented under it runs again and again, once per frame.
+  </p>
+  <p>
+    <code>cap.read()</code> takes one frame. <code>ret</code> (return) says whether a frame was
+    read, and <code>img</code> (image) is the frame itself: a grid of pixel values. That
+    <code>img</code> is the frame you would process in any camera-based program &mdash; exactly
+    like the photo files in the earlier notes.
+  </p>
+  <p>
+    <code>cv2.imshow</code> shows the frame in a window titled <code>"Frame"</code>. Each new frame
+    replaces the previous one, so the window looks like live video.
+  </p>
+
+  <h3>3. Stop when you press q</h3>
+  <pre class="code-block"><code>key = cv2.waitKey(1)
+if key in (ord('q'), ord('Q')):
+    break</code></pre>
+  <p>
+    <code>cv2.waitKey(1)</code> waits 1 millisecond for a key press, then continues.
+    <code>key</code> is a code that tells you which key was pressed, or <code>-1</code> if no key
+    was pressed. This short wait also gives the window time to draw the frame, which is why the
+    video appears at all.
+  </p>
+  <p>
+    The next line checks for <code>q</code> or <code>Q</code>. <code>ord()</code> turns a letter
+    into its number &mdash; <code>ord('q')</code> is 113 &mdash; so a letter can be compared with
+    the number in <code>key</code>. Testing both means Caps Lock makes no difference.
+  </p>
+  <p>
+    <code>break</code> leaves the loop and moves on to the last two lines. After you run the
+    program, the terminal in Visual Studio Code is still the selected window, so a <code>q</code> or
+    <code>Q</code> you type goes to Visual Studio Code, not to the program that shows the video.
+    Move your mouse pointer over the video window and click once to select it. Then type
+    <code>q</code> or <code>Q</code> to end the program.
+  </p>
+  <p>
+    There is also a quicker way to stop a running program: in the Visual Studio Code terminal,
+    press the two keys <code>Ctrl</code> and <code>C</code> at the same time.
+  </p>
+
+  <h3>4. Turn the camera off</h3>
+  <pre class="code-block"><code>cap.release()
+cv2.destroyAllWindows()</code></pre>
+  <p>
+    <code>cap.release()</code> disconnects from the camera, so other programs can use it again and
+    the camera light goes out. <code>cv2.destroyAllWindows()</code> closes the window.
+  </p>
+
+  <h2>The whole program</h2>
+  <p>
+    The pieces above, put back together. This is the complete file, 10 lines in all:
+  </p>
+  <pre class="code-block"><code>import cv2
+cap = cv2.VideoCapture(0)
+while True:
+    ret, img = cap.read()
+    cv2.imshow("Frame", img)
+    key = cv2.waitKey(1)
+    if key in (ord('q'), ord('Q')):
+        break
+cap.release()
+cv2.destroyAllWindows()</code></pre>
+
+  <h2>Save one frame</h2>
+  <p>
+    Many jobs need a single frame, not a stream: take one frame, then analyse it. You do not need
+    a different program for that. Inside the loop, <code>img</code> is already one frame, so one
+    extra line saves it to a file:
+  </p>
+  <pre class="code-block"><code>cv2.imwrite("camera_frame.jpg", img)</code></pre>
+  <p>
+    Add that line just after <code>cap.read()</code>, and the program writes a new file for every
+    frame. To keep just one, add it above the <code>break</code> line instead, so the file is saved
+    when you press <code>q</code>: what you see on screen at that moment is what you get.
+  </p>
+  <p>
+    Once the frame is a file, everything in the earlier notes applies to it &mdash; including
+    <code>face_recognition.load_image_file</code> in
+    <a href="ai-note06.html">How does AI find the key points on your face?</a>.
+  </p>
+
+  <h2>Running it on your own computer</h2>
+  <p>
+    <a href="downloads/Folder-AI-Face-Make-Up.zip" download>Download the zip file</a> and unzip it to
+    a folder. The zip holds all six programs in this series; this note uses
+    <code>face05.py</code>. This one does not need a photo in the folder. Open the folder in Visual
+    Studio Code, then type these three lines in the terminal:
+  </p>
+  <pre class="code-block"><code>uv python pin 3.12.10
+uv sync
+uv run face05.py</code></pre>
+  <p>
+    The first line records which Python version this folder uses, and the second installs every
+    package that <code>pyproject.toml</code> lists, including OpenCV. The third line opens the
+    camera window. Press <code>q</code> in that window to close it.
+  </p>
+  <p>
+    If you have not set up uv yet, start with
+    <a href="ai-note05.html">How to install Visual Studio Code?</a> and then the uv note for
+    <a href="ai-note03.html">Windows</a> or <a href="ai-note04.html">Mac</a>.
+  </p>
+
+  <h2>What comes next</h2>
+  <p>
+    The camera is only the eye; the thinking comes next, in the note that adds the AI on top.
+  </p>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+</body>
+</html>
