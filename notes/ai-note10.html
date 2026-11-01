@@ -86,26 +86,26 @@
     <li>
       <strong>There is a loop.</strong> A photo is opened once. A camera keeps delivering frames,
       so the program needs a loop, a way to show each frame, a way to stop, and a way to release
-      the camera. That is about 8 lines, and note09 already explained them.
+      the camera.
     </li>
     <li>
       <strong>Speed matters.</strong> A photo can take a whole second; a frame cannot, or the next
       one is already late and the video stutters. Hence the quarter-size copy and the points scaled
-      back up &mdash; about 6 lines.
+      back up.
     </li>
     <li>
       <strong>There is no file to draw on.</strong> The photo note used <code>ImageDraw</code>, which
       fills a shape with a see-through colour in one line. A live frame is a grid of numbers in
       memory, and OpenCV has no matching one-line fill, so the colour is applied by building a mask
-      and mixing it in &mdash; about 12 lines.
+      and mixing it in.
     </li>
     <li>
       <strong>Two colour orders.</strong> OpenCV keeps colours blue-first; the AI library wants
-      red-first. The flip and the conversion back cost a line each.
+      red-first.
     </li>
   </ul>
   <p>
-    So the extra length is not the make-up. It is the price of keeping up with a moving face.
+    So the extra length comes from keeping up with a moving face.
   </p>
 
   <h2>How the program works</h2>
