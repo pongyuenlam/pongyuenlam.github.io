@@ -12,12 +12,12 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>How to mitigate AI hallucination with Retrieval-Augmented Generation (RAG)? | Howard Lam, PhD</title>
+<title>How to mitigate AI hallucination with Retrieval-Augmented Generation (RAG) by providing a webpage? | Howard Lam, PhD</title>
 <meta name="description" content="Why a model cannot know your own webpage, and how a 67-line program fetches the page and puts the right sentences in front of it before it answers.">
 <link rel="canonical" href="https://pongyuenlam.github.io/notes/ai-note11.html">
 
 <meta property="og:type" content="article">
-<meta property="og:title" content="How to mitigate AI hallucination with Retrieval-Augmented Generation (RAG)?">
+<meta property="og:title" content="How to mitigate AI hallucination with Retrieval-Augmented Generation (RAG) by providing a webpage?">
 <meta property="og:description" content="Why a model cannot know your own webpage, and how a 67-line program fetches the page and puts the right sentences in front of it before it answers.">
 <meta property="og:url" content="https://pongyuenlam.github.io/notes/ai-note11.html">
 <meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
@@ -31,7 +31,7 @@
 {
   "@context": "https://schema.org",
   "@type": "BlogPosting",
-  "headline": "How to mitigate AI hallucination with Retrieval-Augmented Generation (RAG)?",
+  "headline": "How to mitigate AI hallucination with Retrieval-Augmented Generation (RAG) by providing a webpage?",
   "description": "Why a model cannot know your own webpage, and how a 67-line program fetches the page and puts the right sentences in front of it before it answers.",
   "author": {
     "@type": "Person",
@@ -63,7 +63,7 @@
 </header>
 
 <main>
-  <h1>How to mitigate AI hallucination with Retrieval-Augmented Generation (RAG)?</h1>
+  <h1>How to mitigate AI hallucination with Retrieval-Augmented Generation (RAG) by providing a webpage?</h1>
   <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 1, 2026 &middot; 6 min read</p>
 
   <p>
@@ -411,15 +411,13 @@ uv run rag_webpage_01.py</code></pre>
 
   <h2>What this is good for</h2>
   <p>
-    Anything the model could not have learned, provided it sits on a webpage. That covers two kinds
-    of page. The first is recent: prices, policies, or results published after the cut-off date. The
-    second is uncovered: your own webpage, or a small company site that never appeared in the
-    training text. The model supplies the language; the webpage supplies the facts.
+    Anything the model has not learned, provided it sits on a webpage.
   </p>
-  <p>
-    Four limits are worth knowing before you rely on it.
-  </p>
+  <h2>What are its limitations?</h2>
   <ul>
+    <li><strong><code>chunk_size=300</code> and <code>chunk_overlap=100</code> affect the result.</strong>
+    An answer to a question may still be separated into two chunks, even with the
+    <code>chunk_overlap</code> set between them.</li>
     <li><strong>The model itself has not learned anything.</strong> RAG changes what the model reads
     for one question; it does not move the cut-off date, and the next question without the page is
     back to guessing.</li>
@@ -431,7 +429,7 @@ uv run rag_webpage_01.py</code></pre>
     identifier such as a course code may be missed.</li>
     <li><strong>The page is fetched fresh each run.</strong> Editing the page changes the answers,
     which is convenient for a website and risky for an audit trail. And if the page is wrong, the
-    answer will be wrong in the same way, just more confidently.</li>
+    answer will be wrong too.</li>
   </ul>
 
   <h2>What comes next</h2>
