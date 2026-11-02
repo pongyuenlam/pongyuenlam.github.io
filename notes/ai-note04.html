@@ -124,7 +124,7 @@
   </p>
   <pre class="code-block"><code>uv --version</code></pre>
   <p>Expected output looks like this (your version number may differ):</p>
-  <pre class="code-block"><code>uv 0.13.6</code></pre>
+  <pre class="code-block no-copy"><code>uv 0.13.6</code></pre>
   <p>If you see a version number, you are done.</p>
 
   <h2>Mac troubleshooting</h2>
@@ -144,20 +144,23 @@
   </p>
 
   <h3>Step 2: choose the Python version for this folder</h3>
-  <pre class="code-block"><code>uv python install 3.12.10
-uv python pin 3.12.10</code></pre>
+  <p>Run these two commands, one after the other:</p>
+  <pre class="code-block"><code>uv python install 3.12.10</code></pre>
+  <pre class="code-block"><code>uv python pin 3.12.10</code></pre>
   <ul>
-    <li>The first line downloads Python 3.12.10 onto your computer. You do this once; other projects can reuse the same copy later.</li>
-    <li>The second line tells this folder to use Python 3.12.10, and saves that choice in a small file called <code>.python-version</code>. Anyone &mdash; or any program &mdash; who opens this folder later will use the same version.</li>
+    <li>The first command downloads Python 3.12.10 onto your computer. You do this once; other projects can reuse the Python version later.</li>
+    <li>The second command tells this folder to use Python 3.12.10, and saves that choice in a small file called <code>.python-version</code>. Anyone &mdash; or any program &mdash; who opens this folder later will use the same version.</li>
   </ul>
 
   <h3>Step 3: install the packages your program needs &mdash; choose one of the two options</h3>
   <p><strong>Option 1</strong></p>
-  <pre class="code-block"><code>uv init
-uv add -r requirements.txt</code></pre>
+  <pre class="code-block"><code>uv init</code></pre>
+  <pre class="code-block"><code>uv add -r requirements.txt</code></pre>
   <p>
-    <code>uv init</code> creates a Python project file, <code>pyproject.toml</code>, which keeps
-    track of the Python version this project requires and the packages it needs.
+    <code>uv init</code> creates a Python project file, <code>pyproject.toml</code>. TOML stands for
+    Tom's Obvious Minimal Language &mdash; a config file format for humans
+    (<a href="https://toml.io/en/" target="_blank" rel="noopener">toml.io</a>). The file keeps track
+    of the Python version this project requires and the packages it needs.
   </p>
   <p>
     <code>uv add -r requirements.txt</code> reads the package list and installs each one into the
@@ -168,8 +171,8 @@ uv add -r requirements.txt</code></pre>
   <p>
     <code>uv sync</code> installs exactly the packages listed in the folder's <code>uv.lock</code>
     file and removes anything extra, so you get the same setup as the original project. That is why
-    it suits a folder you downloaded from someone else, such as a GitHub project. Do not run
-    <code>uv init</code> here: the folder already has a <code>pyproject.toml</code>, and uv will not
+    it suits a folder you downloaded from someone else, such as a GitHub project. In Option 2, do not
+    run <code>uv init</code>: the folder already has a <code>pyproject.toml</code>, and uv will not
     replace it.
   </p>
 
@@ -222,7 +225,7 @@ uv add -r requirements.txt</code></pre>
 <script>
 var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
 var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
-document.querySelectorAll('pre.code-block').forEach(function (block) {
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
   var btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'copy-btn';
