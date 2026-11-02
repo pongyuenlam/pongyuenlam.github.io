@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-Hans-CN">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>如何用 AI 实时为你涂上口红？ | 林邦源博士</title>
+<meta name="description" content="一个 35 行的程序，读取摄像头画面，在每一帧中找出人脸，并把嘴唇涂上樱桃红。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note10.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note10.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note10.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note10.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note10.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何用 AI 实时为你涂上口红？">
+<meta property="og:description" content="一个 35 行的程序，读取摄像头画面，在每一帧中找出人脸，并把嘴唇涂上樱桃红。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-CN/notes/ai-note10.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="/css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "如何用 AI 实时为你涂上口红？",
+  "description": "一个 35 行的程序，读取摄像头画面，在每一帧中找出人脸，并把嘴唇涂上樱桃红。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-01",
+  "dateModified": "2026-11-01",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-CN/notes/ai-note10.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="/">林邦源博士</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="/">首页</a></li>
+        <li><a href="/biography.html">个人简介</a></li>
+        <li><a href="/research.html">研究</a></li>
+        <li><a href="/cases.html">案例</a></li>
+        <li><a href="/books.html">书籍</a></li>
+        <li><a href="/zh-CN/ai-programs.html">AI 笔记</a></li>
+        <li><a href="/links/">链接</a></li>
+        <li><a href="/glossary/">词汇表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1>如何用 AI 实时为你涂上口红？</h1>
+  <p class="paper-meta">林邦源 &middot; AI 笔记 &middot; 2026年11月1日 &middot; 阅读时间约 7 分钟</p>
+  <p class="lang-switcher">
+    <a href="/notes/ai-note10.html">English</a>
+    <a href="/zh-HK/notes/ai-note10.html">繁體中文</a>
+    <span class="current">简体中文</span>
+  </p>
+
+  <p>
+    本文把前两篇合而为一。从
+    <a href="/zh-CN/notes/ai-note09.html">〈如何从摄像头获取实时画面？〉</a>借来摄像头循环，
+    从 <a href="/zh-CN/notes/ai-note08.html">〈如何用 AI 为你涂口红？〉</a>借来口红。
+    成果是 35 行代码，让一张动态的脸带着樱桃红的嘴唇出现在屏幕上。
+  </p>
+  <p>
+    唯一的新概念是：嘴唇要在每一帧中重新寻找。找出、上色、显示；然后下一帧到来，
+    同样三个步骤再重复一次。因为每次上色只需几分之一秒，你的脸看起来就像一直涂着口红。
+  </p>
+
+  <h2>为什么这个程序比照片版本长</h2>
+  <p>
+    口红那篇是 14 行，这篇是 35 行。口红逻辑本身没有变：同样的 12 个嘴唇关键点、
+    同样的樱桃红、同样的填色。变长的是<strong>实时</strong>处理（而非处理文件）的代价。
+  </p>
+  <ul>
+    <li>
+      <strong>需要循环。</strong>照片只需打开一次。摄像头会不断送来一帧又一帧画面，
+      所以程序需要一个循环、一个显示每帧的方法、一个停止的方法，以及一个释放摄像头的方法。
+    </li>
+    <li>
+      <strong>速度至关重要。</strong>处理一张照片可以花整整一秒；一帧画面不行，
+      否则下一帧已经迟到，视频就会卡顿。这就是为什么要在缩小四分之一的副本上找脸，
+      再把关键点放大回原尺寸。
+    </li>
+    <li>
+      <strong>没有文件可以直接画。</strong>照片那篇使用 <code>ImageDraw</code>，
+      一行就能用半透明颜色填满形状。实时画面在内存中是一格格的数字，
+      OpenCV 没有对等的一行填色指令，所以要先建立掩码（mask），再把颜色混进去。
+    </li>
+    <li>
+      <strong>两种颜色顺序。</strong>OpenCV 的颜色是蓝色在前；AI 库要的是红色在前。
+    </li>
+  </ul>
+  <p>
+    所以多出来的行数，都是为了跟上了一张移动中的脸。
+  </p>
+
+  <h2>程序如何运行</h2>
+
+  <h3>1. 加载三个库</h3>
+  <pre class="code-block"><code>import cv2
+import face_recognition
+import numpy as np</code></pre>
+  <p>
+    <code>cv2</code> 是 <strong>OpenCV</strong>：负责读取摄像头、调整每帧大小、转换颜色顺序，
+    并把画面显示出来。<code>face_recognition</code> 找出人脸及其<strong>关键点</strong>——
+    也就是标示嘴唇的点。<code>np</code> 是 <strong>NumPy</strong>（Numerical Python），
+    它能用一行对整个像素网格做算术——这里非它不可，否则逐个像素混合颜色、每秒 35 次，
+    会慢得无法接受。
+  </p>
+
+  <h3>2. 选择颜色和三个设置</h3>
+  <pre class="code-block"><code>color_lip = (40, 20, 190)
+strength = 120 / 255
+small = 0.25</code></pre>
+  <p>
+    <code>color_lip</code> 是樱桃红，来自口红那篇。在那里，这个红色按红、绿、蓝顺序写成
+    <code>(190, 20, 40)</code>。OpenCV 存储颜色的顺序相反——蓝、绿、红——所以同一种颜色
+    在这里写成 <code>(40, 20, 190)</code>。
+  </p>
+  <p>
+    <code>strength</code> 是口红的显色强度：120 除以 255，约 0.47。每个嘴唇像素变成
+    47% 樱桃红加 53% 原本颜色，所以你原本的嘴唇仍然能透出来。
+  </p>
+  <p>
+    <code>small</code> 是速度设置。找人脸是这个程序最慢的部分，所以在缩小到宽高各四分之一的
+    副本上进行。一帧 1920 &times; 1080 的画面会以 480 &times; 270 来搜索，像素少了 16 倍。
+    没有这个技巧，每帧都要花太长时间处理，视频就会卡顿而不流畅。
+  </p>
+
+  <h3>3. 打开摄像头并读取一帧</h3>
+  <pre class="code-block"><code>cap = cv2.VideoCapture(0)
+while True:
+    ret, img = cap.read()
+    if not ret:
+        break</code></pre>
+  <p>
+    <code>cv2.VideoCapture(0)</code> 连接电脑上第一个摄像头。<code>cap.read()</code> 返回两样东西：
+    <code>ret</code>（return）表示有没有成功取得帧，<code>img</code>（image）是帧本身。
+    如果没有帧送达，<code>ret</code> 就是 <code>False</code>，于是 <code>not ret</code>
+    为 <code>True</code>。这种情况在摄像头被拔掉或被其他程序占用时会发生。
+    <code>break</code> 就停止循环，而不是对着空帧继续运算。
+  </p>
+
+  <h3>4. 在缩小副本中找脸</h3>
+  <pre class="code-block"><code>small_img = cv2.resize(img, (0, 0), fx=small, fy=small)
+rgb_small_img = cv2.cvtColor(small_img, cv2.COLOR_BGR2RGB)
+face_landmarks_list = face_recognition.face_landmarks(rgb_small_img)</code></pre>
+  <p>
+    <code>cv2.resize</code> 制作缩小四分之一的副本；<code>fx</code> 和 <code>fy</code>
+    分别是宽度和高度的缩放倍数。
+  </p>
+  <p>
+    <code>cv2.cvtColor</code> 把颜色顺序从蓝绿红翻转成红绿蓝。<code>face_recognition</code>
+    是按红色在前的顺序训练的，所以它预期这个顺序；直接喂给它 OpenCV 的顺序，脸仍然找得到，
+    但它赖以判断的颜色是错的。<code>cvtColor</code> 是 convert color（转换颜色）的缩写。
+  </p>
+  <p>
+    <code>face_landmarks</code> 返回一个列表，每找到一张脸就有一个条目，每个条目包含
+    <code>top_lip</code>、<code>bottom_lip</code>、眉毛、眼睛等的关键点。
+  </p>
+
+  <h3>5. 在嘴唇位置画上白色掩码</h3>
+  <pre class="code-block"><code>mask = np.zeros(img.shape[0:2], dtype=np.uint8)
+for face_landmarks in face_landmarks_list:
+    for lip in ['top_lip', 'bottom_lip']:
+        points = (np.array(face_landmarks[lip]) / small).astype(np.int32)
+        cv2.fillPoly(mask, [points], 255)</code></pre>
+  <p>
+    <strong>掩码</strong>（mask）是一张与帧同尺寸的黑白图：白色标示口红要涂的位置，
+    黑色标示不涂的位置。<code>np.zeros</code> 一开始把它全部填黑，
+    <code>img.shape[0:2]</code> 取出帧的高和宽作为它的尺寸。
+  </p>
+  <p>
+    两层循环处理每一张脸，以及每张脸的两片嘴唇。关键点是在缩小副本上找到的，
+    所以要除以 <code>small</code>，把它们映射回完整帧：100 的点变回 400。
+    <code>astype(np.int32)</code> 把它们保留为整数像素，因为 OpenCV 无法填满
+    角点落在像素之间的形状。
+  </p>
+  <p>
+    <code>cv2.fillPoly</code> 然后把每片嘴唇的轮廓填上 255，即最亮的值。由于上唇和下唇的
+    关键点同时沿着口腔的外缘和内缘走，白色区域只盖住嘴唇而不会盖住牙齿。
+  </p>
+
+  <h3>6. 柔化边缘</h3>
+  <pre class="code-block"><code>mask = cv2.GaussianBlur(mask, (7, 7), 0)</code></pre>
+  <p>
+    没有这一行，掩码会在嘴唇边缘从白色直接跳到黑色，口红看起来就像用剪刀剪出来的。
+    模糊化把每个像素与它 7 &times; 7 范围内的邻近像素混合，让边缘淡出。
+    效果读起来像化妆，而不是一块填色形状。
+  </p>
+
+  <h3>7. 把颜色混进帧</h3>
+  <pre class="code-block"><code>alpha = (mask / 255 * strength)[:, :, None]
+img = (img * (1 - alpha) + np.array(color_lip) * alpha).astype(np.uint8)</code></pre>
+  <p>
+    <strong>alpha 是什么。</strong><code>alpha</code> 就是掩码换算成 0 到 1 之间的数字。
+    除以 255 把纯白（255）变成 1、纯黑（0）变成 0；再乘以 <code>strength</code>
+    把白色降到 0.47。所以在嘴唇上 alpha 是 0.47，远离嘴唇是 0，模糊出来的灰色边缘
+    落在两者之间。
+  </p>
+  <pre class="code-block"><code>img.shape                      # (1080, 1920, 3)   rows, columns, colour values
+alpha.shape                    # (1080, 1920)      rows, columns
+alpha[:, :, None].shape        # (1080, 1920, 1)   rows, columns, 1</code></pre>
+  <p>
+    <strong>从帧说起。</strong>取一帧宽 1920 像素、高 1080 像素的画面——这是一般摄像头
+    全高清（full HD）的标准尺寸。NumPy 把它存储为 <code>(1080, 1920, 3)</code>：1080 行、
+    每行 1920 个像素、每个像素 3 个数字——分别是蓝、绿、红。
+  </p>
+  <p>
+    <strong>再看 alpha。</strong>它的形状是 <code>(1080, 1920)</code>：1080 行、1920 列，
+    每个像素只有一个数字，没有颜色分量。
+  </p>
+  <p>
+    <strong><code>None</code> 加了什么。</strong>方括号里有三个部分，由两个逗号分隔：
+    第一个 <code>:</code> 取所有行，第二个 <code>:</code> 取所有列，<code>None</code>
+    则加上恰好容纳 1 个数字的第三层。形状变成 <code>(1080, 1920, 1)</code>。
+  </p>
+  <p>
+    <strong>为什么这样就够。</strong>NumPy 对形状不符有一条固定规则：哪一边是 1，
+    就把那个值重复到与另一边匹配。所以 1 会被拉长成 3，每个像素的单一数字被使用三次——
+    蓝、绿、红各一次。
+  </p>
+  <p>
+    <strong>最后一行。</strong>它把同一条公式一次性套用到帧的每个像素：
+    新像素 = 旧像素 &times; (1 &minus; alpha) + 樱桃红 &times; alpha。在嘴唇上，
+    alpha 是 0.47，所以每个像素变成 53% 原本的嘴唇加 47% 樱桃红——你嘴唇天然的明暗
+    仍然透出来，这正是效果读起来像化妆而非油漆的原因。远离嘴唇的地方 alpha 是 0，
+    原像素原封不动地通过。
+  </p>
+
+  <h3>8. 显示帧，按 q 或 Q 停止</h3>
+  <pre class="code-block"><code>cv2.imshow("Frame", img)
+key = cv2.waitKey(1)
+if key in (ord('q'), ord('Q')):
+    break
+cap.release()
+cv2.destroyAllWindows()</code></pre>
+  <p>
+    <code>cv2.imshow</code> 把完成的帧显示在窗口中。<code>cv2.waitKey(1)</code>
+    等待一毫秒看有没有按键，然后返回所按按键的代码，没有按键就返回 <code>-1</code>。
+    如果代码是 <code>q</code> 或 <code>Q</code>，循环结束并释放摄像头，其他程序就能使用它，
+    摄像头指示灯也会熄灭。
+  </p>
+  <p>
+    按 <code>q</code> 之前，先点击视频窗口内部；按键信号会送往目前选中的窗口，
+    而你在 Visual Studio Code 按运行后，选中的通常是终端。双键退出的方法也行：
+    在终端同时按 <code>Ctrl</code> 和 <code>C</code>。
+  </p>
+
+  <h2>完整程序</h2>
+  <p>
+    把上面的部分拼回来。这就是完整的文件，一共 35 行：
+  </p>
+  <pre class="code-block"><code>import cv2
+import face_recognition
+import numpy as np
+# Cherry red from face04_lip.py: (red, green, blue, see-through)
+# OpenCV uses blue-green-red order, so the color is written backwards
+color_lip = (40, 20, 190)
+strength = 120 / 255          # how strong the lipstick is: 0 = none, 1 = solid
+small = 0.25                  # look for the face in a picture 1/4 the size, so the video is fast
+cap = cv2.VideoCapture(0)
+while True:
+    ret, img = cap.read()
+    if not ret:
+        break
+    # face_recognition uses red-green-blue order, OpenCV uses blue-green-red
+    small_img = cv2.resize(img, (0, 0), fx=small, fy=small)
+    rgb_small_img = cv2.cvtColor(small_img, cv2.COLOR_BGR2RGB)
+    face_landmarks_list = face_recognition.face_landmarks(rgb_small_img)
+    # Mask: white where the lips are, black everywhere else
+    mask = np.zeros(img.shape[0:2], dtype=np.uint8)
+    for face_landmarks in face_landmarks_list:
+        for lip in ['top_lip', 'bottom_lip']:
+            # The landmarks were found on the small picture, so make them 4 times bigger
+            points = (np.array(face_landmarks[lip]) / small).astype(np.int32)
+            cv2.fillPoly(mask, [points], 255)
+    # Soften the lip edges
+    mask = cv2.GaussianBlur(mask, (7, 7), 0)
+    # Mix the lip color into the picture where the mask is white
+    alpha = (mask / 255 * strength)[:, :, None]
+    img = (img * (1 - alpha) + np.array(color_lip) * alpha).astype(np.uint8)
+    cv2.imshow("Frame", img)
+    key = cv2.waitKey(1)
+    if key in (ord('q'), ord('Q')):
+        break
+cap.release()
+cv2.destroyAllWindows()</code></pre>
+
+  <h2>在自己的电脑上运行</h2>
+  <p>
+    <a href="/notes/downloads/Folder-AI-Face-Make-Up.zip" download>下载 zip 文件</a>并解压到
+    一个文件夹。这个 zip 包含本系列的六个程序；本文使用 <code>face06.py</code>。
+    这个程序不需要在文件夹里放照片。在 Visual Studio Code 中打开文件夹，然后在终端
+    输入以下三行：
+  </p>
+  <pre class="code-block"><code>uv python pin 3.12.10
+uv sync
+uv run face06.py</code></pre>
+  <p>
+    如果你还没有设置 uv，请先阅读
+    <a href="/zh-CN/notes/ai-note05.html">〈如何安装 Visual Studio Code？〉</a>，
+    然后是 <a href="/zh-CN/notes/ai-note03.html">Windows</a> 或
+    <a href="/zh-CN/notes/ai-note04.html">Mac</a> 的 uv 笔记。
+  </p>
+  <p>
+    两个实际提醒。第一，电脑越快视频越流畅；在较旧的笔记本电脑上，找脸的频率较低，
+    口红可能会比你的嘴部动作慢半拍。第二，程序会为它找到的<strong>每一张脸</strong>涂上
+    红唇——包括坐在你后面的人。在你为课堂或会议录像之前，这一点值得知道。
+  </p>
+
+  <h2>接下来</h2>
+  <p>
+    改动一行颜色，就是另一种色调。每一帧都已经找到人脸，所以任何化妆效果，
+    现在都只是你如何运用这些关键点的问题。
+  </p>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">邮箱</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+</body>
+</html>

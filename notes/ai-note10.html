@@ -15,6 +15,10 @@
 <title>How to use AI to put lipstick on your face in real time? | Howard Lam, PhD</title>
 <meta name="description" content="A 35-line program that reads the webcam, finds the face in every frame, and paints the lips cherry red.">
 <link rel="canonical" href="https://pongyuenlam.github.io/notes/ai-note10.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note10.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note10.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note10.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note10.html">
 
 <meta property="og:type" content="article">
 <meta property="og:title" content="How to use AI to put lipstick on your face in real time?">
@@ -63,6 +67,11 @@
 <main>
   <h1>How to use AI to put lipstick on your face in real time?</h1>
   <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 1, 2026 &middot; 7 min read</p>
+  <p class="lang-switcher">
+    <span class="current">English</span>
+    <a href="/zh-HK/notes/ai-note10.html">繁體中文</a>
+    <a href="/zh-CN/notes/ai-note10.html">简体中文</a>
+  </p>
 
   <p>
     This note joins the last two together. From
@@ -253,7 +262,7 @@ alpha[:, :, None].shape        # (1080, 1920, 1)   rows, columns, 1</code></pre>
     Away from the lips, alpha is 0, so the old pixel passes through untouched.
   </p>
 
-  <h3>8. Show the frame, and stop with q</h3>
+  <h3>8. Show the frame, and stop with q or Q</h3>
   <pre class="code-block"><code>cv2.imshow("Frame", img)
 key = cv2.waitKey(1)
 if key in (ord('q'), ord('Q')):
