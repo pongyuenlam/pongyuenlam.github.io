@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-Hans-CN">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>如何安装 Visual Studio Code？ | 林邦源博士</title>
+<meta name="description" content="在 Windows 或 Mac 上下载并安装 Visual Studio Code，确认它能正常打开，为 Python 与 uv 笔记做好准备。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note05.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note05.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note05.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note05.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note05.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何安装 Visual Studio Code？">
+<meta property="og:description" content="在 Windows 或 Mac 上下载并安装 Visual Studio Code，并确认它能正常打开。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-CN/notes/ai-note05.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="/css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "如何安装 Visual Studio Code？",
+  "description": "在 Windows 或 Mac 上下载并安装 Visual Studio Code，确认它能正常打开，为 Python 与 uv 笔记做好准备。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-01",
+  "dateModified": "2026-11-01",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-CN/notes/ai-note05.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="/">林邦源博士</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="/">首页</a></li>
+        <li><a href="/biography.html">个人简介</a></li>
+        <li><a href="/research.html">研究</a></li>
+        <li><a href="/cases.html">案例</a></li>
+        <li><a href="/books.html">书籍</a></li>
+        <li><a href="/zh-CN/ai-programs.html">AI 笔记</a></li>
+        <li><a href="/links/">链接</a></li>
+        <li><a href="/glossary/">词汇表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1>如何安装 Visual Studio Code？</h1>
+  <p class="paper-meta">林邦源 &middot; AI 笔记 &middot; 2026年11月1日 &middot; 阅读时间约 4 分钟</p>
+  <p class="lang-switcher">
+    <a href="/notes/ai-note05.html">English</a>
+    <a href="/zh-HK/notes/ai-note05.html">繁體中文</a>
+    <span class="current">简体中文</span>
+  </p>
+
+  <p>
+    Visual Studio Code——简称 VS Code——是微软推出的免费集成开发环境（Integrated
+    Development Environment，IDE）。简单来说，它是一个把文件集中管理、让你编辑文件、
+    并在文字旁边显示 AI 帮助的程序。它就是我在较早前的笔记
+    <a href="/zh-CN/notes/ai-note01.html">〈无代码、低代码、氛围编程与编程〉</a>中
+    介绍过的编辑器。你只需安装一次，在 Windows 或 Mac 上都只需要几分钟。
+  </p>
+
+  <h2>观看演示视频</h2>
+  <iframe
+    src="https://drive.google.com/file/d/1OO5itR6J0hr__rJavKFBp0FKsKnb0wWN/preview"
+    title="如何安装 Visual Studio Code"
+    style="width:100%; aspect-ratio:16/9; border:0;"
+    loading="lazy"
+    allowfullscreen></iframe>
+  <p class="paper-meta">
+    如果视频无法加载，请在 Google Drive 打开：
+    <a href="https://drive.google.com/file/d/1OO5itR6J0hr__rJavKFBp0FKsKnb0wWN/view?usp=sharing" target="_blank" rel="noopener">视频</a>
+    （无需账户）。
+  </p>
+
+  <h2>下载安装程序</h2>
+  <p>
+    前往
+    <a href="https://code.visualstudio.com/download" target="_blank" rel="noopener">code.visualstudio.com/download</a>，
+    选择适合你电脑的按钮。这个页面由微软发布，下载完全免费。
+  </p>
+
+  <h2>在 Windows 上安装</h2>
+  <p>
+    在下载页面选择 <strong>Windows</strong> 按钮，运行下载的文件。接受许可条款，
+    然后一直按 <strong>Next</strong>，直到出现 <strong>Install</strong> 并点击它。
+    默认选项已经足够。
+  </p>
+
+  <h2>在 Mac 上安装</h2>
+  <p>
+    在下载页面选择 <strong>Mac</strong> 按钮——如果你的 Mac 较新，选择名为
+    “Apple silicon”的芯片版本；如果不确定，选择“Intel”。
+  </p>
+  <p>
+    双击下载的文件解压，然后把 <strong>Visual Studio Code</strong> 拖进
+    <strong>Applications（应用程序）</strong>文件夹。之后从 Launchpad 或聚焦搜索
+    打开它，就像打开 Word 或 Excel 一样。
+  </p>
+
+  <h2>验证安装</h2>
+  <p>
+    打开 Visual Studio Code。你应该会看到一个列出最近文件夹的
+    <strong>Welcome（欢迎）</strong>标签页。这就是所需的全部设置，暂时无需再配置任何东西。
+  </p>
+
+  <h2>接下来读什么</h2>
+  <p>要打开文件夹并用 uv 运行 Python 程序，请继续阅读：</p>
+  <ul>
+    <li><a href="/zh-CN/notes/ai-note03.html">如何在 Windows 安装及使用 uv 包管理工具？</a></li>
+    <li><a href="/zh-CN/notes/ai-note04.html">如何在 Mac 上安装及使用 uv 包管理工具？</a></li>
+    <li><a href="/links/uv.html">〈VS Code + Python 设置指南〉</a>，涵盖相同内容但更加详细</li>
+  </ul>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">邮箱</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+</body>
+</html>

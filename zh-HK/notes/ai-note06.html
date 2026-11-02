@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-HK">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 如何找出你臉上的關鍵點？ | 林邦源博士</title>
+<meta name="description" content="一個只有 25 行的程式，能找出臉上 72 個關鍵點並畫出來——專為非技術讀者講解。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note06.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note06.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note06.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note06.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note06.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="AI 如何找出你臉上的關鍵點？">
+<meta property="og:description" content="一個只有 25 行的程式，能找出臉上 72 個關鍵點並畫出來——專為非技術讀者講解。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-HK/notes/ai-note06.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-face-landmarks.jpg">
+<meta property="og:image:alt" content="一張臉標有 72 個關鍵點，以紅色圓點顯示並以綠線相連">
+
+<link rel="stylesheet" href="/css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "AI 如何找出你臉上的關鍵點？",
+  "description": "一個只有 25 行的程式，能找出臉上 72 個關鍵點並畫出來——專為非技術讀者講解。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-01",
+  "dateModified": "2026-11-01",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-HK/notes/ai-note06.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="/">林邦源博士</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="/">首頁</a></li>
+        <li><a href="/biography.html">個人簡介</a></li>
+        <li><a href="/research.html">研究</a></li>
+        <li><a href="/cases.html">案例</a></li>
+        <li><a href="/books.html">書籍</a></li>
+        <li><a href="/zh-HK/ai-programs.html">AI 筆記</a></li>
+        <li><a href="/links/">連結</a></li>
+        <li><a href="/glossary/">詞彙表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1>AI 如何找出你臉上的關鍵點？</h1>
+  <p class="paper-meta">林邦源 &middot; AI 筆記 &middot; 2026年11月1日 &middot; 閱讀時間約 5 分鐘</p>
+  <p class="lang-switcher">
+    <a href="/notes/ai-note06.html">English</a>
+    <span class="current">繁體中文</span>
+    <a href="/zh-CN/notes/ai-note06.html">简体中文</a>
+  </p>
+
+  <p>
+    在本文中，我們使用
+    <a href="https://github.com/ageitgey/face_recognition" target="_blank" rel="noopener">face_recognition</a>
+    程式庫，它能在相片中找出人臉，以及每張臉上的關鍵點。
+  </p>
+  <p>
+    這個程式是官方範例的修改版本，原範例見此網頁：
+    <a href="https://github.com/ageitgey/face_recognition/blob/master/examples/find_facial_features_in_picture.py" target="_blank" rel="noopener">find_facial_features_in_picture.py</a>。
+  </p>
+
+  <h2>前後對比</h2>
+  <figure class="exhibit">
+    <img src="/images/howard-face.jpg" alt="一張臉的原始相片" style="max-width:100%; height:auto;">
+    <figcaption>我們開始時的相片：<code>my_photo.jpg</code>。</figcaption>
+  </figure>
+  <figure class="exhibit">
+    <img src="/images/howard-face-landmarks.jpg" alt="同一張臉，72 個關鍵點以紅色圓點顯示並以綠線相連" style="max-width:100%; height:auto;">
+    <figcaption>程式執行後的同一張相片：72 個關鍵點、紅點、綠線。儲存為 <code>my_photo_landmarks.jpg</code>。</figcaption>
+  </figure>
+
+  <h2>這 72 個點標出了甚麼</h2>
+  <p>
+    程式把關鍵點按臉部部位分組。
+  </p>
+  <ul>
+    <li><strong>下巴</strong>——17 個點，沿下顎畫成一條開放的線。</li>
+    <li><strong>眉毛</strong>——每邊 5 個點，畫成開放的線。</li>
+    <li><strong>鼻子</strong>——鼻樑 4 個點，鼻尖 5 個點。</li>
+    <li><strong>眼睛</strong>——每邊 6 個點，首尾相連，閉合成形。</li>
+    <li><strong>嘴唇</strong>——上唇 12 個點，下唇 12 個點，同樣是閉合形狀。</li>
+  </ul>
+  <p>17 + 5 + 5 + 4 + 5 + 6 + 6 + 12 + 12 = 72。</p>
+
+  <h2>程式如何運作</h2>
+  <p>
+    裡面只有四個概念。下面每一段都是幾行程式碼，後面跟著白話說明。
+  </p>
+
+  <h3>1. 載入相片並取得關鍵點</h3>
+  <pre class="code-block"><code>image = face_recognition.load_image_file("my_photo.jpg")
+face_landmarks_list = face_recognition.face_landmarks(image)
+pil_image = Image.fromarray(image)</code></pre>
+  <p>
+    第一行讀取相片。第二行是真正的 AI 工作：它找出圖中每一張臉，然後回傳每張臉的關鍵點。
+    第三行把相片變成程式可以在上面畫圖的東西。
+  </p>
+  <p>
+    結果是一個清單，每張臉對應一個項目。我們的相片只有一張臉，所以清單只有一個項目。
+  </p>
+
+  <h3>2. 選擇標記的大小和顏色</h3>
+  <pre class="code-block"><code>size = max(2, pil_image.width // 300)
+color_line = (0, 255, 0)
+color_point = (255, 0, 0)</code></pre>
+  <p>
+    在小相片上看起來合適的圓點，放到大相片上就會消失，所以大小要根據相片寬度計算。
+    <code>//</code> 是整數除法，會捨去小數：我們的相片寬 976 像素，<code>976 // 300</code>
+    等於 3。<code>max(2, 3)</code> 取兩個數字中較大的，即 3，所以每個圓點和線條都是
+    3 像素粗。小相片的大小至少是 2，標記仍然看得見。
+  </p>
+  <p>
+    <code>color_line</code> 把線條顏色設為綠色：三個數字分別是紅、綠、藍的像素值，
+    <code>(0, 255, 0)</code> 表示無紅、全綠、無藍。<code>color_point</code> 把圓點顏色
+    設為紅色，因為 <code>(255, 0, 0)</code> 表示全紅、無綠、無藍。
+  </p>
+
+  <h3>3. 連接每個臉部部位的點</h3>
+  <pre class="code-block"><code>if facial_feature in ['left_eye', 'right_eye', 'top_lip', 'bottom_lip']:
+    d.line(points + [points[0]], fill=color_line, width=size)
+else:
+    d.line(points, fill=color_line, width=size)</code></pre>
+  <p>
+    眼睛和嘴唇是閉合形狀，所以程式把第一個點再加到清單末端。這樣線條就能繞一整圈，
+    不會留下缺口。下巴、眉毛和鼻子是開放的線，直接畫即可。
+  </p>
+
+  <h3>4. 在每個點畫上紅色圓點</h3>
+  <pre class="code-block"><code>for x, y in points:
+    d.ellipse([x - size * 2, y - size * 2, x + size * 2, y + size * 2], fill=color_point)</code></pre>
+  <p>
+    畫圓需要一個外接方框：左、上、右、下。從該點向四方各延伸 6 像素，就得到直徑
+    12 像素的圓點。迴圈對每個臉部部位的每個點重複這個動作。
+  </p>
+  <pre class="code-block"><code>pil_image.save("my_photo_landmarks.jpg")</code></pre>
+  <p>
+    最後，程式把帶有標記的相片儲存起來。那就是本文頂部展示的圖片。
+  </p>
+
+  <h2>完整程式</h2>
+  <p>
+    把上面的四個部分拼回來。這就是完整的檔案，一共 25 行：
+  </p>
+  <pre class="code-block"><code># https://github.com/ageitgey/face_recognition
+# https://github.com/ageitgey/face_recognition/blob/master/examples/find_facial_features_in_picture.py
+from PIL import Image, ImageDraw
+import face_recognition
+image = face_recognition.load_image_file("my_photo.jpg")
+face_landmarks_list = face_recognition.face_landmarks(image)
+pil_image = Image.fromarray(image)
+# Make the dots and lines bigger for bigger pictures
+size = max(2, pil_image.width // 300)
+color_line = (0, 255, 0)
+color_point = (255, 0, 0)
+for face_landmarks in face_landmarks_list:
+    d = ImageDraw.Draw(pil_image)
+    # Each face part is a list of key points, e.g. 'chin' has 17 points
+    for facial_feature, points in face_landmarks.items():
+        print(facial_feature, len(points), "points")
+        # Eyes and lips are closed shapes, so join the last point back to the first
+        if facial_feature in ['left_eye', 'right_eye', 'top_lip', 'bottom_lip']:
+            d.line(points + [points[0]], fill=color_line, width=size)
+        else:
+            d.line(points, fill=color_line, width=size)
+        # Draw a dot on every key point
+        for x, y in points:
+            d.ellipse([x - size * 2, y - size * 2, x + size * 2, y + size * 2], fill=color_point)
+    pil_image.save("my_photo_landmarks.jpg")</code></pre>
+
+  <h2>在自己的電腦上執行</h2>
+  <p>
+    <a href="/notes/downloads/Folder-AI-Face-Make-Up.zip" download>下載 zip 檔案</a>並解壓到
+    一個資料夾。這個 zip 包含本系列的六個程式；本文使用
+    <code>face01_landmarks.py</code>。把你自己的相片放進該資料夾，命名為
+    <code>my_photo.jpg</code>。在 Visual Studio Code 中開啟資料夾，然後在終端機輸入
+    以下三行：
+  </p>
+  <pre class="code-block"><code>uv python pin 3.12.10
+uv sync
+uv run face01_landmarks.py</code></pre>
+  <p>
+    第一行記錄這個資料夾使用的 Python 版本。第二行安裝 <code>pyproject.toml</code>
+    列出的所有套件，你不用逐一安裝。第三行執行程式，它會把帶標記的相片儲存為
+    <code>my_photo_landmarks.jpg</code>。
+  </p>
+  <p>
+    如果你還沒有設定 uv，請先閱讀
+    <a href="/zh-HK/notes/ai-note05.html">〈如何安裝 Visual Studio Code？〉</a>，
+    然後是 <a href="/zh-HK/notes/ai-note03.html">Windows</a> 或
+    <a href="/zh-HK/notes/ai-note04.html">Mac</a> 的 uv 筆記。
+  </p>
+  <p>
+    技術備註：<code>face-recognition</code> 套件依賴另一個名為 <code>dlib</code> 的套件。
+    zip 中的專案檔案已指向預先編譯好的 <code>dlib</code> 版本，所以 <code>uv sync</code>
+    會直接安裝可用版本，你不需要安裝編譯器。
+  </p>
+
+  <h2>這有甚麼用</h2>
+  <p>
+    找出關鍵點，是任何需要對臉部特定部位操作的應用的第一步：塗口紅、改變眉毛顏色等等。
+    有趣的是，AI 負責「找」，而顏色、粗細和風格的選擇權仍然在你手上。這是一種有用的
+    分工：機器回答「嘴唇在哪裡？」，而你決定嘴唇應該是甚麼樣子。
+  </p>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">電郵</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+</body>
+</html>
