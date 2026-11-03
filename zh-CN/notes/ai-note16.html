@@ -121,7 +121,9 @@ model = SentenceTransformer('BAAI/bge-m3')</code></pre>
     这里引入了两个库。<code>SentenceTransformer</code> 加载一个现成的模型，
     把句子变成嵌入向量；<code>BAAI/bge-m3</code> 是由北京智源人工智能研究院（Beijing
     Academy of Artificial Intelligence）训练的模型，能妥善处理多种语言，
-    所以我们无需自行训练任何东西。首次运行会下载约 2&nbsp;GB，所以需要互联网一次；
+    所以我们无需自行训练任何东西——模型网页见
+    <a href="https://huggingface.co/BAAI/bge-m3" target="_blank" rel="noopener">huggingface.co/BAAI/bge-m3</a>。
+    首次运行会下载约 2&nbsp;GB，所以需要互联网一次；
     之后模型已保存在电脑上。<code>numpy</code>——习惯上简写为 <code>np</code>——
     是快速数列运算的标准库。
   </p>
