@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>如何用檢索增強生成（RAG）在沒有幻覺的情況下回答問題？ | 林邦源博士</title>
-<meta name="description" content="一個程式，把同一條問題問 DeepSeek 兩次——第一次靠模型記憶，第二次先從真實網頁檢索出最相關的句子再交給模型——所以有根據的答案還會附上可核對的行號。為非技術讀者講解。">
+<meta name="description" content="一個程式，把同一條問題問 DeepSeek 兩次——第一次純粹憑模型訓練所學，第二次以真實網頁檢索出的最相關句子作為依據——所以答案還會附上可核對的行號。為非技術讀者講解。">
 <link rel="canonical" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note17.html">
 <link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note17.html">
 <link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note17.html">
@@ -22,7 +22,7 @@
 
 <meta property="og:type" content="article">
 <meta property="og:title" content="如何用檢索增強生成（RAG）在沒有幻覺的情況下回答問題？">
-<meta property="og:description" content="一個程式，把同一條問題問 DeepSeek 兩次——第一次靠模型記憶，第二次先從真實網頁檢索出最相關的句子再交給模型——所以有根據的答案還會附上可核對的行號。為非技術讀者講解。">
+<meta property="og:description" content="一個程式，把同一條問題問 DeepSeek 兩次——第一次純粹憑模型訓練所學，第二次以真實網頁檢索出的最相關句子作為依據——所以答案還會附上可核對的行號。為非技術讀者講解。">
 <meta property="og:url" content="https://pongyuenlam.github.io/zh-HK/notes/ai-note17.html">
 <meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
 <meta property="og:image:width" content="495">
@@ -36,7 +36,7 @@
   "@context": "https://schema.org",
   "@type": "BlogPosting",
   "headline": "如何用檢索增強生成（RAG）在沒有幻覺的情況下回答問題？",
-  "description": "一個程式，把同一條問題問 DeepSeek 兩次——第一次靠模型記憶，第二次先從真實網頁檢索出最相關的句子再交給模型——所以有根據的答案還會附上可核對的行號。為非技術讀者講解。",
+  "description": "一個程式，把同一條問題問 DeepSeek 兩次——第一次純粹憑模型訓練所學，第二次以真實網頁檢索出的最相關句子作為依據——所以答案還會附上可核對的行號。為非技術讀者講解。",
   "author": {
     "@type": "Person",
     "name": "Howard Pong Yuen Lam"
@@ -76,10 +76,10 @@
   </p>
 
   <p>
-    問一個聊天模型問題，它會靠記憶寫出答案。文字流利，但有些「事實」可能是憑空編造的——這就是<strong>幻覺</strong>（hallucination）。<strong>檢索增強生成</strong>（Retrieval-Augmented Generation，簡寫 RAG）把次序調轉：程式先從真實文件找出相關的句子，再請模型只利用那些句子作答。
+    問一個聊天模型問題，它會憑訓練時學到的知識生成答案。文字流利，但有些「事實」可能是憑空編造的——這就是<strong>幻覺</strong>（hallucination）。<strong>檢索增強生成</strong>（Retrieval-Augmented Generation，簡寫 RAG）把次序調轉：程式先從真實文件找出相關的句子，再請模型只利用那些句子作答。
   </p>
   <p>
-    本文的程式在一次執行中展示這個差異。它把問題 <em>「How many people get headaches at least once a year?」</em> 問 DeepSeek 兩次：第一次純靠記憶，第二次則把 Panadol 頭痛網頁中最相關的三句連同問題一起送進提示字串。第二次的答案還會附上它依據的行號，你可以自己打開檔案核對——全程 82 行。
+    本文的程式在一次執行中展示這個差異。它把問題 <em>「How many people get headaches at least once a year?」</em> 問 DeepSeek 兩次：第一次讓 AI 純粹憑訓練所學生成答案，第二次則以 Panadol 頭痛網頁中最相關的三句作為依據。第二次的答案還會附上它依據的行號，你可以自己打開檔案核對——全程 82 行。
   </p>
 
   <h2>一分鐘看懂原理</h2>
@@ -181,7 +181,7 @@ before_rag_chain = before_rag_prompt | my_model | StrOutputParser()
 user_question = "How many people get headaches at least once a year?"
 print(before_rag_chain.invoke({"topic": user_question}))</code></pre>
   <p>
-    第一次提問刻意簡單：模板 <code>"{topic}"</code> 只有問題，所以模型完全靠記憶作答。管道符號從左讀到右：填模板，送給 DeepSeek，解包成純文字。<code>invoke({"topic": user_question})</code> 填好空位就執行整條鏈。回覆流利詳細——但沒有任何來源可以核對。
+    第一次提問刻意簡單：模板 <code>"{topic}"</code> 只有問題，所以模型完全憑訓練所學作答。管道符號從左讀到右：填模板，送給 DeepSeek，解包成純文字。<code>invoke({"topic": user_question})</code> 填好空位就執行整條鏈。回覆流利詳細——但沒有任何來源可以核對。
   </p>
   <pre class="code-block"><code>print("After RAG")
 after_rag_template = """Answer the question based only on the following context:

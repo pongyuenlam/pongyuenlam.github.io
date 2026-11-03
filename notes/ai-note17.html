@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>How can Retrieval-Augmented Generation (RAG) answer questions without hallucination? | Howard Lam, PhD</title>
-<meta name="description" content="A program that asks an AI model the same question twice — once from memory, once with sentences retrieved from a real webpage — so the grounded answer comes with line numbers you can check. Explained for non-technical readers.">
+<meta name="description" content="A program that asks an AI model the same question twice — once purely from its training, once grounded in sentences retrieved from a real webpage — so the answer comes with line numbers you can check. Explained for non-technical readers.">
 <link rel="canonical" href="https://pongyuenlam.github.io/notes/ai-note17.html">
 <link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note17.html">
 <link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note17.html">
@@ -22,7 +22,7 @@
 
 <meta property="og:type" content="article">
 <meta property="og:title" content="How can Retrieval-Augmented Generation (RAG) answer questions without hallucination?">
-<meta property="og:description" content="A program that asks an AI model the same question twice — once from memory, once with sentences retrieved from a real webpage — so the grounded answer comes with line numbers you can check. Explained for non-technical readers.">
+<meta property="og:description" content="A program that asks an AI model the same question twice — once purely from its training, once grounded in sentences retrieved from a real webpage — so the answer comes with line numbers you can check. Explained for non-technical readers.">
 <meta property="og:url" content="https://pongyuenlam.github.io/notes/ai-note17.html">
 <meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
 <meta property="og:image:width" content="495">
@@ -36,7 +36,7 @@
   "@context": "https://schema.org",
   "@type": "BlogPosting",
   "headline": "How can Retrieval-Augmented Generation (RAG) answer questions without hallucination?",
-  "description": "A program that asks an AI model the same question twice — once from memory, once with sentences retrieved from a real webpage — so the grounded answer comes with line numbers you can check. Explained for non-technical readers.",
+  "description": "A program that asks an AI model the same question twice — once purely from its training, once grounded in sentences retrieved from a real webpage — so the answer comes with line numbers you can check. Explained for non-technical readers.",
   "author": {
     "@type": "Person",
     "name": "Howard Pong Yuen Lam"
@@ -77,7 +77,7 @@
   <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 3, 2026 &middot; 8 min read</p>
 
   <p>
-    Ask a chat model a question and it writes an answer from memory. The writing is fluent, but
+    Ask a chat model a question and it generates an answer from what it learned during training. The writing is fluent, but
     some of the &ldquo;facts&rdquo; may be invented &mdash; this is called
     <strong>hallucination</strong>. <strong>Retrieval-Augmented Generation</strong> (RAG) turns the
     order around: first the program finds the relevant lines in a real document, then the model is
@@ -85,9 +85,9 @@
   </p>
   <p>
     The program in this note shows the difference in a single run. It asks DeepSeek the question
-    <em>&ldquo;How many people get headaches at least once a year?&rdquo;</em> twice: first from
-    memory alone, then with the three most relevant sentences from Panadol's headache webpage pasted
-    into the prompt. The second answer even names the line number it relied on, so you can open the
+    <em>&ldquo;How many people get headaches at least once a year?&rdquo;</em> twice: first letting
+    the AI generate an answer purely from its training, then grounding it with the three most
+    relevant sentences from Panadol's headache webpage. The second answer even names the line number it relied on, so you can open the
     file and check it yourself &mdash; in 82 lines.
   </p>
 
@@ -234,7 +234,7 @@ user_question = "How many people get headaches at least once a year?"
 print(before_rag_chain.invoke({"topic": user_question}))</code></pre>
   <p>
     The first ask is deliberately plain: the template <code>"{topic}"</code> contains nothing but
-    the question, so the model answers from memory alone. The chain reads left to right through the
+    the question, so the model answers purely from its training. The chain reads left to right through the
     pipe symbol: fill the template, send it to DeepSeek, unpack the reply into text.
     <code>invoke({"topic": user_question})</code> fills the blank and runs the chain. The reply is
     fluent and detailed &mdash; but there is no source to check it against.
