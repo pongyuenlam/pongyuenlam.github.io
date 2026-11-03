@@ -102,9 +102,14 @@ Set lunches beef set $100, Pork set $110, Chicken set $120</code></pre>
     背后靠两件数学工具。第一，一个预先训练好的模型把每个句子变成一列数字，称为
     <strong>嵌入向量</strong>（embedding）：把这些数字想象成坐标，每个句子就变成一个点，
     而意思相近的句子最终会靠在一起。第二，<strong>余弦相似度</strong>（cosine
-    similarity）比较两列这样的数字，方法是测量它们之间的夹角，就像量角器一样。
+    similarity）比较两列这样的数字，方法是测量它们之间的夹角。
     得分为 1 代表方向相同、意思相同；0 代表毫不相关。程序选出得分最高的
-    句子——而且只在得分够好时才作答。
+    句子——而且只在得分够好时才作答。这种按意思寻找文字、不靠生成式模型凭空写作的方法，
+    正是我的工作论文的主题：Lam, Pong Yuen (2026), “Natural Language Processing:
+    Foundations and Applications without Hallucination from Generative AI”, Working Paper.
+    Available at SSRN:
+    <a href="https://doi.org/10.2139/ssrn.7384558" target="_blank" rel="noopener">https://doi.org/10.2139/ssrn.7384558</a>。
+    也可参阅我的<a href="https://pongyuenlam.github.io/research.html">研究页面</a>。
   </p>
 
   <h2>逐段拆解程序</h2>

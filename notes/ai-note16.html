@@ -107,9 +107,14 @@ Set lunches beef set $100, Pork set $110, Chicken set $120</code></pre>
     list of numbers, called an <strong>embedding</strong>: picture the numbers as coordinates, so
     every sentence becomes a point, and sentences with similar meanings end up close together.
     Second, <strong>cosine similarity</strong> compares two of these number lists by measuring the
-    angle between them, like a protractor. A score of 1 means same direction, same meaning; 0 means
+    angle between them. A score of 1 means same direction, same meaning; 0 means
     unrelated. The program picks the sentence with the highest score &mdash; and only answers if
-    that score is good enough.
+    that score is good enough. This meaning-based way of finding text, without a generative model
+    inventing anything, is the subject of my working paper: Lam, Pong Yuen (2026),
+    &ldquo;Natural Language Processing: Foundations and Applications without Hallucination from
+    Generative AI&rdquo;, Working Paper. Available at SSRN:
+    <a href="https://doi.org/10.2139/ssrn.7384558" target="_blank" rel="noopener">https://doi.org/10.2139/ssrn.7384558</a>.
+    See also my <a href="https://pongyuenlam.github.io/research.html">research page</a>.
   </p>
 
   <h2>The program, piece by piece</h2>
