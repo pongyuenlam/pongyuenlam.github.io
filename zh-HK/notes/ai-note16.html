@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-HK">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python 程式如何找出與問題最相似的句子？ | 林邦源博士</title>
+<meta name="description" content="一個 20 行的程式，讀取載有餐廳資料的檔案，找出意思上與你的問題最接近的句子並印出來——為非技術讀者講解。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note16.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note16.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note16.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note16.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note16.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="Python 程式如何找出與問題最相似的句子？">
+<meta property="og:description" content="一個 20 行的程式，讀取載有餐廳資料的檔案，找出意思上與你的問題最接近的句子並印出來——為非技術讀者講解。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-HK/notes/ai-note16.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="/css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Python 程式如何找出與問題最相似的句子？",
+  "description": "一個 20 行的程式，讀取載有餐廳資料的檔案，找出意思上與你的問題最接近的句子並印出來——為非技術讀者講解。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-03",
+  "dateModified": "2026-11-03",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-HK/notes/ai-note16.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="/">林邦源博士</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="/">首頁</a></li>
+        <li><a href="/biography.html">個人簡介</a></li>
+        <li><a href="/research.html">研究</a></li>
+        <li><a href="/cases.html">案例</a></li>
+        <li><a href="/books.html">書籍</a></li>
+        <li><a href="/zh-HK/ai-programs.html">AI 筆記</a></li>
+        <li><a href="/links/">連結</a></li>
+        <li><a href="/glossary/">詞彙表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1>Python 程式如何找出與問題最相似的句子？</h1>
+  <p class="paper-meta">林邦源 &middot; AI 筆記 &middot; 2026年11月3日 &middot; 閱讀時間約 7 分鐘</p>
+  <p class="lang-switcher">
+    <a href="/notes/ai-note16.html">English</a>
+    <span class="current">繁體中文</span>
+    <a href="/zh-CN/notes/ai-note16.html">简体中文</a>
+  </p>
+
+  <p>
+    一位顧客輸入<em>「What is your address?」</em>。普通的關鍵字搜尋只會找到
+    包含這些字眼的行。但一個小型 AI 模型可以拿問題的<strong>意思</strong>，與檔案中的
+    每一句比較，並選出最接近的一句——即使措辭不同。
+  </p>
+  <p>
+    本文的程式正是為一間小餐廳做這件事：它讀取一個載有餐廳資料的純文字檔，
+    找出與問題最相似的句子並印出來，全程只用 20 行。無需帳戶、無需金鑰、
+    無需費用——一切在你自己的電腦上執行。
+  </p>
+
+  <h2>資料檔案</h2>
+  <p>
+    餐廳的知識是一個純文字檔 <code>sentences-restaurant.txt</code>，每行一項資料：
+  </p>
+  <pre class="code-block no-copy"><code>Opening hour 9am-11pm
+Address : Unit 10, 2F, Festival Walk, Kowloon Tong
+Set lunches beef set $100, Pork set $110, Chicken set $120</code></pre>
+  <p>
+    這個檔案已包含在示範 zip 內，所以你可以先執行程式，之後才修改句子。
+  </p>
+
+  <h2>一分鐘看懂原理</h2>
+  <p>
+    背後靠兩件數學工具。第一，一個預先訓練好的模型把每句句子變成一列數字，稱為
+    <strong>嵌入向量</strong>（embedding）：把這些數字想像成座標，每句句子就變成一個點，
+    而意思相近的句子最終會靠在一起。第二，<strong>餘弦相似度</strong>（cosine
+    similarity）比較兩列這樣的數字，方法是量度它們之間的夾角，就像量角器一樣。
+    得分為 1 代表方向相同、意思相同；0 代表毫不相關。程式選出得分最高的
+    句子——而且只在得分夠好時才作答。
+  </p>
+
+  <h2>逐段拆解程式</h2>
+  <pre class="code-block"><code>from sentence_transformers import SentenceTransformer
+import numpy as np
+
+model = SentenceTransformer('BAAI/bge-m3')</code></pre>
+  <p>
+    這裡引入了兩個函式庫。<code>SentenceTransformer</code> 載入一個現成的模型，
+    把句子變成嵌入向量；<code>BAAI/bge-m3</code> 是由北京智源人工智能研究院（Beijing
+    Academy of Artificial Intelligence）訓練的模型，能妥善處理多種語言，
+    所以我們無需自行訓練任何東西。首次執行會下載約 2&nbsp;GB，所以需要互聯網一次；
+    之後模型已儲存在電腦上。<code>numpy</code>——習慣上簡寫為 <code>np</code>——
+    是快速數列運算的標準函式庫。
+  </p>
+  <pre class="code-block"><code>with open('sentences-restaurant.txt', 'r', encoding='utf-8') as f:
+    sentences = [line.strip() for line in f.readlines() if line.strip()]
+
+user_question = "What is your address?"</code></pre>
+  <p>
+    檔案被讀入一個句子清單，每行前後的空白會被移除，空行會被略過。問題獨佔一行，
+    所以很容易改動它來問其他問題。
+  </p>
+  <pre class="code-block"><code>question_embedding = model.encode(user_question.strip().lower())
+sentence_embeddings = model.encode([s.lower() for s in sentences])</code></pre>
+  <p>
+    <code>model.encode</code> 把文字變成嵌入向量：先是問題，然後是檔案中的每一句。
+    一切都先轉成小寫，令大寫字母不影響比較。嵌入向量也稱為<strong>向量</strong>（vector）
+    ——一支由數字組成、指向句子意思的箭頭。
+  </p>
+  <pre class="code-block"><code>dot_product = np.dot(sentence_embeddings, question_embedding)
+dense_scores = dot_product / (np.linalg.norm(sentence_embeddings, axis=1) * np.linalg.norm(question_embedding))</code></pre>
+  <p>
+    這就是手寫出來的量角器。<strong>點積</strong>（dot product，<code>np.dot</code>）
+    把兩個向量相乘；把它除以兩條<strong>長度</strong>（<code>np.linalg.norm</code>——norm
+    即長度），便得出兩者夾角的餘弦。結果 <code>dense_scores</code> 是每句句子一個
+    得分：問題分別與第 1 行、第 2 行、第 3 行……比較。
+  </p>
+  <pre class="code-block"><code>ranked_indices = np.argsort(dense_scores)[::-1]
+i = ranked_indices[0]
+
+if dense_scores[i] > 0.5:
+    print(f"Your question is: {user_question}")
+    print(f"You can find answer from the sentence number {i}")
+    print(f"The sentence is: {sentences[i]}")
+else:
+    print("no answer")</code></pre>
+  <p>
+    <code>np.argsort</code> 把得分排序並傳回它們的位置；<code>[::-1]</code> 把次序
+    倒轉，令最高分排在最前，而 <code>ranked_indices[0]</code> 就是勝出句子的編號。
+    接下來是重要的一環：程式只在最高得分超過 <code>0.5</code> 時才作答。如果檔案中
+    沒有任何句子夠接近，它會老實地印出 <code>no answer</code>，而不是亂猜。
+  </p>
+
+  <h2>完整程式</h2>
+  <pre class="code-block"><code>from sentence_transformers import SentenceTransformer
+import numpy as np
+
+model = SentenceTransformer('BAAI/bge-m3')
+
+with open('sentences-restaurant.txt', 'r', encoding='utf-8') as f:
+    sentences = [line.strip() for line in f.readlines() if line.strip()]
+
+user_question = "What is your address?"
+
+question_embedding = model.encode(user_question.strip().lower())
+sentence_embeddings = model.encode([s.lower() for s in sentences])
+
+dot_product = np.dot(sentence_embeddings, question_embedding)
+dense_scores = dot_product / (np.linalg.norm(sentence_embeddings, axis=1) * np.linalg.norm(question_embedding))
+
+ranked_indices = np.argsort(dense_scores)[::-1]
+i = ranked_indices[0]
+
+if dense_scores[i] > 0.5:
+    print(f"Your question is: {user_question}")
+    print(f"You can find answer from the sentence number {i}")
+    print(f"The sentence is: {sentences[i]}")
+else:
+    print("no answer")</code></pre>
+
+  <h2>在自己的電腦上執行</h2>
+  <p>
+    <a href="/notes/downloads/Folder-AI-Similar-Sentence.zip" download>下載 zip 檔案</a>並
+    解壓到一個資料夾。這個 zip 包含程式、<code>sentences-restaurant.txt</code> 資料檔，
+    以及一個 <code>pyproject.toml</code> 專案檔案。在 Visual Studio Code 中開啟資料夾，
+    在終端機逐行輸入以下三行：
+  </p>
+  <pre class="code-block"><code>uv python pin 3.12.10</code></pre>
+  <pre class="code-block"><code>uv sync</code></pre>
+  <pre class="code-block"><code>uv run cos_similarity12_restaurant.py</code></pre>
+  <p>
+    第一行記錄這個資料夾使用哪個 Python 版本。第二行設定專案，並安裝程式需要的兩個
+    套件 <code>sentence-transformers</code> 和 <code>numpy</code>。第三行執行程式。
+    首次執行因要下載模型而需時較長；之後，答案幾秒內便會出現：
+  </p>
+  <pre class="code-block no-copy"><code>Similarity scores: [0.5011991  0.5202471  0.39348638]
+Ranked indices: [1 0 2]
+Your question is: What is your address?
+You can find answer from the sentence number 1
+The sentence is: Address : Unit 10, 2F, Festival Walk, Kowloon Tong</code></pre>
+  <p>
+    對照資料檔細看第一行：地址句子得 0.520 分，營業時間句子得 0.501
+    分——緊隨其後，因為營業時間同樣是實用的資料——而套餐句子得 0.393 分。
+    勝出者僅僅越過 0.5 門檻，這對如此簡短的問題來說很典型；內容更豐富的檔案
+    會把差距拉開。
+  </p>
+  <p>
+    如果你還未設定 uv，請先從
+    <a href="ai-note05.html">如何安裝 Visual Studio Code？</a>開始，然後看 uv 筆記：
+    <a href="ai-note03.html">Windows</a> 或 <a href="ai-note04.html">Mac</a>。
+  </p>
+
+  <h2>限制</h2>
+  <ul>
+    <li><strong>0.5 門檻是估出來的。</strong>調低它，勉強的配對就會混入；調高它，
+    好的問題反而得到 <code>no answer</code>。試問幾條問題，按你的檔案調校。</li>
+    <li><strong>它找到的是句子，不會撰寫答案。</strong>回覆永遠是檔案裡的一行，
+    一字不改。若要模型就着找到的句子寫出自然的回覆，可把兩者一併交給聊天
+    模型——見下方的 DeepSeek 筆記。</li>
+    <li><strong>首次執行較重。</strong>模型下載約 2&nbsp;GB，需要互聯網一次；之後的
+    執行離線而且快速。</li>
+    <li><strong>過短的問題難以配對。</strong>只有兩個字的問題沒有多少意思可比較，
+    所以每句句子的得分都會偏低。</li>
+  </ul>
+
+  <h2>延伸閱讀</h2>
+  <ul>
+    <li><a href="https://sbert.net/" target="_blank" rel="noopener">Sentence Transformers 文件</a>列出其他預訓練模型，包括更細更快的選擇。</li>
+    <li><a href="ai-note12.html">程式如何把文字分拆成句子？</a>示範如何把較長的文件預備成乾淨的句子，然後再作配對。</li>
+    <li><a href="ai-note15.html">Python 程式如何用 DeepSeek API？</a>是自然的下一步：把找到的句子交給聊天模型，讓它寫出自然的回覆。</li>
+    <li><a href="ai-note11.html">如何提供網頁，用檢索增強生成（RAG）減少 AI 幻覺？</a>正是同一個兩步構思的完整規模版：先找相似文字，再讓模型據此作答。</li>
+  </ul>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">電郵</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', '複製程式碼到剪貼簿');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', '已複製到剪貼簿');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', '複製程式碼到剪貼簿');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>
