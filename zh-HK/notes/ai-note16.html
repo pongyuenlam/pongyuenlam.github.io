@@ -145,7 +145,7 @@ sentence_embeddings = model.encode([s.lower() for s in sentences])</code></pre>
   <pre class="code-block"><code>dot_product = np.dot(sentence_embeddings, question_embedding)
 dense_scores = dot_product / (np.linalg.norm(sentence_embeddings, axis=1) * np.linalg.norm(question_embedding))</code></pre>
   <p>
-    這就是手寫出來的量角器。<strong>點積</strong>（dot product，<code>np.dot</code>）
+    <strong>點積</strong>（dot product，<code>np.dot</code>）
     把兩個向量相乘；把它除以兩條<strong>長度</strong>（<code>np.linalg.norm</code>——norm
     即長度），便得出兩者夾角的餘弦。結果 <code>dense_scores</code> 是每句句子一個
     得分：問題分別與第 1 行、第 2 行、第 3 行……比較。

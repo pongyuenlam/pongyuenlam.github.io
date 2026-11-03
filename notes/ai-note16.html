@@ -151,7 +151,7 @@ sentence_embeddings = model.encode([s.lower() for s in sentences])</code></pre>
   <pre class="code-block"><code>dot_product = np.dot(sentence_embeddings, question_embedding)
 dense_scores = dot_product / (np.linalg.norm(sentence_embeddings, axis=1) * np.linalg.norm(question_embedding))</code></pre>
   <p>
-    This is the protractor, written out by hand. The <strong>dot product</strong>
+    The <strong>dot product</strong>
     (<code>np.dot</code>) multiplies two vectors together; dividing it by the two
     <strong>lengths</strong> (<code>np.linalg.norm</code> &mdash; norm means length) gives the
     cosine of the angle between them. The result, <code>dense_scores</code>, is one score per
