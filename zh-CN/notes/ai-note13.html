@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-Hans-CN">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>网页抓取如何把网页变成一个句子文件？ | 林邦源博士</title>
+<meta name="description" content="给初学者的网页抓取：一个 32 行的程序，下载网页、抽出可读文字、切成句子并存入文件，为非技术读者讲解。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note13.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note13.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note13.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note13.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note13.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="网页抓取如何把网页变成一个句子文件？">
+<meta property="og:description" content="给初学者的网页抓取：一个 32 行的程序，下载网页、抽出可读文字、切成句子并存入文件，为非技术读者讲解。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-CN/notes/ai-note13.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="/css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "网页抓取如何把网页变成一个句子文件？",
+  "description": "给初学者的网页抓取：一个 32 行的程序，下载网页、抽出可读文字、切成句子并存入文件，为非技术读者讲解。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-03",
+  "dateModified": "2026-11-03",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-CN/notes/ai-note13.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="/">林邦源博士</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="/">首页</a></li>
+        <li><a href="/biography.html">个人简介</a></li>
+        <li><a href="/research.html">研究</a></li>
+        <li><a href="/cases.html">案例</a></li>
+        <li><a href="/books.html">书籍</a></li>
+        <li><a href="/zh-CN/ai-programs.html">AI 笔记</a></li>
+        <li><a href="/links/">链接</a></li>
+        <li><a href="/glossary/">词汇表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1>网页抓取如何把网页变成一个句子文件？</h1>
+  <p class="paper-meta">林邦源 &middot; AI 笔记 &middot; 2026年11月3日 &middot; 阅读时间约 6 分钟</p>
+  <p class="lang-switcher">
+    <a href="/notes/ai-note13.html">English</a>
+    <a href="/zh-HK/notes/ai-note13.html">繁體中文</a>
+    <span class="current">简体中文</span>
+  </p>
+
+  <p>
+    网页不是纯文本。在你所见的背后，页面其实是一段很长的 <strong>HTML</strong> 代码
+    （HyperText Markup Language，超文本标记语言）：可读的文章与菜单、页脚、样式，
+    以及让页面可交互的脚本混在一起。程序要对网页做任何有用的事——数句子、搜索内容，
+    或喂给 AI 模型——都必须先从那些代码中抽出可读的文本。
+  </p>
+  <p>
+    用程序下载页面并提取其文本，称为<strong>网页抓取</strong>（web scraping）：程序把有用的
+    内容从页面上<em>刮</em>下来，把代码留在后面。本文的程序是一个小型网页抓取器，分四步运行：
+    下载网页、只保留值得阅读的部分、把文本切成句子，再把句子存入文本文件，每行一句。
+    示例页面是 Panadol 关于头痛的页面，输出文件名为 <code>panadol.txt</code>。
+  </p>
+
+  <h2>步骤 1：下载网页</h2>
+  <pre class="code-block"><code>url = "https://www.panadol.com/en-gb/adult-symptoms/headache/"
+headers = {"User-Agent": "Mozilla/5.0 (compatible; SkillBot/1.0)"}
+resp = requests.get(url, headers=headers, timeout=15)
+resp.raise_for_status()
+resp.encoding = resp.apparent_encoding</code></pre>
+  <p>
+    <code>requests</code> 库负责从互联网下载页面。前两行设置这次调用：<code>url</code>
+    是网址，<code>headers</code> 带着一个 <code>User-Agent</code>，即一个告诉网站
+    “谁在请求”的简短名称。许多网站会拒绝看起来不像来自浏览器的请求，所以程序用一个
+    像浏览器的名称介绍自己。
+  </p>
+  <p>
+    <code>requests.get(...)</code> 下载页面；<code>resp</code> 是 <em>response</em>（响应，
+    即服务器的答复）的缩写，而 <code>timeout=15</code> 表示 15 秒后放弃，不再无止境地等。
+    <code>raise_for_status()</code> 在服务器报告失败（例如“页面不存在”）时，以清晰的
+    错误信息停止程序，而不是悄悄地把一个错误页面当成文章保存起来。
+  </p>
+  <p>
+    最后一行关乎<strong>编码</strong>：把页面的原始字节变成可读字符的规则。网页经常错误
+    声明自己的编码，所以程序改用 <code>apparent_encoding</code>，即 <code>requests</code>
+    从实际字节推测出来的编码。这样读取文本时，特殊字符才能保持正确。
+  </p>
+
+  <h2>步骤 2：只保留可读的文本</h2>
+  <pre class="code-block"><code>soup = BeautifulSoup(resp.text, "html.parser")
+for tag in soup(["script", "style", "noscript", "nav", "footer"]):
+    tag.decompose()
+
+lines = [" ".join(tag.get_text(" ").split()) for tag in soup.find_all(["h1", "h2", "h3", "p", "li"])]
+lines = [line for line in lines if line != ""]</code></pre>
+  <p>
+    来自 <code>bs4</code> 包（Beautiful Soup 4）的 <code>BeautifulSoup</code>，把 HTML
+    代码解析成一棵程序可以搜索的标签树；结果命名为 <code>soup</code>。接下来两行丢掉五种
+    我们不要的标签：<code>script</code>（JavaScript 代码）、<code>style</code>（页面样式）、
+    <code>noscript</code>（JavaScript 关闭时显示的文本）、<code>nav</code>（菜单）和
+    <code>footer</code>（页面底部）。<code>decompose()</code> 把每个标签连同里面的一切删除，
+    于是只剩下真正的内容。
+  </p>
+  <p>
+    然后 <code>find_all</code> 收集值得阅读的标签：标题（<code>h1</code> 最大，
+    <code>h3</code> 较小）、段落（<code>p</code>）和列表项（<code>li</code>）。对每个
+    标签，<code>get_text(" ")</code> 只取出文字，而 <code>" ".join(... .split())</code>
+    把任何连续的空格和换行压成单个空格，所以每个标签变成一行整洁的文本。第二行丢掉空行，
+    只保留真正含有文字的行。
+  </p>
+
+  <h2>步骤 3：把每一行切成句子</h2>
+  <pre class="code-block"><code>sentences = []
+for line in lines:
+    for sentence in re.split(r"(?&lt;=[.!?])\s+(?=[A-Z])", line):
+        sentences.append(sentence)
+lines = sentences</code></pre>
+  <p>
+    一行可能包含几个句子，所以程序在每个“句号、感叹号或问号之后是空格，而空格之后是
+    大写字母”的位置切开每一行。这个模式是一个<strong>正则表达式</strong>（regular
+    expression），由 Python 的 <code>re</code> 模块处理的搜索模式，而它周围那五行在
+    <a href="ai-note12.html">程序如何把一段文本切成句子？</a>中有逐部分讲解。这几行之后，
+    <code>lines</code> 这个名字指的是句子，而不再是网页的行。
+  </p>
+
+  <h2>步骤 4：把句子存入文件</h2>
+  <pre class="code-block"><code>with open("panadol.txt", "w", encoding="utf-8") as outfile:
+    for line in lines:
+        outfile.write(line + "\n")</code></pre>
+  <p>
+    <code>open("panadol.txt", "w", ...)</code> 在同一文件夹打开文件以供写入：文件不存在就
+    创建，已存在就清空。<code>encoding="utf-8"</code> 让每个字符保持正确；UTF-8 是把世上
+    每种语言的字符写入磁盘最常用的方式。之后循环把每个句子连同 <code>"\n"</code>（换行
+    字符）写入，所以每个句子都自成一行。事后打开 <code>panadol.txt</code>，是查看程序在
+    页面上找到了什么的最简单方法。
+  </p>
+
+  <h2>完整程序</h2>
+  <p>
+    四个步骤合起来，一共 32 行。最后三行打印一份简短报告，让你不开文件也能看到结果：
+  </p>
+  <pre class="code-block"><code>import re
+
+import requests
+from bs4 import BeautifulSoup
+
+url = "https://www.panadol.com/en-gb/adult-symptoms/headache/"
+headers = {"User-Agent": "Mozilla/5.0 (compatible; SkillBot/1.0)"}
+resp = requests.get(url, headers=headers, timeout=15)
+resp.raise_for_status()
+resp.encoding = resp.apparent_encoding
+
+soup = BeautifulSoup(resp.text, "html.parser")
+for tag in soup(["script", "style", "noscript", "nav", "footer"]):
+    tag.decompose()
+
+lines = [" ".join(tag.get_text(" ").split()) for tag in soup.find_all(["h1", "h2", "h3", "p", "li"])]
+lines = [line for line in lines if line != ""]
+
+sentences = []
+for line in lines:
+    for sentence in re.split(r"(?&lt;=[.!?])\s+(?=[A-Z])", line):
+        sentences.append(sentence)
+lines = sentences
+
+with open("panadol.txt", "w", encoding="utf-8") as outfile:
+    for line in lines:
+        outfile.write(line + "\n")
+
+print(f"Saved {len(lines)} sentences to panadol.txt")
+print("The first three sentences:")
+for line in lines[:3]:
+    print(line)</code></pre>
+  <p>
+    报告那几行用上了 <strong>f-string</strong>：带有 <code>{...}</code> 空位的字符串，由
+    Python 填入内容，所以 <code>{len(lines)}</code> 会变成句子的数目。
+    <code>lines[:3]</code> 取列表的前三项。
+  </p>
+
+  <h2>在自己的电脑上运行</h2>
+  <p>
+    <a href="/notes/downloads/Folder-AI-Webpage-Sentences.zip" download>下载 zip 文件</a>并解压到
+    一个文件夹。这个 zip 包含程序和一个 <code>pyproject.toml</code> 项目文件；没有输入文件，
+    因为输入就是网页本身。在 Visual Studio Code 中打开文件夹，然后在终端逐行输入以下三行：
+  </p>
+  <pre class="code-block"><code>uv python pin 3.12.10</code></pre>
+  <pre class="code-block"><code>uv sync</code></pre>
+  <pre class="code-block"><code>uv run webpage_sentences.py</code></pre>
+  <p>
+    第一行记录这个文件夹使用哪个 Python 版本。第二行设置项目，并安装程序需要的两个软件包
+    <code>requests</code> 和 <code>beautifulsoup4</code>。第三行运行程序。输出如下：
+  </p>
+  <pre class="code-block no-copy"><code>Saved 307 sentences to panadol.txt
+The first three sentences:
+For Healthcare Professionals
+United Kingdom
+ASIA PACIFIC</code></pre>
+  <p>
+    你运行时确切的数字可能不同，因为网站会不时更新页面。再留意前三个句子是什么：它们来自
+    页面最顶端的国家选择器，而不是头痛文章。这是第一个提示：提取效果好，但并不完美，
+    下一节会讨论。打开 <code>panadol.txt</code> 可以看到程序保存的全部句子。要读取另一页，
+    改动 <code>url</code> 那行和输出文件名即可。
+  </p>
+  <p>
+    如果你还没有设置 uv，请先从
+    <a href="ai-note05.html">如何安装 Visual Studio Code？</a>开始，然后看 uv 笔记：
+    <a href="ai-note03.html">Windows</a> 或 <a href="ai-note04.html">Mac</a>。
+  </p>
+
+  <h2>局限</h2>
+  <ul>
+    <li><strong>有些导航文本会漏网。</strong>Panadol 页面顶端的国家选择器不在
+    <code>nav</code> 标签内，所以它的文字在清理后仍然存留，如上面的输出所示。每个网站
+    编排 HTML 的方式都不同，所以对一页有效的清理列表，在另一页可能留下零碎的杂物。</li>
+    <li><strong>有些页面会拒绝或误导抓取器。</strong>网站可以屏蔽并非来自真正浏览器的请求；
+    有些页面在下载<em>之后</em>才用 JavaScript 构建内容，所以下载回来的 HTML 根本不含文章。
+    网站也可以在使用条款中禁止抓取，所以请温和地抓取：这里一页、那里一页，而不是用循环
+    抓取成千上万页。</li>
+    <li><strong>切句子有其局限。</strong>这个正则表达式对手打的英文切得很好，但遇到
+    <em>Dr.</em> 这类缩写，以及标点之后是小写字母的情况就会出错；详情见
+    <a href="ai-note12.html">切句子的笔记</a>。</li>
+  </ul>
+  <p>
+    在 AI 时代，网站是否还会被人阅读，已经成为一个问题。许多用户不再亲自浏览网站；
+    他们只是问 AI 模型，然后读它给出的答案。如果一家公司或一个人阻止所有程序读取其页面，
+    AI 模型同样读不到：这些内容永远不会影响 AI 的答案，网站也永远不会被点名引用。
+    这就是为什么<strong>答案引擎优化</strong>（Answer Engine Optimization，AEO）和
+    <strong>生成式引擎优化</strong>（Generative Engine Optimization，GEO）——让你的页面
+    不只迎合传统搜索引擎，也迎合 AI 搜索——对任何想在互联网上占一席之地的公司或个人，
+    都正变得不可或缺。把每个程序拒之门外的网站也许感觉安全，但最终会沦为互联网世界里的
+    孤岛：虽然在线，却不被 AI 看见，也缺席于每一个 AI 答案。
+  </p>
+  <p>
+    这些抓取问题没有一个是致命的：对大多数普通的文章页面，这四个步骤都能产出一份干净的
+    句子列表，可供下一阶段的工作使用。
+  </p>
+
+  <h2>延伸阅读</h2>
+  <ul>
+    <li><a href="https://requests.readthedocs.io/" target="_blank" rel="noopener">requests 文档</a>详细说明 headers、timeout 和编码。</li>
+    <li><a href="https://www.crummy.com/software/BeautifulSoup/bs4/doc/" target="_blank" rel="noopener">Beautiful Soup 文档</a>列出搜索页面的各种方法，远超这里用到的两种。</li>
+    <li><a href="ai-note12.html">程序如何把一段文本切成句子？</a>把步骤 3 的正则表达式逐一拆开讲解。</li>
+    <li><a href="ai-note11.html">如何提供网页，用检索增强生成（RAG）减少 AI 幻觉？</a>展示保存下来的句子有何用处：把它们喂给 AI 模型，让它的答案可以追溯回真实的句子。</li>
+  </ul>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">邮箱</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', '复制代码到剪贴板');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', '已复制到剪贴板');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', '复制代码到剪贴板');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>
