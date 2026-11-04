@@ -90,13 +90,26 @@
     when it opens. It is version 1 — deliberately minimal so every line is easy to follow.
   </p>
 
+  <h2>Watch the walkthrough</h2>
+  <iframe
+    src="https://drive.google.com/file/d/17IryjRZdWZIJZ09T5o_klGd2fxMmjKww/preview"
+    title="How to use LiveKit and Synthesia Avatar"
+    style="width:100%; aspect-ratio:16/9; border:0;"
+    loading="lazy"
+    allowfullscreen></iframe>
+  <p class="paper-meta">
+    If the video does not load, open it in Google Drive:
+    <a href="https://drive.google.com/file/d/17IryjRZdWZIJZ09T5o_klGd2fxMmjKww/view?usp=sharing" target="_blank" rel="noopener">video</a>
+    (no account needed).
+  </p>
+
   <h2>The pipeline</h2>
   <pre class="code-block no-copy"><code>browser mic → VAD → STT → LLM → TTS → Synthesia avatar → browser video</code></pre>
   <p>
     Five pieces wired together over LiveKit's real-time transport.
     <strong>VAD</strong> (Voice Activity Detection) listens for when you start and stop talking,
     <strong>STT</strong> turns speech to text, <strong>LLM</strong> answers,
-    <strong>TTS</strong> turns the answer back to speech, and <strong>Synthesia</strong> renders
+    <strong>TTS</strong> turns the answer in text back to speech, and <strong>Synthesia</strong> renders
     the face with lips that match the audio. All five run on LiveKit Cloud — no separate servers needed.
   </p>
 
@@ -125,7 +138,7 @@
   <p>
     Sign in at <a href="https://app.synthesia.io/" target="_blank" rel="noopener">app.synthesia.io</a>.
     Go to <strong>Avatars</strong> and pick or create an avatar — each one has a UUID, shown in the
-    URL when you open it (it looks like <code>8788bef1-8020-46e0-a8f4-510ea9989b25</code>).
+    URL when you open it (it looks like <code>3190429b-1eda-4151-bf24-96162e405840</code>).
     Copy that as <code>SYNTHESIA_AVATAR_ID</code>.
   </p>
   <p>
@@ -141,7 +154,7 @@
 LIVEKIT_API_KEY=APIxxxxxxxxxxxxx
 LIVEKIT_API_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 SYNTHESIA_API_KEY=syn_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-SYNTHESIA_AVATAR_ID=8788bef1-8020-46e0-a8f4-510ea9989b25</code></pre>
+SYNTHESIA_AVATAR_ID=3190429b-1eda-4151-bf24-96162e405840</code></pre>
   <p><strong>Important:</strong> never put <code>.env</code> on GitHub or any public site — it contains your live credentials.</p>
 
   <h2>Running it on your own computer</h2>
@@ -204,7 +217,7 @@ from livekit.plugins import silero, synthesia
 load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
 AGENT_NAME = "avatar-demo"
-AVATAR_ID = os.getenv("SYNTHESIA_AVATAR_ID") or "8788bef1-8020-46e0-a8f4-510ea9989b25"
+AVATAR_ID = os.getenv("SYNTHESIA_AVATAR_ID") or "3190429b-1eda-4151-bf24-96162e405840"
 VOICE_ID = "db6b0ed5-d5d3-463d-ae85-518a07d3c2b4"
 
 INSTRUCTIONS = """\

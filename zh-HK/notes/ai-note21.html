@@ -125,7 +125,7 @@
   <p>
     登入 <a href="https://app.synthesia.io/" target="_blank" rel="noopener">app.synthesia.io</a>。
     進入 <strong>Avatars</strong>，選一個或新建一個數位人——每個數位人都有一個 UUID，
-    打開它時 URL 裡就能看到（像 <code>8788bef1-8020-46e0-a8f4-510ea9989b25</code>），
+    打開它時 URL 裡就能看到（像 <code>3190429b-1eda-4151-bf24-96162e405840</code>），
     這就是 <code>SYNTHESIA_AVATAR_ID</code>。
   </p>
   <p>
@@ -141,7 +141,7 @@
 LIVEKIT_API_KEY=APIxxxxxxxxxxxxx
 LIVEKIT_API_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 SYNTHESIA_API_KEY=syn_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-SYNTHESIA_AVATAR_ID=8788bef1-8020-46e0-a8f4-510ea9989b25</code></pre>
+SYNTHESIA_AVATAR_ID=3190429b-1eda-4151-bf24-96162e405840</code></pre>
   <p><strong>注意：</strong>絕對不要把 <code>.env</code> 傳到 GitHub 或任何公開網站——裡面是你的真實憑證。</p>
 
   <h2>在自己電腦上執行</h2>
@@ -203,7 +203,7 @@ from livekit.plugins import silero, synthesia
 load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
 AGENT_NAME = "avatar-demo"
-AVATAR_ID = os.getenv("SYNTHESIA_AVATAR_ID") or "8788bef1-8020-46e0-a8f4-510ea9989b25"
+AVATAR_ID = os.getenv("SYNTHESIA_AVATAR_ID") or "3190429b-1eda-4151-bf24-96162e405840"
 VOICE_ID = "db6b0ed5-d5d3-463d-ae85-518a07d3c2b4"
 
 INSTRUCTIONS = """\
