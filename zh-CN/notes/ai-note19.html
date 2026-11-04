@@ -121,7 +121,7 @@ LIVEKIT_API_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code><
   <pre class="code-block"><code>uv add -r requirements.txt</code></pre>
   <p>读取 <code>requirements.txt</code>，安装里面列出的所有包，包括 <code>livekit-agents</code> 和 <code>python-dotenv</code>。这步只需跑一次，除非之后你改了程序、要升级某个包版本，或要加新的包，才需要再跑。</p>
   <pre class="code-block"><code>uv run main.py console</code></pre>
-  <p>在终端启动代理，让你直接在本机用麦克风说话，不用开浏览器或 LiveKit Cloud 房间。终端会显示类似 <code>agent listening on ws://localhost:7880</code> 的信息，然后等你说话。</p>
+  <p>在终端启动代理，让你直接说话、并听到代理的回答。</p>
 
   <h2>两个 Python 文件</h2>
   <p>
