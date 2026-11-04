@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to use LiveKit Voice Agent to Chat? | Howard Lam, PhD</title>
+<meta name="description" content="Run your first voice-controlled AI agent in minutes: speak to an LLM and it speaks back — built with LiveKit Agents and four commands in the Terminal.">
+<link rel="canonical" href="https://pongyuenlam.github.io/notes/ai-note20.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note20.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note20.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note20.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note20.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to use LiveKit Voice Agent to Chat?">
+<meta property="og:description" content="Run your first voice-controlled AI agent in minutes — speech recognition, an LLM, and text-to-speech, all in one Python program.">
+<meta property="og:url" content="https://pongyuenlam.github.io/notes/ai-note20.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="Howard Lam, PhD">
+
+<link rel="stylesheet" href="../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "How to use LiveKit Voice Agent to Chat?",
+  "description": "Run your first voice-controlled AI agent in minutes — speech recognition, an LLM, and text-to-speech, all in one Python program.",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-04",
+  "dateModified": "2026-11-04",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/notes/ai-note20.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../biography.html">Biography</a></li>
+        <li><a href="../research.html">Research</a></li>
+        <li><a href="../cases.html">Cases</a></li>
+        <li><a href="../books.html">Books</a></li>
+        <li><a href="../ai-programs.html">AI Notes</a></li>
+        <li><a href="../links/">Links</a></li>
+        <li><a href="../glossary/">Glossary</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <span class="current">English</span>
+  <a href="/zh-HK/notes/ai-note20.html">繁體中文</a>
+  <a href="/zh-CN/notes/ai-note20.html">简体中文</a>
+</div>
+
+<main>
+  <h1>How to use LiveKit Voice Agent to Chat?</h1>
+  <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 4, 2026 &middot; 5 min read</p>
+
+  <p>
+    A <strong>voice agent</strong> is an AI program that you can talk to in real time:
+    you speak, it recognises your words (<strong>STT</strong>, speech-to-text), sends the text to a
+    large language model (<strong>LLM</strong>), then turns the answer back into speech
+    (<strong>TTS</strong>, text-to-speech). <a href="https://livekit.io/" target="_blank" rel="noopener">LiveKit</a>
+    is an open-source framework that ties these three pieces together over the internet, so your
+    agent can run on a server and answer calls from a browser or a phone.
+  </p>
+  <p>
+    This note walks you through a minimal but complete voice agent in Python. The program greets
+    you and answers any question using the LLM — no custom tools required.
+  </p>
+
+  <h2>Watch the walkthrough</h2>
+  <iframe
+    src="https://drive.google.com/file/d/14TPewW9TpAE5wHLKPz95hkc1rktIX5pB/preview"
+    title="How to use LiveKit Voice Agent"
+    style="width:100%; aspect-ratio:16/9; border:0;"
+    loading="lazy"
+    allowfullscreen></iframe>
+  <p class="paper-meta">
+    If the video does not load, open it in Google Drive:
+    <a href="https://drive.google.com/file/d/14TPewW9TpAE5wHLKPz95hkc1rktIX5pB/view?usp=sharing" target="_blank" rel="noopener">video</a>
+    (no account needed).
+  </p>
+
+  <h2>What you need</h2>
+  <ul>
+    <li>A Mac (the same steps work on Windows and Linux too).</li>
+    <li><a href="https://pongyuenlam.github.io/notes/ai-note18.html">Homebrew installed</a> and the <code>uv</code> package manager — if you do not have <code>uv</code>, run <code>brew install uv</code>.</li>
+    <li>A <a href="https://cloud.livekit.io/" target="_blank" rel="noopener">LiveKit Cloud</a> account (the free <strong>Build</strong> plan is enough).</li>
+    <li>Your LiveKit Cloud credentials, which you copy into a file called <code>.env</code> &mdash; see below.</li>
+  </ul>
+
+  <h2>Set up LiveKit Cloud</h2>
+  <p>
+    Sign up at <a href="https://cloud.livekit.io/" target="_blank" rel="noopener">cloud.livekit.io</a>.
+    In the dashboard, click <strong>Projects</strong> &rarr; <strong>Create Project</strong>, then open
+    the project and go to <strong>Keys</strong>. Copy the three values:
+  </p>
+  <ul>
+    <li><code>LIVEKIT_URL</code> &mdash; looks like <code>wss://your-project.livekit.cloud</code>.</li>
+    <li><code>LIVEKIT_API_KEY</code> &mdash; a short string like <code>APIxxxxxxxxxxxxx</code>.</li>
+    <li><code>LIVEKIT_API_SECRET</code> &mdash; a longer string, shown only once.</li>
+  </ul>
+  <p>
+    In your project folder, create a file named <code>.env</code> with these three lines:
+  </p>
+  <pre class="code-block no-copy"><code>LIVEKIT_URL=wss://your-project.livekit.cloud
+LIVEKIT_API_KEY=APIxxxxxxxxxxxxx
+LIVEKIT_API_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code></pre>
+  <p><strong>Important:</strong> never put <code>.env</code> on GitHub or any public site — it contains your live credentials.</p>
+
+  <h2>Running it on your own computer</h2>
+  <p>
+    <a href="downloads/Folder-AI-LiveKit-Agent.zip" download>Download the zip file</a> and
+    unzip it to a folder. The zip holds the program and a <code>pyproject.toml</code> project file.
+    Add your own <code>.env</code> file with the keys, as shown above. Then open the folder in
+    Visual Studio Code and type these two lines in the terminal, one at a time:
+  </p>
+  <pre class="code-block"><code>uv sync</code></pre>
+  <pre class="code-block"><code>uv run main.py console</code></pre>
+  <p>
+    <code>uv sync</code> reads <code>pyproject.toml</code>, downloads Python 3.13 if you do not
+    already have it, and installs every package the agent needs. <code>uv run main.py console</code>
+    then starts the agent in your Terminal so you can speak to it directly. You only need to run
+    <code>uv sync</code> once — only re-run it if you later change <code>main.py</code> or the
+    dependencies.
+  </p>
+
+  <h2>The Python files</h2>
+  <p>
+    The zip contains two files: <code>pyproject.toml</code> and <code>main.py</code>. Here they
+    are for reference.
+  </p>
+
+  <h3><code>pyproject.toml</code></h3>
+  <pre class="code-block no-copy"><code>[project]
+name = "folder-ai-livekit-agent"
+version = "0.1.0"
+requires-python = "&gt;=3.13"
+dependencies = [
+    "livekit-agents>=1.8.4,<2",
+    "python-dotenv",
+]
+
+[build-system]
+requires = ["uv_build>=0.13.6,<0.14.0"]
+build-backend = "uv_build"</code></pre>
+
+  <h3><code>main.py</code></h3>
+  <pre class="code-block no-copy"><code>from dotenv import load_dotenv
+from livekit.agents import (
+    Agent,
+    AgentServer,
+    AgentSession,
+    JobContext,
+    cli,
+    inference,
+)
+
+load_dotenv()
+
+
+server = AgentServer()
+
+
+@server.rtc_session()
+async def entrypoint(ctx: JobContext):
+    session = AgentSession(
+        vad=inference.VAD(),
+        stt=inference.STT("deepgram/nova-3", language="multi"),
+        llm=inference.LLM("google/gemma-4-31b-it"),
+        tts=inference.TTS("cartesia/sonic-3", voice="9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"),
+    )
+
+    agent = Agent(
+        instructions=(
+            "You are a helpful and friendly voice assistant built by LiveKit. "
+            "Use your knowledge to answer any question the user asks, clearly "
+            "and concisely. Engage naturally in conversation."
+        ),
+    )
+
+    await session.start(agent=agent, room=ctx.room)
+    await session.generate_reply(instructions="greet the user and ask what they'd like to talk about")
+
+
+if __name__ == "__main__":
+    cli.run_app(server)</code></pre>
+
+  <h3>How <code>main.py</code> works, in plain words</h3>
+  <p>
+    <strong>Voice Activity Detection, STT, LLM, TTS.</strong> The
+    <code>AgentSession</code> line wires four pieces together.
+    <code>vad=inference.VAD()</code> is Voice Activity Detection — it listens to the microphone
+    stream and tells the agent when you start and stop talking, so the LLM only processes real
+    speech instead of background noise. Speech is turned to text by Deepgram
+    (<code>deepgram/nova-3</code>), text is answered by Google Gemma 4
+    (<code>google/gemma-4-31b-it</code>), and the answer is spoken by Cartesia
+    (<code>cartesia/sonic-3</code>). All four run on LiveKit Cloud so you do not need separate
+    API keys for each provider — a single LiveKit account covers them.
+  </p>
+  <p>
+    <strong>No tools needed.</strong> Unlike agents that call external APIs (weather, calendar,
+    databases), this agent answers directly from the LLM's built-in knowledge. That means zero
+    setup beyond LiveKit Cloud credentials and zero external dependencies — but also no access
+    to real-time or private data. Tools are optional; you add them only when you need them.
+  </p>
+  <p>
+    <strong>A friendly greeting.</strong> After the session starts,
+    <code>generate_reply(instructions="greet the user and ask what they'd like to talk about")</code>
+    makes the agent speak the first thing, so callers hear a hello instead of silence.
+  </p>
+
+  <h2>Talk to your agent</h2>
+  <p>
+    With <code>uv run main.py console</code> running in your Terminal, the program will ask your
+    Mac for microphone permission — click <strong>Allow</strong>. Then speak into your
+    microphone: you should hear the agent greet you back, and you can continue the conversation
+    freely. Press <code>Ctrl</code>+<code>C</code> when you want to stop.
+  </p>
+  <p>
+    If the Terminal does not print anything after you press play, or it shows an error about
+    missing credentials, stop the server (<code>Ctrl</code>+<code>C</code>), check that
+    <code>.env</code> is in the project folder, and run
+    <code>uv run main.py console</code> again.
+  </p>
+
+  <h2>Limitations</h2>
+  <ul>
+    <li><strong>You need a LiveKit Cloud account and real credentials in <code>.env</code>.</strong>
+      The program will not start without them.</li>
+    <li><strong>The free Build plan has limits (checked 2026-11-04):</strong> 1,000 session minutes
+      per month, a $2.50 LiveKit Inference credit (about 50 minutes of calls), cold starts —
+      the first call after an idle period may take a few seconds to answer — and only one
+      deployed agent. Paid plans start at $50/month.</li>
+    <li><strong>The LLM answers from its own knowledge only.</strong> Without tools or RAG,
+      the agent cannot browse the web, access real-time data, or use information from your
+      files. For that you will need to add tools (see
+      <a href="https://pongyuenlam.github.io/notes/ai-note19.html">the weather-tool version of this note</a>)
+      or a retrieval pipeline.</li>
+  </ul>
+
+  <h2>Further reading</h2>
+  <ul>
+    <li><a href="https://livekit.io/" target="_blank" rel="noopener">livekit.io</a> — the
+      official LiveKit homepage with pricing and docs.</li>
+    <li><a href="https://github.com/livekit/agents" target="_blank" rel="noopener">livekit/agents</a>
+      — the LiveKit Agents Python repository with more examples.</li>
+    <li><a href="https://cloud.livekit.io/docs/agents/" target="_blank" rel="noopener">LiveKit Cloud Agents docs</a>
+      — the official guide for building and deploying agents.</li>
+    <li><a href="https://pongyuenlam.github.io/notes/ai-note19.html">How to use LiveKit Voice Agent with Weather Tool?</a>
+      — a parallel note showing how to give your agent a custom tool that calls real APIs.</li>
+    <li><a href="https://pongyuenlam.github.io/notes/ai-note18.html">How to install Homebrew Package Manager for macOS?</a>
+      — where to get <code>uv</code> in one command if you have not installed it yet.</li>
+    <li><a href="https://pongyuenlam.github.io/notes/ai-note17.html">How can Retrieval-Augmented Generation (RAG) answer questions without hallucination?</a>
+      — a voice agent's LLM has the same hallucination problem; RAG is how you fix it.</li>
+  </ul>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', 'Copy code to clipboard');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', 'Copied to clipboard');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', 'Copy code to clipboard');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>

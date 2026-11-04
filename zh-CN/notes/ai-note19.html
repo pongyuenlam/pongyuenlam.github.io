@@ -12,7 +12,7 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>如何使用 LiveKit 语音代理？ | 林邦源博士</title>
+<title>如何使用带天气工具的 LiveKit 语音代理？ | 林邦源博士</title>
 <meta name="description" content="用几分钟跑起你的第一个语音 AI 代理：语音识别、LLM、文字转语音，一个 Python 程序配合终端四条指令即可完成。">
 <link rel="canonical" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note19.html">
 <link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note19.html">
@@ -21,7 +21,7 @@
 <link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note19.html">
 
 <meta property="og:type" content="article">
-<meta property="og:title" content="如何使用 LiveKit 语音代理？">
+<meta property="og:title" content="如何使用带天气工具的 LiveKit 语音代理？">
 <meta property="og:description" content="用几分钟跑起你的第一个语音 AI 代理：语音识别、LLM、文字转语音，一个 Python 程序即可完成。">
 <meta property="og:url" content="https://pongyuenlam.github.io/zh-CN/notes/ai-note19.html">
 <meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
@@ -73,14 +73,14 @@
 </div>
 
 <main>
-  <h1>如何使用 LiveKit 语音代理？</h1>
+  <h1>如何使用带天气工具的 LiveKit 语音代理？</h1>
   <p class="paper-meta">林邦源 · AI 笔记 · 2026年11月4日 · 阅读时间约 6 分钟</p>
 
   <p>
     <strong>语音代理（Voice Agent）</strong>是一种你可以实时对话的 AI 程序：你说话，它先把语音识别成文字（<strong>STT</strong>，speech-to-text），再把文字交给大语言模型（<strong>LLM</strong>），最后把答案转成语音播放给你听（<strong>TTS</strong>，text-to-speech）。<a href="https://livekit.io/" target="_blank" rel="noopener">LiveKit</a> 是一个开源框架，把这三个部件通过网络串在一起，所以你的代理可以跑在服务器上，接受来自浏览器或电话的通话。
   </p>
   <p>
-    本笔记带你跑起一个精简但完整的语音代理 Python 程序。代理会先问候你、可以告诉你天气（示例工具），而且几分钟内就能部署到 LiveKit Cloud。你只需要在终端输入五条命令。
+    本笔记带你跑起一个精简但完整的语音代理 Python 程序。代理会先问候你、可以告诉你天气（示例工具）。
   </p>
 
   <h2>你需要准备什么</h2>
@@ -108,29 +108,35 @@ LIVEKIT_API_KEY=APIxxxxxxxxxxxxx
 LIVEKIT_API_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code></pre>
   <p><strong>注意：</strong>千万不要把 <code>.env</code> 放上 GitHub 或任何公开网站——里面有真实凭证。</p>
 
-  <h2>五条命令</h2>
+  <h2>在自己电脑上运行</h2>
   <p>
-    使用 Visual Studio Code 或类似的集成开发环境（IDE）打开这个文件夹，然后逐条执行以下五行。前两条告诉 <code>uv</code> 使用 Python 3.13；第三条初始化一个新项目；第四条安装 <code>requirements.txt</code> 列出的包；第五条启动代理。前四条只需做一次，之后每次想再跑代理时只需要跑第五条即可。
+    <a href="/downloads/Folder-AI-LiveKit-Agent.zip" download>下载 zip 文件</a>，解压到一个文件夹里。zip 里包含程序和 <code>pyproject.toml</code> 项目配置文件。把你的 <code>.env</code> 凭证文件放到同一文件夹（如上面「设置 LiveKit Cloud」步骤所示）。然后在 Visual Studio Code 里打开这个文件夹，在终端逐条输入以下两行：
   </p>
-  <pre class="code-block"><code>uv python install 3.13</code></pre>
-  <p>下载并安装 Python 3.13。</p>
-  <pre class="code-block"><code>uv python pin 3.13</code></pre>
-  <p>把这个项目锁定在 Python 3.13。</p>
-  <pre class="code-block"><code>uv init</code></pre>
-  <p>建立 <code>pyproject.toml</code>，这是 <code>uv</code> 管理项目的配置文件。</p>
-  <pre class="code-block"><code>uv add -r requirements.txt</code></pre>
-  <p>读取 <code>requirements.txt</code>，安装里面列出的所有包，包括 <code>livekit-agents</code> 和 <code>python-dotenv</code>。之后不用再跑，除非你修改了程序——例如升级某个包版本，或加入新包。</p>
+  <pre class="code-block"><code>uv sync</code></pre>
   <pre class="code-block"><code>uv run main.py console</code></pre>
-  <p>在终端启动代理，让你直接说话、并听到代理的回答。</p>
-
-  <h2>两个 Python 文件</h2>
   <p>
-    在执行上面的命令之前，先把以下两个文件粘贴进你的项目文件夹。
+    <code>uv sync</code> 读取 <code>pyproject.toml</code>，如果你的电脑还没有 Python 3.13，它会自动下载安装，然后装好所有依赖包。<code>uv run main.py console</code> 会在终端启动代理，让你直接说话、并听到代理的回答。你只需要跑一次 <code>uv sync</code>——只有在修改了 <code>main.py</code> 或依赖包之后才需要重新跑。
   </p>
 
-  <h3><code>requirements.txt</code></h3>
-  <pre class="code-block no-copy"><code>livekit-agents>=1.8.4,<2
-python-dotenv</code></pre>
+  <h2>程序文件</h2>
+  <p>
+    zip 里包含两个文件：<code>pyproject.toml</code> 和 <code>main.py</code>。下面是它们的完整内容供参考。
+  </p>
+
+  <h3><code>pyproject.toml</code></h3>
+  <pre class="code-block no-copy"><code>[project]
+name = "folder-ai-livekit-agent"
+version = "0.1.0"
+requires-python = "&gt;=3.13"
+dependencies = [
+    "livekit-agents>=1.8.4,<2",
+    "python-dotenv",
+    "requests",
+]
+
+[build-system]
+requires = ["uv_build>=0.13.6,<0.14.0"]
+build-backend = "uv_build"</code></pre>
 
   <h3><code>main.py</code></h3>
   <pre class="code-block no-copy"><code>from dotenv import load_dotenv

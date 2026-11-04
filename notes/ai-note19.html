@@ -12,7 +12,7 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>How to use LiveKit Voice Agent? | Howard Lam, PhD</title>
+<title>How to use LiveKit Voice Agent with Weather Tool? | Howard Lam, PhD</title>
 <meta name="description" content="Run your first voice-controlled AI agent in minutes: text speaks to an LLM and speaks back — built with LiveKit Agents and four commands in the Terminal.">
 <link rel="canonical" href="https://pongyuenlam.github.io/notes/ai-note19.html">
 <link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note19.html">
@@ -21,7 +21,7 @@
 <link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note19.html">
 
 <meta property="og:type" content="article">
-<meta property="og:title" content="How to use LiveKit Voice Agent?">
+<meta property="og:title" content="How to use LiveKit Voice Agent with Weather Tool?">
 <meta property="og:description" content="Run your first voice-controlled AI agent in minutes — speech recognition, an LLM, and text-to-speech, all in one Python program.">
 <meta property="og:url" content="https://pongyuenlam.github.io/notes/ai-note19.html">
 <meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
@@ -73,7 +73,7 @@
 </div>
 
 <main>
-  <h1>How to use LiveKit Voice Agent?</h1>
+  <h1>How to use LiveKit Voice Agent with Weather Tool?</h1>
   <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 4, 2026 &middot; 6 min read</p>
 
   <p>
@@ -86,8 +86,21 @@
   </p>
   <p>
     This note walks you through a minimal but complete voice agent in Python. The program greets
-    you, tells you the weather (a demo tool), and can be deployed to LiveKit Cloud in minutes.
-    You will need to type five commands in the Terminal.
+    you, tells you the weather (a demo tool).
+  </p>
+
+  <h2>Watch the walkthrough</h2>
+  <iframe
+    src="https://drive.google.com/file/d/14TPewW9TpAE5wHLKPz95hkc1rktIX5pB/preview"
+    title="How to use LiveKit Voice Agent"
+    style="width:100%; aspect-ratio:16/9; border:0;"
+    loading="lazy"
+    allowfullscreen></iframe>
+  <p class="paper-meta">
+    If the video does not load, open it in Google Drive:
+    <a href="https://drive.google.com/file/d/14TPewW9TpAE5wHLKPz95hkc1rktIX5pB/view?usp=sharing" target="_blank" rel="noopener">video</a>
+    (no account needed). The video shows an earlier version of the program with demo weather code;
+    the program in this note below has a fully working weather tool.
   </p>
 
   <h2>What you need</h2>
@@ -117,36 +130,43 @@ LIVEKIT_API_KEY=APIxxxxxxxxxxxxx
 LIVEKIT_API_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code></pre>
   <p><strong>Important:</strong> never put <code>.env</code> on GitHub or any public site — it contains your live credentials.</p>
 
-  <h2>The five commands</h2>
+  <h2>Running it on your own computer</h2>
   <p>
-    Use Visual Studio Code or similar Integrated Development Environment (IDE) to open the folder, and run these five commands one by one. The first two tell <code>uv</code> to use Python 3.13. The third initialises a new
-    project. The fourth installs the dependencies listed in <code>requirements.txt</code>. The
-    fifth starts the agent. You only have to do these first four commands once and do not have to do them again the next time you want to run the agent in the fifth command.
+    <a href="downloads/Folder-AI-LiveKit-Agent.zip" download>Download the zip file</a> and
+    unzip it to a folder. The zip holds the program and a <code>pyproject.toml</code> project file.
+    Add your own <code>.env</code> file with the keys, as shown above. Then open the folder in
+    Visual Studio Code and type these two lines in the terminal, one at a time:
   </p>
-  <pre class="code-block"><code>uv python install 3.13</code></pre>
-  <p>Downloads and installs Python 3.13.</p>
-  <pre class="code-block"><code>uv python pin 3.13</code></pre>
-  <p>Locks this project to Python 3.13.</p>
-  <pre class="code-block"><code>uv init</code></pre>
-  <p>Creates the <code>pyproject.toml</code> file that <code>uv</code> uses to manage your project.</p>
-  <pre class="code-block"><code>uv add -r requirements.txt</code></pre>
-  <p>Reads <code>requirements.txt</code> and installs every package listed there, including
-    <code>livekit-agents</code> and <code>python-dotenv</code>. You won't need to run this again
-    unless you later modify the program — for example, to bump a package version or add new
-    packages.</p>
+  <pre class="code-block"><code>uv sync</code></pre>
   <pre class="code-block"><code>uv run main.py console</code></pre>
-  <p>Starts the agent in your Terminal so you can speak to it directly and listen to the agent's answer.</p>
+  <p>
+    <code>uv sync</code> reads <code>pyproject.toml</code>, downloads Python 3.13 if you do not
+    already have it, and installs every package the agent needs. <code>uv run main.py console</code>
+    then starts the agent in your Terminal so you can speak to it directly. You only need to run
+    <code>uv sync</code> once — only re-run it if you later change <code>main.py</code> or the
+    dependencies.
+  </p>
 
   <h2>The Python files</h2>
   <p>
-    Here are the two files you need <em>before</em> running the commands above. Paste them into
-    your project folder first.
+    The zip contains two files: <code>pyproject.toml</code> and <code>main.py</code>. Here they
+    are for reference.
   </p>
 
-  <h3><code>requirements.txt</code></h3>
-  <pre class="code-block no-copy"><code>livekit-agents>=1.8.4,<2
-python-dotenv
-requests</code></pre>
+  <h3><code>pyproject.toml</code></h3>
+  <pre class="code-block no-copy"><code>[project]
+name = "folder-ai-livekit-agent"
+version = "0.1.0"
+requires-python = "&gt;=3.13"
+dependencies = [
+    "livekit-agents>=1.8.4,<2",
+    "python-dotenv",
+    "requests",
+]
+
+[build-system]
+requires = ["uv_build>=0.13.6,<0.14.0"]
+build-backend = "uv_build"</code></pre>
 
   <h3><code>main.py</code></h3>
   <pre class="code-block no-copy"><code>import requests
@@ -360,54 +380,6 @@ if __name__ == "__main__":
     missing credentials, stop the server (<code>Ctrl</code>+<code>C</code>), check that
     <code>.env</code> is in the project folder, and run
     <code>uv run main.py console</code> again.
-  </p>
-
-  <h2>Deploying to LiveKit Cloud</h2>
-  <p>
-    Running your agent locally in the Terminal is great for testing, but to answer calls from a
-    browser or a phone &mdash; anything outside your own Mac &mdash; you need to deploy it to
-    LiveKit Cloud. The free <strong>Build</strong> plan is enough to start:
-  </p>
-  <table>
-    <thead>
-      <tr>
-        <th>Feature</th>
-        <th>Build (free)</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Agent deployments</td>
-        <td><strong>1</strong></td>
-      </tr>
-      <tr>
-        <td>Agents running at the same time</td>
-        <td>5</td>
-      </tr>
-      <tr>
-        <td>Agent session minutes</td>
-        <td>1,000 per month</td>
-      </tr>
-      <tr>
-        <td>Cold start prevention</td>
-        <td>&mdash;</td>
-      </tr>
-      <tr>
-        <td>LiveKit Inference credit</td>
-        <td>$2.50 (about 50 minutes)</td>
-      </tr>
-    </tbody>
-  </table>
-  <p>
-    Only one deployed agent on the free plan, and paid plans start at Ship ($50/month). To push
-    your project to the cloud:
-  </p>
-  <pre class="code-block"><code>lk cloud auth          # link the LiveKit CLI to your Cloud project
-lk agent create        # run from this folder (creates livekit.toml and Dockerfile)
-lk agent deploy        # push later updates</code></pre>
-  <p>
-    <strong>Note:</strong> your <code>.env</code> keys are not uploaded automatically. Add them
-    as agent secrets in the dashboard or with <code>lk agent update-secrets</code>.
   </p>
 
   <h2>Limitations</h2>
