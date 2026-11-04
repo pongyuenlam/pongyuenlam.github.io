@@ -113,7 +113,7 @@ LIVEKIT_API_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code><
     使用 Visual Studio Code 或类似的集成开发环境（IDE）打开这个文件夹，然后逐条执行以下五行。前两条告诉 <code>uv</code> 使用 Python 3.13；第三条初始化一个新项目；第四条安装 <code>requirements.txt</code> 列出的包；第五条启动代理。
   </p>
   <pre class="code-block"><code>uv python install 3.13</code></pre>
-  <p>下载 Python 3.13，并存进项目的 <code>.venv</code> 文件夹——不会动到 Mac 自带的 Python。</p>
+  <p>下载 Python 3.13。这步只需做一次，下次执行 LiveKit 语音代理程序时不用再跑。</p>
   <pre class="code-block"><code>uv python pin 3.13</code></pre>
   <p>把这个项目锁定在 Python 3.13，让团队成员都用同一版本。</p>
   <pre class="code-block"><code>uv init</code></pre>
