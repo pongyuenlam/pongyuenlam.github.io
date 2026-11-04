@@ -135,9 +135,10 @@ LIVEKIT_API_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code><
     <code>livekit-agents</code> and <code>python-dotenv</code>. You do not have to run this command
     again unless you want to change the program and need to change the version of a package or
     need more packages.</p>
-  <pre class="code-block"><code>uv run main.py</code></pre>
-  <p>Starts the agent server and connects it to your LiveKit Cloud project. The Terminal will print
-    a message like <code>server running on localhost:7880</code>.</p>
+  <pre class="code-block"><code>uv run main.py console</code></pre>
+  <p>Starts the agent in your Terminal so you can type and speak to it directly, without opening a
+    browser or a LiveKit Cloud room. The Terminal will print a prompt like
+    <code>agent listening on ws://localhost:7880</code> and then wait for you to speak.</p>
 
   <h2>The Python files</h2>
   <p>
@@ -221,17 +222,16 @@ if __name__ == "__main__":
 
   <h2>Talk to your agent</h2>
   <p>
-    With <code>uv run main.py</code> still running in your Terminal, go back to the LiveKit Cloud
-    dashboard and open the <strong>Rooms</strong> page. Click <strong>Create Room</strong>, give
-    it a name, and click <strong>Join</strong>. A new page opens with a room URL &mdash; copy that
-    URL into a new browser tab and press <strong>Allow</strong> when your Mac asks for
-    microphone permission. Say hello &mdash; the agent should greet you back.
+    With <code>uv run main.py console</code> running in your Terminal, the program will ask your
+    Mac for microphone permission &mdash; click <strong>Allow</strong>. Then speak into your
+    microphone: you should hear the agent greet you back, and you can continue the conversation
+    freely. Press <code>Ctrl</code>+<code>C</code> when you want to stop.
   </p>
   <p>
-    If the room page shows <strong>&ldquo;Agent not connected&rdquo;</strong>, your Terminal is
-    probably not running or the credentials in <code>.env</code> are wrong. Stop the server
-    (<code>Ctrl</code>+<code>C</code> in Terminal), check <code>.env</code>, and run
-    <code>uv run main.py</code> again.
+    If the Terminal does not print anything after you press play, or it shows an error about
+    missing credentials, stop the server (<code>Ctrl</code>+<code>C</code>), check that
+    <code>.env</code> is in the project folder, and run
+    <code>uv run main.py console</code> again.
   </p>
 
   <h2>Limitations</h2>

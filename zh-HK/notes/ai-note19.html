@@ -120,8 +120,8 @@ LIVEKIT_API_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code><
   <p>建立 <code>pyproject.toml</code>，這是 <code>uv</code> 管理專案的設定檔。</p>
   <pre class="code-block"><code>uv add -r requirements.txt</code></pre>
   <p>讀取 <code>requirements.txt</code>，安裝裡面列出的所有套件，包括 <code>livekit-agents</code> 和 <code>python-dotenv</code>。這步只需跑一次，除非之後你改了程式、要升級某個套件版本，或要加新的套件，才需要再跑。</p>
-  <pre class="code-block"><code>uv run main.py</code></pre>
-  <p>啟動代理伺服器，連上你的 LiveKit Cloud 專案。終端機會顯示類似 <code>server running on localhost:7880</code> 的訊息。</p>
+  <pre class="code-block"><code>uv run main.py console</code></pre>
+  <p>在終端機啟動代理，讓你直接在本機用麥克風說話，不用開瀏覽器或 LiveKit Cloud 房間。終端機會顯示類似 <code>agent listening on ws://localhost:7880</code> 的訊息，然後等你說話。</p>
 
   <h2>兩個 Python 檔案</h2>
   <p>
@@ -194,10 +194,10 @@ if __name__ == "__main__":
 
   <h2>跟你的代理對話</h2>
   <p>
-    讓終端機維持 <code>uv run main.py</code> 執行中，回到 LiveKit Cloud 控制台的 <strong>Rooms</strong> 頁面，點 <strong>Create Room</strong>、輸入一個名稱、點 <strong>Join</strong>。新頁面會顯示這個房間的網址——把它複製到新瀏覽器分頁，Mac 要求麥克風權限時按 <strong>Allow</strong>。說聲 hello，代理應該會回你問候。
+    讓 <code>uv run main.py console</code> 在終端機執行中，程式會請求 Mac 的麥克風權限——按 <strong>Allow</strong>。然後對著麥克風說話：你應該會聽到代理回你問候，接著就可以自由對話。想停止時按 <code>Ctrl</code>+<code>C</code>。
   </p>
   <p>
-    如果房間頁面顯示 <strong>「Agent not connected」</strong>，代表終端機沒在執行，或是 <code>.env</code> 裡的憑證錯了。按 <code>Ctrl</code>+<code>C</code> 停止伺服器，檢查 <code>.env</code>，然後再執行一次 <code>uv run main.py</code>。
+    如果終端機一直沒反應，或顯示缺少憑證的錯誤訊息，按 <code>Ctrl</code>+<code>C</code> 停止，檢查 <code>.env</code> 是否在專案資料夾，再執行一次 <code>uv run main.py console</code>。
   </p>
 
   <h2>局限</h2>
