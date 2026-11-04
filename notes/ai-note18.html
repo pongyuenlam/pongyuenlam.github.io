@@ -184,6 +184,21 @@ google-assistant (disabled)             google-earth-pro</code></pre>
   <pre class="code-block"><code>brew update</code></pre>
   <pre class="code-block"><code>brew upgrade</code></pre>
 
+  <h2>How to uninstall Homebrew?</h2>
+  <p>
+    To remove Homebrew, run the official uninstall script from the
+    <a href="https://github.com/homebrew/install#uninstall-homebrew" target="_blank" rel="noopener">Homebrew/install</a>
+    repository (as of the time of writing this AI Note):
+  </p>
+  <pre class="code-block"><code>/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)"</code></pre>
+  <p>
+    This removes the Homebrew folder and the <code>brew</code> command. It also uninstalls the
+    command-line tools you installed with <code>brew install</code>. Desktop apps you installed
+    (such as Firefox) may remain in your Applications folder and can be dragged to the Trash
+    separately. If you are unsure, check the
+    <a href="https://docs.brew.sh/FAQ#how-do-i-uninstall-homebrew" target="_blank" rel="noopener">official FAQ</a>.
+  </p>
+
   <h2>Limitations</h2>
   <ul>
     <li><strong>The PATH step is the one people miss.</strong> Without it, <code>brew</code> is not

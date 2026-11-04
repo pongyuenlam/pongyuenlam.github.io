@@ -172,6 +172,20 @@ google-assistant (disabled)             google-earth-pro</code></pre>
   <pre class="code-block"><code>brew update</code></pre>
   <pre class="code-block"><code>brew upgrade</code></pre>
 
+  <h2>如何解除安裝 Homebrew？</h2>
+  <p>
+    要移除 Homebrew，請執行來自
+    <a href="https://github.com/homebrew/install#uninstall-homebrew" target="_blank" rel="noopener">Homebrew/install</a>
+    倉庫的官方解除安裝腳本（截至撰寫本 AI 筆記之時）：
+  </p>
+  <pre class="code-block"><code>/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)"</code></pre>
+  <p>
+    這會移除 Homebrew 資料夾與 <code>brew</code> 指令，也會一併解除安裝你用 <code>brew install</code> 安裝的指令列工具。
+    你安裝的桌面應用程式（例如 Firefox）可能仍留在 Applications 資料夾，可另行拖到資源回收筒。
+    如有疑問，請查閱
+    <a href="https://docs.brew.sh/FAQ#how-do-i-uninstall-homebrew" target="_blank" rel="noopener">官方 FAQ</a>。
+  </p>
+
   <h2>局限</h2>
   <ul>
     <li><strong>PATH 步驟最容易被遺漏。</strong>沒有它，即使安裝成功，<code>brew</code> 也找不到。</li>
