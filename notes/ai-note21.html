@@ -410,9 +410,11 @@ if __name__ == "__main__":
     <li><strong>Lin only knows opening hours.</strong> The whole knowledge base is one paragraph in
       <code>INSTRUCTIONS</code>. That is on purpose — version 1 is about wiring the pieces, not
       knowledge. Later versions can add tools, a database, or RAG.</li>
-    <li><strong>You need three accounts (LiveKit, Synthesia, Cartesia).</strong> LiveKit Cloud
-      covers STT, LLM, and TTS, but Synthesia is a separate subscription. At time of writing
-      Synthesia charges for avatar minutes.</li>
+    <li><strong>You need two accounts (LiveKit and Synthesia).</strong> LiveKit Cloud's Inference
+      service covers STT, LLM, and TTS (including voices from Cartesia and Deepgram), so you do
+      not need separate provider accounts. Synthesia offers a free Basic plan
+      (at time of writing, Nov&nbsp;2026) that includes Interactive Avatar with 1 concurrent session;
+      paid plans raise that limit and add credits.</li>
     <li><strong>Two-terminal workflow.</strong> You have to start <code>agent.py</code> and
       <code>server.py</code> separately. That is fine for demos, but a production deployment
       would bundle them behind a single supervisor or run them on LiveKit Cloud Agents alone.</li>
