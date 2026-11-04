@@ -132,7 +132,9 @@ LIVEKIT_API_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code><
   <p>Creates the <code>pyproject.toml</code> file that <code>uv</code> uses to manage your project.</p>
   <pre class="code-block"><code>uv add -r requirements.txt</code></pre>
   <p>Reads <code>requirements.txt</code> and installs every package listed there, including
-    <code>livekit-agents</code> and <code>python-dotenv</code>.</p>
+    <code>livekit-agents</code> and <code>python-dotenv</code>. You do not have to run this command
+    again unless you want to change the program and need to change the version of a package or
+    need more packages.</p>
   <pre class="code-block"><code>uv run main.py</code></pre>
   <p>Starts the agent server and connects it to your LiveKit Cloud project. The Terminal will print
     a message like <code>server running on localhost:7880</code>.</p>
