@@ -125,27 +125,12 @@
 
   <h2>Add Homebrew to your PATH</h2>
   <p>
-    Right after the install, the script prints a few lines that let your Mac find the
+    Right after the install, the script prints a few lines at the end that let your Mac find the
     <code>brew</code> command. This step is easy to overlook &mdash; but if you do, the Terminal will
-    say <code>command not found</code>. Copy the lines the installer shows you; it already prints
-    the correct ones for your Mac's chip:
-  </p>
-  <p>
-    <strong>Apple Silicon</strong> (M1, M2, M3, M4) &mdash; Homebrew lives in
-    <code>/opt/homebrew</code>:
-  </p>
-  <pre class="code-block"><code>echo >> ~/.zprofile
-echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
-eval "$(/opt/homebrew/bin/brew shellenv)"</code></pre>
-  <p>
-    <strong>Intel</strong> &mdash; Homebrew lives in <code>/usr/local</code>:
-  </p>
-  <pre class="code-block"><code>echo >> ~/.zprofile
-echo 'eval "$(/usr/local/bin/brew shellenv)"' >> ~/.zprofile
-eval "$(/usr/local/bin/brew shellenv)"</code></pre>
-  <p>
-    If you are unsure which chip you have, click the Apple menu &rarr; <strong>About This Mac</strong>.
-    Apple Silicon Macs say &ldquo;Chip&rdquo;; Intel Macs say &ldquo;Processor&rdquo;.
+    say <code>command not found</code>. <strong>Before you close the Terminal, scroll up to the last
+    few lines the installer printed, copy them, and run them exactly as shown.</strong> They already
+    contain the right folder for your Mac's chip, so you do not have to guess between Apple Silicon
+    and Intel.
   </p>
 
   <h2>Check it works</h2>
@@ -153,8 +138,8 @@ eval "$(/usr/local/bin/brew shellenv)"</code></pre>
   <pre class="code-block"><code>brew --version</code></pre>
   <p>
     It prints a version number, something like <code>Homebrew 4.4.0</code>. If you see
-    <code>command not found: brew</code>, the PATH step did not take effect &mdash; run the three
-    lines for your chip again, then restart Terminal.
+    <code>command not found: brew</code>, the PATH step did not take effect &mdash; go back to the
+    lines the installer printed, run them again, then restart Terminal.
   </p>
 
   <h2>Try it: install a tool and an app</h2>

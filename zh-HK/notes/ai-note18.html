@@ -120,26 +120,10 @@
 
   <h2>把 Homebrew 加入 PATH</h2>
   <p>
-    安裝完成後，指令會印出幾行，讓你的 Mac 找得到 <code>brew</code> 指令。
+    安裝完成後，指令會在最後印出幾行，讓你的 Mac 找得到 <code>brew</code> 指令。
     這一步很容易被忽略——但若略過，終端機會顯示 <code>command not found</code>。
-    請直接複製安裝程式印出的那幾行，它已因應你 Mac 的晶片給出正確版本：
-  </p>
-  <p>
-    <strong>Apple Silicon</strong>（M1、M2、M3、M4）——Homebrew 位於
-    <code>/opt/homebrew</code>：
-  </p>
-  <pre class="code-block"><code>echo >> ~/.zprofile
-echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
-eval "$(/opt/homebrew/bin/brew shellenv)"</code></pre>
-  <p>
-    <strong>Intel</strong>——Homebrew 位於 <code>/usr/local</code>：
-  </p>
-  <pre class="code-block"><code>echo >> ~/.zprofile
-echo 'eval "$(/usr/local/bin/brew shellenv)"' >> ~/.zprofile
-eval "$(/usr/local/bin/brew shellenv)"</code></pre>
-  <p>
-    若不確定自己的晶片，按蘋果選單 &rarr; <strong>關於此 Mac</strong>。
-    Apple Silicon 會顯示「晶片」；Intel 則顯示「處理器」。
+    <strong>關閉終端機前，請向上捲動到安裝程式最後印出的幾行，複製並原樣執行它們。</strong>
+    那幾行已因應你 Mac 的晶片給出正確資料夾，所以你不用猜是 Apple Silicon 還是 Intel。
   </p>
 
   <h2>檢查是否成功</h2>
@@ -148,7 +132,7 @@ eval "$(/usr/local/bin/brew shellenv)"</code></pre>
   <p>
     它會印出版本編號，例如 <code>Homebrew 4.4.0</code>。若顯示
     <code>command not found: brew</code>，代表 PATH 步驟尚未生效——
-    請重新執行對應你晶片的三行，再重開終端機。
+    請回到安裝程式印出的那幾行，重新執行一次，再重開終端機。
   </p>
 
   <h2>試試看：安裝工具與應用程式</h2>
