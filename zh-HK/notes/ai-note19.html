@@ -119,7 +119,7 @@ LIVEKIT_API_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code><
   <pre class="code-block"><code>uv init</code></pre>
   <p>建立 <code>pyproject.toml</code>，這是 <code>uv</code> 管理專案的設定檔。</p>
   <pre class="code-block"><code>uv add -r requirements.txt</code></pre>
-  <p>讀取 <code>requirements.txt</code>，安裝裡面列出的所有套件，包括 <code>livekit-agents</code> 和 <code>python-dotenv</code>。這步只需跑一次，除非之後你改了程式、要升級某個套件版本，或要加新的套件，才需要再跑。</p>
+  <p>讀取 <code>requirements.txt</code>，安裝裡面列出的所有套件，包括 <code>livekit-agents</code> 和 <code>python-dotenv</code>。之後不用再跑，除非你修改了程式——例如升級某個套件版本，或加入新套件。</p>
   <pre class="code-block"><code>uv run main.py console</code></pre>
   <p>在終端機啟動代理，讓你直接說話、並聽到代理的回答。</p>
 
