@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to install Homebrew Package Manager for macOS? | Howard Lam, PhD</title>
+<meta name="description" content="Install Homebrew on a Mac, add it to your PATH, and use it to install command-line tools and desktop apps from the terminal — for non-technical readers.">
+<link rel="canonical" href="https://pongyuenlam.github.io/notes/ai-note18.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note18.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note18.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note18.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note18.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to install Homebrew Package Manager for macOS?">
+<meta property="og:description" content="Install Homebrew on a Mac, add it to your PATH, and use it to install command-line tools and desktop apps from the terminal.">
+<meta property="og:url" content="https://pongyuenlam.github.io/notes/ai-note18.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="Howard Lam, PhD">
+
+<link rel="stylesheet" href="../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "How to install Homebrew Package Manager for macOS?",
+  "description": "Install Homebrew on a Mac, add it to your PATH, and use it to install command-line tools and desktop apps from the terminal — for non-technical readers.",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-04",
+  "dateModified": "2026-11-04",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/notes/ai-note18.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../biography.html">Biography</a></li>
+        <li><a href="../research.html">Research</a></li>
+        <li><a href="../cases.html">Cases</a></li>
+        <li><a href="../books.html">Books</a></li>
+        <li><a href="../ai-programs.html">AI Notes</a></li>
+        <li><a href="../links/">Links</a></li>
+        <li><a href="../glossary/">Glossary</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <span class="current">English</span>
+  <a href="/zh-HK/notes/ai-note18.html">繁體中文</a>
+  <a href="/zh-CN/notes/ai-note18.html">简体中文</a>
+</div>
+
+<main>
+  <h1>How to install Homebrew Package Manager for macOS?</h1>
+  <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 4, 2026 &middot; 5 min read</p>
+
+  <p>
+    <strong>Homebrew</strong> is a <strong>package manager</strong> for macOS. A package manager is a
+    single command that downloads and installs other programs for you, so you do not have to hunt
+    down websites and drag files into the Applications folder. With Homebrew, installing a tool like
+    <code>git</code> or an app like Firefox is one short line in the Terminal. This note covers
+    macOS only.
+  </p>
+
+  <h2>Watch the walkthrough</h2>
+  <iframe
+    src="https://drive.google.com/file/d/1PuHyMGNIR1qlENxumWjRJI0vJVdPRoKo/preview"
+    title="How to install Homebrew Package Manager for macOS"
+    style="width:100%; aspect-ratio:16/9; border:0;"
+    loading="lazy"
+    allowfullscreen></iframe>
+  <p class="paper-meta">
+    If the video does not load, open it in Google Drive:
+    <a href="https://drive.google.com/file/d/1PuHyMGNIR1qlENxumWjRJI0vJVdPRoKo/view?usp=sharing" target="_blank" rel="noopener">video</a>
+    (no account needed).
+  </p>
+
+  <h2>What you need</h2>
+  <ul>
+    <li>A Mac running <strong>macOS Sequoia (15) or newer</strong> &mdash; these are the versions
+      Homebrew officially supports. Older macOS versions may still work but are not guaranteed.</li>
+    <li>An <strong>internet connection</strong>.</li>
+    <li>Your Mac's <strong>administrator password</strong> &mdash; the installer needs permission to
+      create its own folder.</li>
+    <li>The <strong>Terminal</strong> app, in Applications &rarr; Utilities (or type
+      &ldquo;Terminal&rdquo; into Spotlight).</li>
+  </ul>
+
+  <h2>The install command</h2>
+  <p>
+    Open Terminal and paste this line from the
+    <a href="https://brew.sh/" target="_blank" rel="noopener">official Homebrew page</a>:
+  </p>
+  <pre class="code-block"><code>/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"</code></pre>
+  <p>
+    Press <strong>Return</strong>. The script explains what it will do, then pauses and asks for your
+    password. Type your Mac's login password &mdash; you will <em>not</em> see the letters appear
+    &mdash; and press <strong>Return</strong> again. The install can take several minutes; wait
+    until the script finishes and prints <strong>&ldquo;Installation successful!&rdquo;</strong>.
+  </p>
+
+  <h2>Add Homebrew to your PATH</h2>
+  <p>
+    Right after the install, the script prints a few lines that let your Mac find the
+    <code>brew</code> command. This step is easy to skip &mdash; but if you do, the Terminal will
+    say <code>command not found</code>. Copy the lines the installer shows you; it already prints
+    the correct ones for your Mac's chip:
+  </p>
+  <p>
+    <strong>Apple Silicon</strong> (M1, M2, M3, M4) &mdash; Homebrew lives in
+    <code>/opt/homebrew</code>:
+  </p>
+  <pre class="code-block"><code>echo >> ~/.zprofile
+echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+eval "$(/opt/homebrew/bin/brew shellenv)"</code></pre>
+  <p>
+    <strong>Intel</strong> &mdash; Homebrew lives in <code>/usr/local</code>:
+  </p>
+  <pre class="code-block"><code>echo >> ~/.zprofile
+echo 'eval "$(/usr/local/bin/brew shellenv)"' >> ~/.zprofile
+eval "$(/usr/local/bin/brew shellenv)"</code></pre>
+  <p>
+    If you are unsure which chip you have, click the Apple menu &rarr; <strong>About This Mac</strong>.
+    Apple Silicon Macs say &ldquo;Chip&rdquo;; Intel Macs say &ldquo;Processor&rdquo;.
+  </p>
+
+  <h2>Check it works</h2>
+  <p>Close Terminal and open it again, then type:</p>
+  <pre class="code-block"><code>brew --version</code></pre>
+  <p>
+    It prints a version number, something like <code>Homebrew 4.4.0</code>. If you see
+    <code>command not found: brew</code>, the PATH step did not take effect &mdash; run the three
+    lines for your chip again, then restart Terminal.
+  </p>
+
+  <h2>Try it: install a tool and an app</h2>
+  <p>
+    Homebrew has two kinds of packages. <strong>Formulae</strong> are command-line tools and
+    libraries; <strong>casks</strong> are full desktop apps. To install a command-line tool:
+  </p>
+  <pre class="code-block"><code>brew install wget</code></pre>
+  <p>
+    To install a desktop app (here, the Firefox browser) and have it appear in your Applications
+    folder:
+  </p>
+  <pre class="code-block"><code>brew install --cask firefox</code></pre>
+  <p>
+    To update Homebrew itself and upgrade everything you installed with it:
+  </p>
+  <pre class="code-block"><code>brew update</code></pre>
+  <pre class="code-block"><code>brew upgrade</code></pre>
+
+  <h2>Limitations</h2>
+  <ul>
+    <li><strong>Needs your admin password</strong> to create its folder and set up system links.</li>
+    <li><strong>The PATH step is the one people miss.</strong> Without it, <code>brew</code> is not
+      found even though it installed fine.</li>
+    <li><strong>Apple Silicon and Intel use different folders.</strong> Always use the lines the
+      installer printed, because they already match your Mac.</li>
+    <li><strong>Requires internet</strong> every time you install or update a package.</li>
+  </ul>
+
+  <h2>Further reading</h2>
+  <ul>
+    <li><a href="https://brew.sh/" target="_blank" rel="noopener">brew.sh</a> &mdash; the official
+      Homebrew page, with the install command and the latest supported macOS versions.</li>
+    <li><a href="https://docs.brew.sh/Installation" target="_blank" rel="noopener">Homebrew
+      Installation docs</a> &mdash; troubleshooting and alternative install options.</li>
+    <li><a href="https://docs.brew.sh/Manpage" target="_blank" rel="noopener">The brew man page</a>
+      &mdash; the full list of commands.</li>
+    <li><a href="ai-note05.html">How to install Visual Studio Code?</a> &mdash; the editor that works
+      alongside Homebrew.</li>
+    <li><a href="ai-note04.html">How to install and use uv package manager on a Mac?</a> &mdash; once
+      Homebrew is installed, uv is a quick <code>brew install uv</code> away.</li>
+  </ul>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', 'Copy code to clipboard');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', 'Copied to clipboard');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', 'Copy code to clipboard');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>

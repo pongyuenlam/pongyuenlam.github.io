@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-HK">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>如何在 macOS 安裝 Homebrew 套件管理程式？ | 林邦源博士</title>
+<meta name="description" content="在 Mac 上安裝 Homebrew，把它加入 PATH，然後用終端機安裝指令工具與桌面應用——為非技術讀者講解。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note18.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note18.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note18.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note18.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note18.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何在 macOS 安裝 Homebrew 套件管理程式？">
+<meta property="og:description" content="在 Mac 上安裝 Homebrew，把它加入 PATH，然後用終端機安裝指令工具與桌面應用。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-HK/notes/ai-note18.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="/css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "如何在 macOS 安裝 Homebrew 套件管理程式？",
+  "description": "在 Mac 上安裝 Homebrew，把它加入 PATH，然後用終端機安裝指令工具與桌面應用——為非技術讀者講解。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-04",
+  "dateModified": "2026-11-04",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-HK/notes/ai-note18.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="/">林邦源博士</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="/">首頁</a></li>
+        <li><a href="/biography.html">個人簡介</a></li>
+        <li><a href="/research.html">研究</a></li>
+        <li><a href="/cases.html">案例</a></li>
+        <li><a href="/books.html">書籍</a></li>
+        <li><a href="/zh-HK/ai-programs.html">AI 筆記</a></li>
+        <li><a href="/links/">連結</a></li>
+        <li><a href="/glossary/">詞彙表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <a href="/notes/ai-note18.html">English</a>
+  <span class="current">繁體中文</span>
+  <a href="/zh-CN/notes/ai-note18.html">简体中文</a>
+</div>
+
+<main>
+  <h1>如何在 macOS 安裝 Homebrew 套件管理程式？</h1>
+  <p class="paper-meta">林邦源 &middot; AI 筆記 &middot; 2026年11月4日 &middot; 閱讀時間約 5 分鐘</p>
+
+  <p>
+    <strong>Homebrew</strong> 是 macOS 的<strong>套件管理程式</strong>。套件管理程式是一條指令，
+    幫你下載並安裝其他程式，所以你不用四處找網站、再把檔案拖進 Applications 資料夾。
+    有了 Homebrew，安裝 <code>git</code> 之類的工具或 Firefox 這類應用程式，只需在終端機輸入短短一行。
+    本篇只介紹 macOS。
+  </p>
+
+  <h2>觀看示範影片</h2>
+  <iframe
+    src="https://drive.google.com/file/d/1PuHyMGNIR1qlENxumWjRJI0vJVdPRoKo/preview"
+    title="如何在 macOS 安裝 Homebrew 套件管理程式"
+    style="width:100%; aspect-ratio:16/9; border:0;"
+    loading="lazy"
+    allowfullscreen></iframe>
+  <p class="paper-meta">
+    如影片未能載入，請在 Google 雲端硬碟開啟：
+    <a href="https://drive.google.com/file/d/1PuHyMGNIR1qlENxumWjRJI0vJVdPRoKo/view?usp=sharing" target="_blank" rel="noopener">影片</a>
+    （無需帳號）。
+  </p>
+
+  <h2>準備事項</h2>
+  <ul>
+    <li>執行 <strong>macOS Sequoia（15）或更新版本</strong>的 Mac——這是 Homebrew 官方支援的版本。
+      舊版 macOS 或仍可使用，但不保證。</li>
+    <li><strong>網絡連線</strong>。</li>
+    <li>Mac 的<strong>管理員密碼</strong>——安裝程式需要權限建立自己的資料夾。</li>
+    <li><strong>終端機</strong>（Terminal）應用程式，在「應用程式 &rarr; 工具程式」內，
+      或在 Spotlight 輸入「Terminal」。</li>
+  </ul>
+
+  <h2>安裝指令</h2>
+  <p>
+    打開終端機，貼上這行來自
+    <a href="https://brew.sh/" target="_blank" rel="noopener">Homebrew 官方網頁</a>的指令：
+  </p>
+  <pre class="code-block"><code>/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"</code></pre>
+  <p>
+    按 <strong>Return</strong>。指令會先說明它會做甚麼，然後暫停並要求你輸入密碼。
+    輸入 Mac 的登入密碼——畫面上<em>不會</em>顯示任何字元——再按一次 <strong>Return</strong>。
+    安裝可能需時幾分鐘，請等到指令完成並顯示 <strong>「Installation successful!」</strong>。
+  </p>
+
+  <h2>把 Homebrew 加入 PATH</h2>
+  <p>
+    安裝完成後，指令會印出幾行，讓你的 Mac 找得到 <code>brew</code> 指令。
+    這一步很容易被略過——但若略過，終端機會顯示 <code>command not found</code>。
+    請直接複製安裝程式印出的那幾行，它已因應你 Mac 的晶片給出正確版本：
+  </p>
+  <p>
+    <strong>Apple Silicon</strong>（M1、M2、M3、M4）——Homebrew 位於
+    <code>/opt/homebrew</code>：
+  </p>
+  <pre class="code-block"><code>echo >> ~/.zprofile
+echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+eval "$(/opt/homebrew/bin/brew shellenv)"</code></pre>
+  <p>
+    <strong>Intel</strong>——Homebrew 位於 <code>/usr/local</code>：
+  </p>
+  <pre class="code-block"><code>echo >> ~/.zprofile
+echo 'eval "$(/usr/local/bin/brew shellenv)"' >> ~/.zprofile
+eval "$(/usr/local/bin/brew shellenv)"</code></pre>
+  <p>
+    若不確定自己的晶片，按蘋果選單 &rarr; <strong>關於此 Mac</strong>。
+    Apple Silicon 會顯示「晶片」；Intel 則顯示「處理器」。
+  </p>
+
+  <h2>檢查是否成功</h2>
+  <p>關閉終端機再重新打開，然後輸入：</p>
+  <pre class="code-block"><code>brew --version</code></pre>
+  <p>
+    它會印出版本編號，例如 <code>Homebrew 4.4.0</code>。若顯示
+    <code>command not found: brew</code>，代表 PATH 步驟尚未生效——
+    請重新執行對應你晶片的三行，再重開終端機。
+  </p>
+
+  <h2>試試看：安裝工具與應用程式</h2>
+  <p>
+    Homebrew 有兩種套件。<strong>Formulae</strong> 是指令列工具與函式庫；
+    <strong>casks</strong> 是完整的桌面應用程式。安裝一個指令列工具：
+  </p>
+  <pre class="code-block"><code>brew install wget</code></pre>
+  <p>
+    安裝一個桌面應用程式（此例為 Firefox 瀏覽器），它會出現在 Applications 資料夾：
+  </p>
+  <pre class="code-block"><code>brew install --cask firefox</code></pre>
+  <p>
+    更新 Homebrew 本身，以及升級所有以它安裝的套件：
+  </p>
+  <pre class="code-block"><code>brew update</code></pre>
+  <pre class="code-block"><code>brew upgrade</code></pre>
+
+  <h2>局限</h2>
+  <ul>
+    <li><strong>需要管理員密碼</strong>才能建立資料夾與系統連結。</li>
+    <li><strong>PATH 步驟最容易被遺漏。</strong>沒有它，即使安裝成功，<code>brew</code> 也找不到。</li>
+    <li><strong>Apple Silicon 與 Intel 使用不同資料夾。</strong>請務必使用安裝程式印出的那幾行，
+      因為它已對應你的 Mac。</li>
+    <li><strong>每次安裝或更新套件都需要網絡連線。</strong></li>
+  </ul>
+
+  <h2>延伸閱讀</h2>
+  <ul>
+    <li><a href="https://brew.sh/" target="_blank" rel="noopener">brew.sh</a>——Homebrew 官方網頁，
+      含安裝指令與最新支援的 macOS 版本。</li>
+    <li><a href="https://docs.brew.sh/Installation" target="_blank" rel="noopener">Homebrew 安裝文件</a>——
+      疑難排解與其他安裝方式。</li>
+    <li><a href="https://docs.brew.sh/Manpage" target="_blank" rel="noopener">brew 線上手冊</a>——完整指令列表。</li>
+    <li><a href="/zh-HK/notes/ai-note05.html">如何安裝 Visual Studio Code？</a>——可與 Homebrew 搭配使用的編輯器。</li>
+    <li><a href="/zh-HK/notes/ai-note04.html">如何在 Mac 安裝及使用 uv 套件管理工具？</a>——裝好 Homebrew 後，
+      uv 只需一行 <code>brew install uv</code>。</li>
+  </ul>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">電郵</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', '複製程式碼到剪貼簿');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', '已複製到剪貼簿');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', '複製程式碼到剪貼簿');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>
