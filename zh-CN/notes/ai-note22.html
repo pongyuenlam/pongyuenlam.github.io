@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-Hans-CN">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>如何用 LiveKit + Synthesia 数字人（版本 2）？ | 林邦源博士</title>
+<meta name="description" content="在浏览器里做一个会说话的 AI 数字人，知识库放在纯文字档：改一下 FAQs.txt、存档，数字人就学会了新东西。由 LiveKit Agents + Synthesia 驱动。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note22.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note22.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note22.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note22.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note22.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何用 LiveKit + Synthesia 数字人（版本 2）？">
+<meta property="og:description" content="在浏览器里做一个会说话的 AI 数字人，知识库放在纯文字档：改一下 FAQs.txt、存档，数字人就学会了新东西。由 LiveKit Agents + Synthesia 驱动。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-CN/notes/ai-note22.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" string="false">495</meta>
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="../../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "如何用 LiveKit + Synthesia 数字人（版本 2）？",
+  "description": "在浏览器里做一个会说话的 AI 数字人，知识库放在纯文字档：改一下 FAQs.txt、存档，数字人就学会了新东西。由 LiveKit Agents + Synthesia 驱动。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-04",
+  "dateModified": "2026-11-04",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-CN/notes/ai-note22.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../../index.html">首页</a></li>
+        <li><a href="../../biography.html">个人简介</a></li>
+        <li><a href="../../research.html">研究</a></li>
+        <li><a href="../../cases.html">案例</a></li>
+        <li><a href="../../books.html">著作</a></li>
+        <li><a href="../../ai-programs.html">AI 笔记</a></li>
+        <li><a href="../../links/">链接</a></li>
+        <li><a href="../../glossary/">词汇表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <a href="/notes/ai-note22.html">English</a>
+  <a href="/zh-HK/notes/ai-note22.html">繁體中文</a>
+  <span class="current">简体中文</span>
+</div>
+
+<main>
+  <h1>如何用 LiveKit + Synthesia 数字人（版本 2）？</h1>
+  <p class="paper-meta">林邦源博士 &middot; AI 笔记 &middot; 2026 年 11 月 4 日 &middot; 约 7 分钟阅读</p>
+
+  <p>
+    <a href="https://www.synthesia.io/" target="_blank" rel="noopener">Synthesia</a>
+    能生成逼真的 AI 数字人，实时说话、实时对口型。
+    <a href="https://livekit.io/" target="_blank" rel="noopener">LiveKit</a>
+    则把数字人和语音代理绑在一起：麦克风 → 语音识别 → LLM → 文字转语音 → 数字人。
+  </p>
+  <p>
+    <a href="/notes/ai-note21.html">版本 1</a>
+    里数字人知道的所有东西都硬写在 Python prompt 里。这样代码好读，但每次想让 Lin 多知道一件事，
+    都得改 Python、再重启。
+  </p>
+  <p>
+    版本 2 把知识搬到一个纯文字档，叫做 <code>FAQs.txt</code> for frequently asked questions。
+    改完文件、打开一通新的通话，数字人就会学到新内容——不用改代码。Lin 现在能回答四个问题
+    （营业时间、主打菜、地址、回复其他问题的备案答案），不再只限一个。
+  </p>
+
+  <h2>整条流水线</h2>
+  <pre class="code-block no-copy"><code>浏览器麦克风 → VAD → STT → turn detection → LLM → TTS → Synthesia 数字人 → 浏览器视频</code></pre>
+  <p>
+    五块元件透过 LiveKit 的实时传输连在一起。
+    <strong>VAD</strong>（语音活动检测）负责监听你什么时候开口、什么时候停下，
+    <strong>STT</strong> 把语音转文字，<strong>LLM</strong> 负责回答，
+    <strong>TTS</strong> 把回答念出来，<strong>Synthesia</strong> 渲染出跟语音同步的脸。
+    全部跑在 LiveKit Cloud 上。
+  </p>
+
+  <h2>准备工作</h2>
+  <ul>
+    <li>一台 Mac（Windows 和 Linux 也能用，步骤一样）。</li>
+    <li><a href="https://pongyuenlam.github.io/notes/ai-note18.html">装好 Homebrew</a> 和 <code>uv</code> 包管理器——如果还没装 <code>uv</code>，跑 <code>brew install uv</code>。</li>
+    <li>一个 <a href="https://cloud.livekit.io/" target="_blank" rel="noopener">LiveKit Cloud</a> 账号（免费的 <strong>Build</strong> 套餐就够）。</li>
+    <li>一个 <a href="https://www.synthesia.io/" target="_blank" rel="noopener">Synthesia</a> 账号。至少要在上面创建一个数字人（免费账号也能体验）。</li>
+    <li>把 LiveKit 和 Synthesia 的凭证复制到一个叫 <code>.env</code> 的文件里——见下文。</li>
+  </ul>
+
+  <h2>设定 LiveKit Cloud</h2>
+  <p>
+    在 <a href="https://cloud.livekit.io/" target="_blank" rel="noopener">cloud.livekit.io</a>
+    注册登录。进入控制台，点 <strong>Projects</strong> → <strong>Create Project</strong>，
+    打开项目后点 <strong>Keys</strong>，复制这三个值：
+  </p>
+  <ul>
+    <li><code>LIVEKIT_URL</code> —— 格式像 <code>wss://your-project.livekit.cloud</code>。</li>
+    <li><code>LIVEKIT_API_KEY</code> —— 短字符串，像 <code>APIxxxxxxxxxxxxx</code>。</li>
+    <li><code>LIVEKIT_API_SECRET</code> —— 长字符串，只显示一次。</li>
+  </ul>
+
+  <h2>设定 Synthesia</h2>
+  <p>
+    登录 <a href="https://app.synthesia.io/" target="_blank" rel="noopener">app.synthesia.io</a>。
+    进入 <strong>Avatars</strong>，选一个或新建一个数字人——每个数字人都有一个 UUID，
+    打开它时 URL 里就能看到（像 <code>3190429b-1eda-4151-bf24-96162e405840</code>），
+    这就是 <code>SYNTHESIA_AVATAR_ID</code>。
+  </p>
+  <p>
+    然后到 <a href="https://app.synthesia.io/apiKeys" target="_blank" rel="noopener">API Keys</a>
+    创建一把密钥——这就是 <code>SYNTHESIA_API_KEY</code>。
+  </p>
+
+  <h2>创建 <code>.env</code></h2>
+  <p>
+    在你的项目文件夹里新建一个文件，命名为 <code>.env</code>，填入以下五行：
+  </p>
+  <pre class="code-block no-copy"><code>LIVEKIT_URL=wss://your-project.livekit.cloud
+LIVEKIT_API_KEY=APIxxxxxxxxxxxxx
+LIVEKIT_API_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+SYNTHESIA_API_KEY=syn_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+SYNTHESIA_AVATAR_ID=3190429b-1eda-4151-bf24-96162e405840</code></pre>
+  <p><strong>注意：</strong>绝对不要把 <code>.env</code> 传到 GitHub 或任何公开网站——里面是你的真实凭证。</p>
+
+  <h2>在自己电脑上执行</h2>
+  <p>
+    <a href="/downloads/Folder-AI-LiveKit-Avatar-V2.zip" download>下载 zip 文件</a>，
+    解压到一个文件夹里。zip 里包含 <code>agent.py</code>、<code>server.py</code>、
+    <code>index.html</code>、<code>FAQs.txt</code> 和 <code>pyproject.toml</code>。
+    把你的 <code>.env</code> 凭证文件放到同一文件夹（如上面所示）。然后在 Visual Studio Code 里打开这个文件夹，
+    在<strong>两个不同的终端窗口</strong>里分别执行：
+  </p>
+  <p>
+    <strong>终端 1</strong> —— 语音代理 + 数字人引擎：
+  </p>
+  <pre class="code-block"><code>uv sync
+uv run agent.py dev</code></pre>
+  <p>
+    <strong>终端 2</strong> —— 浏览器页面的 Web 服务器：
+  </p>
+  <pre class="code-block"><code>uv run server.py</code></pre>
+  <p>
+    <code>uv sync</code> 只需要第一次跑——它会自动装 Python 3.13 和所有依赖包。之后每次只要开两个终端分别执行 <code>agent.py</code> 和 <code>server.py</code> 就行。
+  </p>
+
+  <h2>在浏览器里打开页面</h2>
+  <p>
+    两个终端都跑起来之后，在 Chrome、Safari 或 Edge 里打开
+    <a href="http://127.0.0.1:8080" target="_blank" rel="noopener">http://127.0.0.1:8080</a>，
+    点 <strong>Start</strong>，允许麦克风权限，然后等个几秒让代理和数字人加入房间。
+    你应该能看到 Lin 跟你打招呼——点一下麦克风图标试试问它一个问题，比如「你们在哪里？」或「你们有什么主打菜？」。
+  </p>
+
+  <h2>不动 Python，直接编辑知识库</h2>
+  <p>
+    Lin 知道的所有东西都在 <code>FAQs.txt</code>，就在 <code>agent.py</code> 旁边：
+  </p>
+  <pre class="code-block no-copy"><code>Q: When is YouFantasy open?
+A: YouFantasy is open every day from 9am to 10pm.
+
+Q: What are the main courses?
+A: Salmon, Beef, Chicken, Pork, Tofu.
+
+Q: Where is YouFantasy?
+A: YouFantasy is on Tat Chee Avenue, Kowloon Tong, Hong Kong.
+
+Q: Any other question?
+A: Sorry, I do not have answer for that question.</code></pre>
+  <p>
+    每当一通新的通话开始，<code>agent.py</code> 都会重新读取这个文件，把 prompt 里的
+    <code>{faqs}</code> 占位符换成最新内容，才启动 session。要给 Lin 加新知识，
+    只要加一组 Q&amp;A、存档、再打开一通新的通话就行——不用改 Python。
+  </p>
+
+  <h2>zip 里的文件</h2>
+
+  <h3><code>pyproject.toml</code></h3>
+  <pre class="code-block no-copy"><code>[project]
+name = "folder-ai-avatar-v2"
+version = "0.1.0"
+requires-python = "&gt;=3.13"
+dependencies = [
+    "aiohttp>=3.14.4",
+    "livekit-agents[openai,silero]~=1.8",
+    "livekit-plugins-synthesia~=1.8",
+    "python-dotenv>=1.2.4",
+]
+
+[build-system]
+requires = ["setuptools>=70"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = []</code></pre>
+
+  <h3><code>agent.py</code></h3>
+  <pre class="code-block no-copy"><code>import asyncio
+import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+from livekit.agents import Agent, AgentSession, JobContext, WorkerOptions, cli, inference
+from livekit.plugins import silero, synthesia
+
+load_dotenv(dotenv_path=Path(__file__).parent / ".env")
+
+AGENT_NAME = "avatar-demo"
+AVATAR_ID = os.getenv("SYNTHESIA_AVATAR_ID") or "3190429b-1eda-4151-bf24-96162e405840"
+VOICE_ID = "db6b0ed5-d5d3-463d-ae85-518a07d3c2b4"
+
+FAQS_FILE = Path(__file__).parent / "FAQs.txt"  # the avatar's knowledge
+
+# {faqs} is replaced with the contents of FAQs.txt at the start of every call.
+INSTRUCTIONS = """\
+You are Lin, the host at YouFantasy, a made-up restaurant. You are a real-time
+avatar in a spoken conversation, so answer in one to three short sentences and never use
+markdown, lists, or URLs.
+
+Answer only from these FAQs:
+
+{faqs}
+
+Those are the only things you know. If the guest asks anything the FAQs do not
+cover, use the answer to "Any other question?" word for word."""
+
+
+def prewarm(proc) -&gt; None:
+    proc.userdata["vad"] = silero.VAD.load()
+
+
+async def entrypoint(ctx: JobContext) -&gt; None:
+    await ctx.connect()
+
+    session = AgentSession(
+        vad=ctx.proc.userdata["vad"],
+        stt=inference.STT(model="cartesia/ink-2"),
+        llm=inference.LLM(model="openai/gpt-4.1-mini"),
+        tts=inference.TTS(model="cartesia/sonic-3.6", voice=VOICE_ID),
+        turn_handling={"turn_detection": "stt"},
+    )
+
+    avatar = synthesia.AvatarSession(
+        synthesia.AvatarConfig(avatar_ids=[AVATAR_ID]),
+        join_timeout=60.0,
+    )
+    for attempt in range(3):
+        try:
+            await avatar.start(session, room=ctx.room)
+            break
+        except synthesia.SynthesiaError as e:
+            if not e.retryable or attempt == 2:
+                raise
+            await asyncio.sleep(2)
+
+    # Read FAQs fresh each call so edits to FAQs.txt show up on the next call.
+    faqs = FAQS_FILE.read_text(encoding="utf-8").strip()
+    await session.start(
+        agent=Agent(instructions=INSTRUCTIONS.replace("{faqs}", faqs)),
+        room=ctx.room,
+    )
+    session.generate_reply(
+        instructions="Welcome the guest to YouFantasy and invite them to ask a question, in one short sentence."
+    )
+
+
+if __name__ == "__main__":
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, prewarm_fnc=prewarm, agent_name=AGENT_NAME, port=8081))</code></pre>
+
+  <h3><code>server.py</code></h3>
+  <pre class="code-block no-copy"><code>import os
+import uuid
+from datetime import timedelta
+from pathlib import Path
+
+from aiohttp import web
+from dotenv import load_dotenv
+from livekit import api
+
+load_dotenv(dotenv_path=Path(__file__).parent / ".env")
+
+AGENT_NAME = "avatar-demo"
+
+
+async def token(request: web.Request) -&gt; web.Response:
+    room = f"avatar-demo-{uuid.uuid4().hex[:8]}"
+    jwt = (
+        api.AccessToken()
+        .with_identity(f"user-{uuid.uuid4().hex[:8]}")
+        .with_ttl(timedelta(minutes=15))
+        .with_grants(api.VideoGrants(room_join=True, room=room))
+        .with_room_config(
+            api.RoomConfiguration(
+                sync_streams=True,
+                agents=[api.RoomAgentDispatch(agent_name=AGENT_NAME)],
+            )
+        )
+        .to_jwt()
+    )
+    return web.json_response({"url": os.environ["LIVEKIT_URL"], "token": jwt})
+
+
+async def index(request: web.Request) -&gt; web.FileResponse:
+    return web.FileResponse(
+        Path(__file__).parent / "index.html", headers={"Cache-Control": "no-store"}
+    )
+
+
+app = web.Application()
+app.router.add_get("/", index)
+app.router.add_get("/token", token)
+
+if __name__ == "__main__":
+    web.run_app(app, host="127.0.0.1", port=8080)</code></pre>
+
+  <h3><code>index.html</code></h3>
+  <pre class="code-block no-copy"><code>&lt;!doctype html&gt;
+&lt;html lang="en"&gt;
+... (same as in English version above)</code></pre>
+
+  <h3>工作原理，大白话解释</h3>
+  <p>
+    <strong>两个程序，两个终端，一个文字档。</strong>
+    <code>agent.py</code> 是语音 + 数字人引擎。
+    <code>server.py</code> 是一个小小的 aiohttp Web 服务器，负责提供页面，并在每次造访时签发一个短期有效的 LiveKit 存取令牌。
+    <code>FAQs.txt</code> 是知识库——agent 每次都会重新读取它，把内容塞进 prompt 里的 <code>{faqs}</code>。
+  </p>
+  <p>
+    <strong>为什么用文字档？</strong> 不会写代码的人也能维护它。餐厅经理、写专题的学生、做教学 demo 的老师——都不用打开 Python 就能加一件事。规则只有一条：每组问答以 <code>Q:</code> 和 <code>A:</code> 各起一行，两组之间空一行。
+  </p>
+  <p>
+    <strong>浏览器完全不知道数字人这回事。</strong>
+    <code>index.html</code> 只是加入一个 LiveKit 房间、播放所有收到的视频轨——
+    它不关心轨来自真实摄像机还是 Synthesia 数字人。数字人从 agent 内部把自己的视频流传出来，
+    房间设定里 <code>sync_streams=True</code> 保证嘴型和音讯同步。
+  </p>
+  <p>
+    <strong>冷启动自动重试。</strong>
+    Synthesia 服务偶尔会花几秒钟才能拉起一个数字人会话，所以 agent 会最多重试三次再放弃。
+    这就是为什么第一次点 Start 会感觉慢——不是坏了，是在热身。
+  </p>
+
+  <h2>版本 1 vs. 版本 2 一眼看懂</h2>
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        <th>版本 1</th>
+        <th>版本 2</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>知识库在哪里</td>
+        <td>Python prompt（<code>INSTRUCTIONS</code>）</td>
+        <td>文字档（<code>FAQs.txt</code>）</td>
+      </tr>
+      <tr>
+        <td>更新知识需要</td>
+        <td>改 Python + 重启</td>
+        <td>存档 + 打新的一通</td>
+      </tr>
+      <tr>
+        <td>问题数量</td>
+        <td>1（营业时间）</td>
+        <td>4（时间、菜、地址、备案答案）</td>
+      </tr>
+      <tr>
+        <td>执行指令</td>
+        <td>两个终端，一样</td>
+        <td>两个终端，一样</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>版本 2 的限制</h2>
+  <ul>
+    <li><strong>Lin 还是只会 <code>FAQs.txt</code> 里的东西。</strong>
+      纯文字档很方便快速更新，但它不能算数、也不能查即时资讯。若要让它会查天气、股价或预约，下一步要加工具或 RAG。</li>
+    <li><strong>需要两个账号（LiveKit 和 Synthesia）。</strong>
+      LiveKit Cloud 的 Inference 服务已经包含 STT、LLM、TTS（包括 Cartesia 和 Deepgram 的语音模型），
+      不用另外申请这些提供者的账号。Synthesia 目前有免费 Basic 套餐（本文编写时是 2026 年 11 月），
+      内含 Interactive Avatar 1 个并发 session；付费套餐提高数量并增加 credits。</li>
+    <li><strong>两个终端才能跑。</strong>
+      演示方便，但要上线的话应该用一个 supervisor 把两者绑起来，或者直接在 LiveKit Cloud Agents 上执行。</li>
+    <li><strong>Web 服务器没有鉴权。</strong>
+      <code>server.py</code> 给每个访客直接生成一个房间令牌，没做登录。本地测试没问题，绝对不要原样部署到公网。</li>
+  </ul>
+
+  <h2>延伸阅读</h2>
+  <ul>
+    <li><a href="https://livekit.io/" target="_blank" rel="noopener">livekit.io</a> —— LiveKit 官网，含定价和文档。</li>
+    <li><a href="https://github.com/livekit/agents" target="_blank" rel="noopener">livekit/agents</a> —— LiveKit Agents Python 仓库，有更多范例（包括 Synthesia）。</li>
+    <li><a href="https://docs.livekit.io/agents/build/agents/avatar/synthesia/" target="_blank" rel="noopener">LiveKit Synthesia Avatar 文档</a> —— 官方指南。</li>
+    <li><a href="https://www.synthesia.io/" target="_blank" rel="noopener">synthesia.io</a> —— 创建和管理你的数字人。</li>
+    <li><a href="/notes/ai-note21.html">如何用 LiveKit + Synthesia 数字人（版本 1）？</a> —— 同一个数字人的精简版，知识库硬编码在 Python 里。</li>
+    <li><a href="/notes/ai-note20.html">如何用 LiveKit 语音代理聊天？</a> —— 没有数字人脸的语音代理版本。</li>
+    <li><a href="/notes/ai-note19.html">如何用带天气工具的 LiveKit 语音代理？</a> —— 示范怎么给代理加一个能调用真实 API 的工具。</li>
+  </ul>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&amp;hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', '复制代码到剪贴板');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', '已复制');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', '复制代码到剪贴板');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>
