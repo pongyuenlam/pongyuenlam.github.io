@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How can AI count the people in a video? | Howard Lam, PhD</title>
+<meta name="description" content="A small Python program that uses YOLO to watch a video and count every person who crosses an invisible line, then saves a labelled copy of the video and prints the total.">
+<link rel="canonical" href="https://pongyuenlam.github.io/notes/ai-note23.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note23.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note23.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note23.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note23.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="How can AI count the people in a video?">
+<meta property="og:description" content="A small Python program that uses YOLO to watch a video and count every person who crosses an invisible line, then saves a labelled copy of the video and prints the total.">
+<meta property="og:url" content="https://pongyuenlam.github.io/notes/ai-note23.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="Howard Lam, PhD">
+
+<link rel="stylesheet" href="../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "How can AI count the people in a video?",
+  "description": "A small Python program that uses YOLO to watch a video and count every person who crosses an invisible line, then saves a labelled copy of the video and prints the total.",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-05",
+  "dateModified": "2026-11-05",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/notes/ai-note23.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../biography.html">Biography</a></li>
+        <li><a href="../research.html">Research</a></li>
+        <li><a href="../cases.html">Cases</a></li>
+        <li><a href="../books.html">Books</a></li>
+        <li><a href="../ai-programs.html">AI Notes</a></li>
+        <li><a href="../links/">Links</a></li>
+        <li><a href="../glossary/">Glossary</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <span class="current">English</span>
+  <a href="/zh-HK/notes/ai-note23.html">繁體中文</a>
+  <a href="/zh-CN/notes/ai-note23.html">简体中文</a>
+</div>
+
+<main>
+  <h1>How can AI count the people in a video?</h1>
+  <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 5, 2026 &middot; 8 min read</p>
+
+  <p>
+    A queue is easy to understand and surprisingly hard to measure. Before AI, to know how many
+    people walked past a certain point, someone had to stand there with a clicker and count by hand
+    &mdash; one click per person, hour after hour.
+  </p>
+  <p>
+    This note uses a short Python program that does the counting for you. It reads a video, uses
+    an AI model called YOLO to count every person who walks across a line drawn on the video. At the
+    end it saves a second copy of the video with boxes and a running tally, and prints the total.
+  </p>
+  <p>
+    The video used here is a 33-second clip of people walking through a queue. The program reports
+    <strong><code>In count: 6</code></strong>: six people crossed the line from left to right.
+  </p>
+
+  <p>
+    <strong><code>queue-management-demo.mp4</code></strong> is a demo video from Ultralytics in the
+    <strong>ultralytics/notebooks</strong> repository on GitHub:
+    <a href="https://github.com/ultralytics/notebooks/releases/tag/v0.0.0" target="_blank" rel="noopener">https://github.com/ultralytics/notebooks/releases/tag/v0.0.0</a>
+  </p>
+  <ul>
+    <li>
+      Direct download link:
+      <a href="https://github.com/ultralytics/notebooks/releases/download/v0.0.0/queue-management-demo.mp4" target="_blank" rel="noopener">https://github.com/ultralytics/notebooks/releases/download/v0.0.0/queue-management-demo.mp4</a>
+    </li>
+  </ul>
+
+  <h2>What YOLO and ObjectCounter do</h2>
+  <p>
+    YOLO stands for <em>You Only Look Once</em>. It is an AI model that looks at a picture once and
+    lists what it sees &mdash; people, cars, dogs &mdash; with a box around each one.
+    <a href="https://www.ultralytics.com/" target="_blank" rel="noopener">Ultralytics</a>, the company
+    that publishes YOLO, also ships a ready-made helper called <strong><code>ObjectCounter</code></strong>. The helper
+    draws the boxes, follows each box from frame to frame, and keeps two totals: one for objects
+    crossing the line in one direction, one for the other direction.
+  </p>
+
+  <h2>Step 1: load the model and open the video</h2>
+  <pre class="code-block"><code>from ultralytics.solutions import ObjectCounter
+import cv2
+model_path = "yolo26n.pt"
+video_path = "queue-management-demo.mp4"
+# Get video properties: width, height, FPS (frame/second)
+cap = cv2.VideoCapture(video_path)
+width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+fps = cap.get(cv2.CAP_PROP_FPS)</code></pre>
+  <p>
+    The first line brings in the counting helper, and the second brings in OpenCV, the library that
+    reads and writes video files. <strong><code>model_path</code></strong> names the AI model:
+    <strong><code>yolo26n.pt</code></strong>, where the <strong><code>n</code></strong> means <em>nano</em>, the smallest and fastest
+    size. The first run downloads it automatically, about 5 MB.
+  </p>
+  <p>
+    <strong><code>cv2.VideoCapture</code></strong> opens <strong><code>queue-management-demo.mp4</code></strong>, then the next three lines
+    read its width, height and speed (25 frames per second). The program needs those numbers for two
+    reasons: the counting line is described in pixels, and the saved video must have exactly the same
+    size and speed as the original.
+  </p>
+
+  <h2>Step 2: draw the counting line</h2>
+  <pre class="code-block"><code>region_points = [(width-400, 300), (width-400, height), (width-350, height), (width-350, 300)]</code></pre>
+  <p>
+    Four pairs of numbers describe the four corners of a thin strip: top-left, bottom-left,
+    bottom-right, top-right. Every point is measured from the top-left corner of the picture,
+    which is <strong><code>(0, 0)</code></strong>, and the bottom-right corner is
+    <strong><code>(width, height)</code></strong>: <strong><code>x</code></strong> grows to the
+    right and <strong><code>y</code></strong> grows downwards. Horizontally, the strip is 50 pixels
+    wide, running from <strong><code>x = width-400</code></strong> to
+    <strong><code>x = width-350</code></strong>. Vertically, it
+    runs from <strong><code>y = 300</code></strong> down to the bottom edge at
+    <strong><code>y = height</code></strong> (674).
+  </p>
+  <p>
+    The strip stands upright because the people move sideways across the picture, from left to right.
+  </p>
+  <p>
+    Direction matters: a person moving from left to right across the strip is counted as
+    <strong>IN</strong>, and moving from right to left is counted as <strong>OUT</strong>. In this
+    video everyone walks left to right, so all six crossings are IN.
+  </p>
+
+  <h2>Step 3: create the counter</h2>
+  <pre class="code-block"><code># Initialize ObjectCounter 
+counter = ObjectCounter(
+    model=model_path,
+    region=region_points,
+    show=True,
+    show_labels = False,
+    show_conf = False,
+    show_in=True,
+    show_out=False
+)</code></pre>
+  <p>
+    This one object does the work. <strong><code>model</code></strong> is the AI model, <strong><code>region</code></strong> is the
+    strip from Step 2, and <strong><code>show=True</code></strong> opens a window so you can watch the video being
+    processed as it happens.
+  </p>
+  <p>
+    <strong><code>show_labels = False</code></strong> hides the class name above each box, in this case the word
+    <strong><code>person</code></strong>, and <strong><code>show_conf = False</code></strong> hides the confidence score, a number like
+    0.85 that says how sure the model is. With both hidden you get plain boxes, which are much easier
+    to read in a crowded queue. <strong><code>show_in=True</code></strong> and <strong><code>show_out=False</code></strong> ask for only
+    the IN tally to be drawn on the video.
+  </p>
+
+  <h2>Step 4: save a labelled copy of the video</h2>
+  <pre class="code-block"><code># Define the codec and create VideoWriter object to save the output video
+fourcc = cv2.VideoWriter_fourcc(*'avc1')  # H.264, plays on Mac
+out = cv2.VideoWriter('result_queue.mp4', fourcc, fps, (width, height))
+if not out.isOpened():  # avc1 not available (e.g. Windows), use mp4v instead
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter('result_queue.mp4', fourcc, fps, (width, height))</code></pre>
+  <p>
+    <strong><code>VideoWriter</code></strong> is the opposite of <strong><code>VideoCapture</code></strong>: it writes a new video file.
+    The <strong><code>fourcc</code></strong> code names the compression format. <strong><code>avc1</code></strong> is H.264, which plays
+    smoothly on a Mac. If that format is not available on your machine &mdash; often the case on
+    Windows &mdash; the program falls back to <strong><code>mp4v</code></strong> so it still produces a file.
+  </p>
+  <p>
+    The output is called <strong><code>result_queue.mp4</code></strong>, so the original video is never overwritten.
+  </p>
+
+  <h2>Step 5: go through the video frame by frame</h2>
+  <pre class="code-block"><code>while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+    results = counter(frame)
+    annotated_frame = results.plot_im
+    # Write the annotated frame to the output video
+    out.write(annotated_frame)
+    key = cv2.waitKey(1)
+    if key == ord('q') or key == ord('Q'):
+        break</code></pre>
+  <p>
+    A video is a long row of still pictures called frames. The loop pulls one frame at a time.
+    <strong><code>ret</code></strong> is true while there are frames left, and becomes false at the end, which ends
+    the loop. Each frame goes into <strong><code>counter(frame)</code></strong>, which finds the people, updates the
+    totals, and returns a copy with the boxes and the number already drawn on it. That copy is
+    <strong><code>results.plot_im</code></strong>, and it is what gets written into the new video.
+  </p>
+  <p>
+    <strong><code>cv2.waitKey(1)</code></strong> waits one millisecond for a key press. Press <strong><code>q</code></strong> or
+    <strong><code>Q</code></strong> in the video window to stop early; otherwise the loop runs to the last frame.
+  </p>
+
+  <h2>Step 6: close everything and print the total</h2>
+  <pre class="code-block"><code>cap.release()
+out.release()
+cv2.destroyAllWindows()
+print("In count:", results.in_count)</code></pre>
+  <p>
+    Releasing the reader and the writer hands the files back to the operating system, and
+    <strong><code>destroyAllWindows()</code></strong> closes the preview window. The last line prints the IN total.
+    For this video it prints:
+  </p>
+  <pre class="code-block no-copy"><code>In count: 6</code></pre>
+  <p>
+    While the program runs you also see, in the preview window, the strip, the boxes around each
+    person, and the count going up as each person steps across.
+  </p>
+
+  <h2>The whole program</h2>
+  <pre class="code-block"><code>from ultralytics.solutions import ObjectCounter
+import cv2
+model_path = "yolo26n.pt"
+video_path = "queue-management-demo.mp4"
+# Get video properties: width, height, FPS (frame/second)
+cap = cv2.VideoCapture(video_path)
+width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+fps = cap.get(cv2.CAP_PROP_FPS)
+region_points = [(width-400, 300), (width-400, height), (width-350, height), (width-350, 300)]
+# Initialize ObjectCounter 
+counter = ObjectCounter(
+    model=model_path,
+    region=region_points,
+    show=True,
+    show_labels = False,
+    show_conf = False,
+    show_in=True,
+    show_out=False
+)
+# Define the codec and create VideoWriter object to save the output video
+fourcc = cv2.VideoWriter_fourcc(*'avc1')  # H.264, plays on Mac
+out = cv2.VideoWriter('result_queue.mp4', fourcc, fps, (width, height))
+if not out.isOpened():  # avc1 not available (e.g. Windows), use mp4v instead
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter('result_queue.mp4', fourcc, fps, (width, height))
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+    results = counter(frame)
+    annotated_frame = results.plot_im
+    # Write the annotated frame to the output video
+    out.write(annotated_frame)
+    key = cv2.waitKey(1)
+    if key == ord('q') or key == ord('Q'):
+        break
+cap.release()
+out.release()
+cv2.destroyAllWindows()
+print("In count:", results.in_count)</code></pre>
+
+  <h2>Running it on your own computer</h2>
+  <p>
+    <a href="downloads/Folder-AI-Count-People.zip" download>Download the zip file</a> and unzip it to
+    a folder. It holds <strong><code>yolo_queue.py</code></strong>, <strong><code>queue-management-demo.mp4</code></strong> and
+    <strong><code>pyproject.toml</code></strong>. Open the folder in Visual Studio Code, then type these three lines
+    in the terminal, one at a time:
+  </p>
+  <pre class="code-block"><code>uv python pin 3.12.10</code></pre>
+  <pre class="code-block"><code>uv sync</code></pre>
+  <pre class="code-block"><code>uv run yolo_queue.py</code></pre>
+  <p>
+    The first run downloads the YOLO model (about 5 MB) and then processes the video. On a recent
+    laptop it takes about a minute. A video window opens; let it play, or press <strong><code>q</code></strong> to stop
+    early. When it finishes you get <strong><code>result_queue.mp4</code></strong> in the same folder and the total in
+    the terminal.
+  </p>
+  <p>
+    If you have not set up uv yet, start with
+    <a href="ai-note05.html">How to install Visual Studio Code?</a> and then the uv note for
+    <a href="ai-note03.html">Windows</a> or <a href="ai-note04.html">Mac</a>.
+  </p>
+
+  <h2>Limitations</h2>
+  <ul>
+    <li><strong>Crowded scenes are hard.</strong> When people walk shoulder to shoulder, boxes
+      overlap and the tracker can lose an identity, so the total drifts from the truth.</li>
+    <li><strong>A crossing is a crossing, not a visitor.</strong> Someone who steps back and forth
+      over the line is counted twice, once IN and once OUT. This counts movements, not unique
+      people.</li>
+    <li><strong>The line has to be in the right place.</strong> Put it where people walk straight
+      through, not where they stop, turn around, or stand. A line too close to the edge of the
+      picture gives the tracker no time to recognise the person before they leave.</li>
+    <li><strong>Small or blurred people are missed.</strong> Anyone far from the camera, moving fast,
+      or filmed at night may never be boxed at all.</li>
+    <li><strong>The camera should stay still.</strong> With a moving camera, people appear and vanish
+      as the view shifts, and the identities jump.</li>
+    <li><strong>Check against a manual count on a short clip before scaling up.</strong> Run it on
+      a clip where you have counted by hand, and compare the two totals. A few people either way is
+      normal for a small model like <strong><code>yolo26n</code></strong>; a bigger model is more accurate but slower.</li>
+  </ul>
+
+  <h2>Further reading</h2>
+  <ul>
+    <li><a href="https://docs.ultralytics.com/guides/object-counting/" target="_blank" rel="noopener">Ultralytics object counting guide</a> &mdash; the official walkthrough of the same helper, with more options.</li>
+    <li><a href="https://docs.ultralytics.com/reference/solutions/object_counter/" target="_blank" rel="noopener">ObjectCounter reference</a> &mdash; every parameter, including <strong><code>classes</code></strong> and <strong><code>region</code></strong>.</li>
+    <li><a href="https://github.com/ultralytics/notebooks/releases/download/v0.0.0/queue-management-demo.mp4" target="_blank" rel="noopener">The queue-management demo video</a> &mdash; the original clip used in this note.</li>
+    <li><a href="https://docs.ultralytics.com/models/yolo26/" target="_blank" rel="noopener">YOLO26 model page</a> &mdash; the model family and the meaning of the <strong><code>n</code></strong>, <strong><code>s</code></strong>, <strong><code>m</code></strong> and <strong><code>l</code></strong> sizes.</li>
+    <li><a href="ai-note09.html">How to get live video from your webcam?</a> &mdash; the same frame-by-frame idea, reading a camera instead of a file.</li>
+    <li><a href="ai-note06.html">How does AI find the key points on your face?</a> &mdash; another way of using a model to read a video frame.</li>
+  </ul>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&amp;hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', 'Copy code to clipboard');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', 'Copied to clipboard');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', 'Copy code to clipboard');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>

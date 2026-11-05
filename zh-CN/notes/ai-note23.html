@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-Hans-CN">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 如何在视频中计算人数？ | 林邦源博士</title>
+<meta name="description" content="一个简短的 Python 程序，用 YOLO 观看视频，统计每一个走过画面中那条线的人，最后另存一份标好框的视频，并打印总数。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note23.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note23.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note23.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note23.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note23.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="AI 如何在视频中计算人数？">
+<meta property="og:description" content="一个简短的 Python 程序，用 YOLO 观看视频，统计每一个走过画面中那条线的人，最后另存一份标好框的视频，并打印总数。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-CN/notes/ai-note23.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="../../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "AI 如何在视频中计算人数？",
+  "description": "一个简短的 Python 程序，用 YOLO 观看视频，统计每一个走过画面中那条线的人，最后另存一份标好框的视频，并打印总数。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-05",
+  "dateModified": "2026-11-05",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-CN/notes/ai-note23.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../../index.html">首页</a></li>
+        <li><a href="../../biography.html">个人简介</a></li>
+        <li><a href="../../research.html">研究</a></li>
+        <li><a href="../../cases.html">案例</a></li>
+        <li><a href="../../books.html">著作</a></li>
+        <li><a href="../../ai-programs.html">AI 笔记</a></li>
+        <li><a href="../../links/">链接</a></li>
+        <li><a href="../../glossary/">词汇表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <a href="/notes/ai-note23.html">English</a>
+  <a href="/zh-HK/notes/ai-note23.html">繁體中文</a>
+  <span class="current">简体中文</span>
+</div>
+
+<main>
+  <h1>AI 如何在视频中计算人数？</h1>
+  <p class="paper-meta">林邦源博士 &middot; AI 笔记 &middot; 2026 年 11 月 5 日 &middot; 约 8 分钟阅读</p>
+
+  <p>
+    排队这件事人人都懂，但要量清楚却出奇地难。在 AI 出现之前，想知道有多少人走过某个位置，
+    通常要有人拿着计数器站在那里，一个一个用手按——每来一个人按一下，一小时又一小时。
+  </p>
+  <p>
+    这篇笔记用一个简短的 Python 程序替你计数。它读取一段视频，用一个叫 YOLO 的 AI 模型，
+    统计每一个走过画面中那条线的人。最后，它会把画好框和累计数字的视频另存一份，并打印总数。
+  </p>
+  <p>
+    这里用的视频是一段 33 秒的片段，拍到人们排队走过。程序报出的结果是
+    <strong><code>In count: 6</code></strong>：六个人从左到右走过那条线。
+  </p>
+
+  <p>
+    <strong><code>queue-management-demo.mp4</code></strong> 是 Ultralytics 的示范视频，放在 GitHub 的
+    <strong>ultralytics/notebooks</strong> 仓库：
+    <a href="https://github.com/ultralytics/notebooks/releases/tag/v0.0.0" target="_blank" rel="noopener">https://github.com/ultralytics/notebooks/releases/tag/v0.0.0</a>
+  </p>
+  <ul>
+    <li>
+      直接下载链接：
+      <a href="https://github.com/ultralytics/notebooks/releases/download/v0.0.0/queue-management-demo.mp4" target="_blank" rel="noopener">https://github.com/ultralytics/notebooks/releases/download/v0.0.0/queue-management-demo.mp4</a>
+    </li>
+  </ul>
+
+  <h2>YOLO 和 ObjectCounter 是做什么的？</h2>
+  <p>
+    YOLO 是 <em>You Only Look Once</em> 的缩写。它是一个 AI 模型，看一张图片一次，就列出它看到的东西——人、车、狗——
+    并在每一样东西外面画一个框。发布 YOLO 的
+    <a href="https://www.ultralytics.com/" target="_blank" rel="noopener">Ultralytics</a>
+    还附带一个现成的工具，叫 <strong><code>ObjectCounter</code></strong>。这个工具会画框、逐帧追踪每一个框，
+    并保留两个总数：一个是往一个方向越线的物体，另一个是往反方向越线的。
+  </p>
+
+  <h2>第一步：加载模型并打开视频</h2>
+  <pre class="code-block"><code>from ultralytics.solutions import ObjectCounter
+import cv2
+model_path = "yolo26n.pt"
+video_path = "queue-management-demo.mp4"
+# Get video properties: width, height, FPS (frame/second)
+cap = cv2.VideoCapture(video_path)
+width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+fps = cap.get(cv2.CAP_PROP_FPS)</code></pre>
+  <p>
+    第一行引入计数工具，第二行引入 OpenCV，也就是负责读写视频文件的库。
+    <strong><code>model_path</code></strong> 指定 AI 模型：<strong><code>yolo26n.pt</code></strong>，
+    其中 <strong><code>n</code></strong> 代表 <em>nano</em>，是体积最小、速度最快的一档。第一次运行时会自动下载这个模型，大约 5 MB。
+  </p>
+  <p>
+    <strong><code>cv2.VideoCapture</code></strong> 打开 <strong><code>queue-management-demo.mp4</code></strong>，
+    接着三行读出它的宽、高和速度（每秒 25 帧）。程序需要这些数字有两个原因：计数线是用像素描述的，
+    而另存的视频必须与原片有完全相同的大小和速度。
+  </p>
+
+  <h2>第二步：画出计数线</h2>
+  <pre class="code-block"><code>region_points = [(width-400, 300), (width-400, height), (width-350, height), (width-350, 300)]</code></pre>
+  <p>
+    四组数字描述一个细长区域的四个角：左上、左下、右下、右上。每一个点都以画面左上角为起点度量，
+    左上角是 <strong><code>(0, 0)</code></strong>，右下角是 <strong><code>(width, height)</code></strong>：
+    <strong><code>x</code></strong> 向右递增，<strong><code>y</code></strong> 向下递增。横向来说，这个区域宽 50 像素，
+    从 <strong><code>x = width-400</code></strong> 到 <strong><code>x = width-350</code></strong>。纵向来说，
+    它从 <strong><code>y = 300</code></strong> 一直到底部边缘 <strong><code>y = height</code></strong>（674）。
+  </p>
+  <p>
+    这个区域是直立的，因为人们是横向走过画面，从左到右。
+  </p>
+  <p>
+    方向很重要：从左到右越过区域的人会记为 <strong>IN</strong>，从右到左则记为 <strong>OUT</strong>。
+    这段视频里所有人都从左往右走，所以六次越线都算 IN。
+  </p>
+
+  <h2>第三步：创建计数器</h2>
+  <pre class="code-block"><code># Initialize ObjectCounter 
+counter = ObjectCounter(
+    model=model_path,
+    region=region_points,
+    show=True,
+    show_labels = False,
+    show_conf = False,
+    show_in=True,
+    show_out=False
+)</code></pre>
+  <p>
+    这一个对象就做完了所有工作。<strong><code>model</code></strong> 是 AI 模型，
+    <strong><code>region</code></strong> 是第二步那个区域，<strong><code>show=True</code></strong> 会打开一个窗口，
+    让你实时看到视频被处理的过程。
+  </p>
+  <p>
+    <strong><code>show_labels = False</code></strong> 会隐藏每个框上方的类别名称，这里就是
+    <strong><code>person</code></strong> 这个字；<strong><code>show_conf = False</code></strong> 会隐藏置信度分数——
+    像 0.85 这种表示模型有多大把握的数字。两者都隐藏后，只会看到干净的框，在拥挤的队伍里容易看得多。
+    <strong><code>show_in=True</code></strong> 和 <strong><code>show_out=False</code></strong> 表示只在视频上画出 IN 的累计数。
+  </p>
+
+  <h2>第四步：另存一份标好框的视频</h2>
+  <pre class="code-block"><code># Define the codec and create VideoWriter object to save the output video
+fourcc = cv2.VideoWriter_fourcc(*'avc1')  # H.264, plays on Mac
+out = cv2.VideoWriter('result_queue.mp4', fourcc, fps, (width, height))
+if not out.isOpened():  # avc1 not available (e.g. Windows), use mp4v instead
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter('result_queue.mp4', fourcc, fps, (width, height))</code></pre>
+  <p>
+    <strong><code>VideoWriter</code></strong> 是 <strong><code>VideoCapture</code></strong> 的反面：它负责写出一个新的视频文件。
+    <strong><code>fourcc</code></strong> 这个代码指定压缩格式。<strong><code>avc1</code></strong> 是 H.264，在 Mac 上播放流畅。
+    如果你的电脑没有这个格式——Windows 常见——程序会改用 <strong><code>mp4v</code></strong>，仍然能产出文件。
+  </p>
+  <p>
+    输出文件叫 <strong><code>result_queue.mp4</code></strong>，所以原始视频永远不会被覆盖。
+  </p>
+
+  <h2>第五步：逐帧读取整段视频</h2>
+  <pre class="code-block"><code>while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+    results = counter(frame)
+    annotated_frame = results.plot_im
+    # Write the annotated frame to the output video
+    out.write(annotated_frame)
+    key = cv2.waitKey(1)
+    if key == ord('q') or key == ord('Q'):
+        break</code></pre>
+  <p>
+    视频其实是一长串静止的图片，叫做帧（frame）。循环每次取出一帧。
+    <strong><code>ret</code></strong> 在还有帧时为 true，到最后变成 false，循环便结束。每一帧会送进
+    <strong><code>counter(frame)</code></strong>，它找出人、更新总数，并返回一份已经画好框和数字的副本。
+    这份副本就是 <strong><code>results.plot_im</code></strong>，也是写入新视频的内容。
+  </p>
+  <p>
+    <strong><code>cv2.waitKey(1)</code></strong> 会等待 1 毫秒，看有没有按键。在视频窗口按
+    <strong><code>q</code></strong> 或 <strong><code>Q</code></strong> 可以提前停止；否则循环会跑到最后一帧。
+  </p>
+
+  <h2>第六步：关闭所有资源并打印总数</h2>
+  <pre class="code-block"><code>cap.release()
+out.release()
+cv2.destroyAllWindows()
+print("In count:", results.in_count)</code></pre>
+  <p>
+    释放读取器和写入器，就是把文件交还给操作系统；<strong><code>destroyAllWindows()</code></strong>
+    关闭预览窗口。最后一行打印 IN 的总数。这段视频打印出：
+  </p>
+  <pre class="code-block no-copy"><code>In count: 6</code></pre>
+  <p>
+    程序运行时，预览窗口也会显示那个区域、每个人身上的框，以及每有一个人走过、数字就往上涨。
+  </p>
+
+  <h2>完整程序</h2>
+  <pre class="code-block"><code>from ultralytics.solutions import ObjectCounter
+import cv2
+model_path = "yolo26n.pt"
+video_path = "queue-management-demo.mp4"
+# Get video properties: width, height, FPS (frame/second)
+cap = cv2.VideoCapture(video_path)
+width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+fps = cap.get(cv2.CAP_PROP_FPS)
+region_points = [(width-400, 300), (width-400, height), (width-350, height), (width-350, 300)]
+# Initialize ObjectCounter 
+counter = ObjectCounter(
+    model=model_path,
+    region=region_points,
+    show=True,
+    show_labels = False,
+    show_conf = False,
+    show_in=True,
+    show_out=False
+)
+# Define the codec and create VideoWriter object to save the output video
+fourcc = cv2.VideoWriter_fourcc(*'avc1')  # H.264, plays on Mac
+out = cv2.VideoWriter('result_queue.mp4', fourcc, fps, (width, height))
+if not out.isOpened():  # avc1 not available (e.g. Windows), use mp4v instead
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter('result_queue.mp4', fourcc, fps, (width, height))
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+    results = counter(frame)
+    annotated_frame = results.plot_im
+    # Write the annotated frame to the output video
+    out.write(annotated_frame)
+    key = cv2.waitKey(1)
+    if key == ord('q') or key == ord('Q'):
+        break
+cap.release()
+out.release()
+cv2.destroyAllWindows()
+print("In count:", results.in_count)</code></pre>
+
+  <h2>在自己的电脑上运行</h2>
+  <p>
+    <a href="/notes/downloads/Folder-AI-Count-People.zip" download>下载 zip 文件</a>并解压到一个文件夹。里面有
+    <strong><code>yolo_queue.py</code></strong>、<strong><code>queue-management-demo.mp4</code></strong> 和
+    <strong><code>pyproject.toml</code></strong>。用 Visual Studio Code 打开这个文件夹，然后在终端里逐行输入以下三行：
+  </p>
+  <pre class="code-block"><code>uv python pin 3.12.10</code></pre>
+  <pre class="code-block"><code>uv sync</code></pre>
+  <pre class="code-block"><code>uv run yolo_queue.py</code></pre>
+  <p>
+    第一次运行会下载 YOLO 模型（约 5 MB），然后处理视频。在较新的笔记本电脑上约需一分钟。会打开一个视频窗口；
+    让它播放，或按 <strong><code>q</code></strong> 提前停止。完成后，同一个文件夹里会出现
+    <strong><code>result_queue.mp4</code></strong>，终端会打印总数。
+  </p>
+  <p>
+    如果你还没安装 uv，请先看
+    <a href="ai-note05.html">如何安装 Visual Studio Code？</a>，再看
+    <a href="ai-note03.html">Windows</a> 或 <a href="ai-note04.html">Mac</a> 的 uv 笔记。
+  </p>
+
+  <h2>局限</h2>
+  <ul>
+    <li><strong>拥挤的场景很难应付。</strong>人们肩并肩走过时，框会重叠，追踪器可能丢掉同一个人的身份，
+      总数便会偏离真实情况。</li>
+    <li><strong>越线一次就是一次，不等于一位访客。</strong>有人在线上来回走动，会被算两次：一次 IN、一次 OUT。
+      这里数的是移动次数，不是独立的人数。</li>
+    <li><strong>线要放在对的位置。</strong>把它放在人们会直行穿过的地方，而不是他们停下、转身或站立的位置。
+      线太靠近画面边缘，追踪器就没有时间在人物离开前认出他。</li>
+    <li><strong>太远或模糊的人会被漏掉。</strong>离摄像头很远、移动很快，或在夜间拍摄的人，可能完全不会被画上框。</li>
+    <li><strong>摄像头要保持不动。</strong>摄像头一移动，人在画面里会出现又消失，追踪的身份也会跳来跳去。</li>
+    <li><strong>扩大规模前，先用短片与人工计数比对。</strong>找一段自己亲手数过的片段来运行，再比较两个总数。
+      对 <strong><code>yolo26n</code></strong> 这种小模型来说，差几个人属正常；更大的模型更准，但更慢。</li>
+  </ul>
+
+  <h2>延伸阅读</h2>
+  <ul>
+    <li><a href="https://docs.ultralytics.com/guides/object-counting/" target="_blank" rel="noopener">Ultralytics 物体计数指南</a> &mdash; 同一工具的官方教程，有更多选项。</li>
+    <li><a href="https://docs.ultralytics.com/reference/solutions/object_counter/" target="_blank" rel="noopener">ObjectCounter 参数参考</a> &mdash; 所有参数，包括 <strong><code>classes</code></strong> 和 <strong><code>region</code></strong>。</li>
+    <li><a href="https://github.com/ultralytics/notebooks/releases/download/v0.0.0/queue-management-demo.mp4" target="_blank" rel="noopener">queue-management 示范视频</a> &mdash; 本笔记所用的原始片段。</li>
+    <li><a href="https://docs.ultralytics.com/models/yolo26/" target="_blank" rel="noopener">YOLO26 模型页面</a> &mdash; 模型系列，以及 <strong><code>n</code></strong>、<strong><code>s</code></strong>、<strong><code>m</code></strong>、<strong><code>l</code></strong> 各尺寸的意思。</li>
+    <li><a href="ai-note09.html">如何从摄像头获取实时画面？</a> &mdash; 同样是逐帧处理的概念，只是读取摄像头而不是文件。</li>
+    <li><a href="ai-note06.html">AI 如何找出你脸上的关键点？</a> &mdash; 另一种用模型读取视频帧的方法。</li>
+  </ul>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&amp;hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', '复制代码到剪贴板');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', '已复制');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', '复制代码到剪贴板');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>
