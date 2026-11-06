@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to get a Google tag to understand the traffic to your website? | Howard Lam, PhD</title>
+<meta name="description" content="A step-by-step guide to getting a Google tag from Google Analytics and adding it to your website, so you can understand how much traffic your pages receive and where it comes from.">
+<link rel="canonical" href="https://pongyuenlam.github.io/notes/ai-note24.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note24.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note24.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to get a Google tag to understand the traffic to your website?">
+<meta property="og:description" content="A step-by-step guide to getting a Google tag from Google Analytics and adding it to your website, so you can understand how much traffic your pages receive and where it comes from.">
+<meta property="og:url" content="https://pongyuenlam.github.io/notes/ai-note24.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="Howard Lam, PhD">
+
+<link rel="stylesheet" href="../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "How to get a Google tag to understand the traffic to your website?",
+  "description": "A step-by-step guide to getting a Google tag from Google Analytics and adding it to your website, so you can understand how much traffic your pages receive and where it comes from.",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-06",
+  "dateModified": "2026-11-06",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/notes/ai-note24.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../biography.html">Biography</a></li>
+        <li><a href="../research.html">Research</a></li>
+        <li><a href="../cases.html">Cases</a></li>
+        <li><a href="../books.html">Books</a></li>
+        <li><a href="../ai-programs.html">AI Notes</a></li>
+        <li><a href="../links/">Links</a></li>
+        <li><a href="../glossary/">Glossary</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1>How to get a Google tag to understand the traffic to your website?</h1>
+  <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 6, 2026 &middot; 6 min read</p>
+
+  <p>
+    A website can sit on the internet and you would never know whether
+    anyone reads it. A <strong>Google tag</strong> is a short piece of code that you
+    put on your pages. Every time someone opens a page, the tag sends a small,
+    anonymous note to Google Analytics. After a few hours you can log in and see
+    how many times each page was opened, which pages are most popular, which
+    country the visitor was in, or how they reached your site &mdash; by typing the
+    address directly (<strong>direct</strong>), by clicking a link on another
+    website (<strong>referral</strong>), by clicking your link in a search
+    engine&rsquo;s results (<strong>organic search</strong>), or by clicking your
+    link inside an <strong>AI assistant</strong>.
+  </p>
+  <p>
+    The tag does not tell you who the people are. It counts <em>traffic</em> &mdash;
+    page views and visits &mdash; not individuals. The way it does this is:
+    the first time a browser opens one of your pages, Google Analytics 4 (GA4, the
+    fourth and current generation of Google Analytics, released in 2020) generates a
+    random number called a <strong>client ID</strong> and stores it in a small text
+    file called a cookie on your own website&rsquo;s domain, as
+    Google explains in its <a
+    href="https://developers.google.com/analytics/devguides/collection/ga4/cookie-usage"
+    target="_blank" rel="noopener">official cookie documentation</a>. That number is
+    not the person&rsquo;s name, email, or a hardware device ID &mdash; it is just an
+    anonymous label for that particular browser on that particular computer or phone.
+    (Unless you separately set up GA4&rsquo;s User-ID feature for logged-in visitors
+    &mdash; which this note does not &mdash; Analytics never learns who the visitor
+    is.) On later visits the same cookie is read again, so Analytics can tell that
+    the same browser came back, without ever knowing who is using it. This note walks
+    through getting a tag from Google and pasting it into your website, step by step.
+  </p>
+
+  <h2>What you need before you start</h2>
+  <ul>
+    <li>A <strong>Google account</strong> (a free Gmail address works).</li>
+    <li>A <strong>website you can edit</strong>, so you can add a few lines to each page.</li>
+  </ul>
+
+  <h2>Step 1: Open Google Analytics</h2>
+  <p>
+    Go to
+    <a href="https://analytics.google.com" target="_blank" rel="noopener">analytics.google.com</a>
+    and sign in with your Google account. The first time you open it, Google asks
+    you to create an <strong>account</strong>. An account is just a container for
+    your websites; you can call it anything, for example your own name or the name
+    of your site.
+  </p>
+
+  <h2>Step 2: Create a GA4 property</h2>
+  <p>
+    Inside the account, Google asks you to create a <strong>property</strong>. A
+    property represents one website. Give it a name (for example
+    &ldquo;My Website&rdquo;) and choose your time zone and currency.
+  </p>
+  <p>
+    Make sure the property is a <strong>GA4</strong> property. You can tell by the
+    ID it shows you later: GA4 IDs start with <code>G-</code>.
+  </p>
+
+  <h2>Step 3: Add a web data stream</h2>
+  <p>
+    A property needs at least one <strong>data stream</strong>, which is the
+    connection between your website and Google Analytics.
+  </p>
+  <p>
+    On the property setup screen, choose <strong>Web</strong>, then type your
+    website&rsquo;s address (for example <code>https://example.com</code>) and give
+    the stream a name. Click <strong>Create stream</strong>.
+  </p>
+
+  <h2>Step 4: Copy the Google tag</h2>
+  <p>
+    After the stream is created, Google shows you a <strong>Measurement ID</strong>
+    that looks like <code>G-XXXXXXXXXX</code>, and a block of code called the
+    <strong>Google tag</strong>. It looks like this (with your own ID in place of
+    <code>G-XXXXXXXXXX</code>):
+  </p>
+  <pre class="code-block"><code>&lt;!-- Google tag (gtag.js) --&gt;
+&lt;script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"&gt;&lt;/script&gt;
+&lt;script&gt;
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-XXXXXXXXXX');
+&lt;/script&gt;</code></pre>
+  <p>
+    Click the copy button next to the code in Google Analytics to copy your own
+    version.
+  </p>
+
+  <h2>Step 5: Paste it into your website</h2>
+  <p>
+    Open the HTML of every page you want to measure. Find the <code>&lt;head&gt;</code>
+    section near the top of the file, and paste the Google tag right after the
+    opening <code>&lt;head&gt;</code> tag, before anything else.
+  </p>
+  <pre class="code-block"><code>&lt;html&gt;
+&lt;head&gt;
+  &lt;!-- paste the Google tag here --&gt;
+  ...
+&lt;/head&gt;</code></pre>
+  <p>
+    Putting it at the very top makes sure the tag loads before the rest of the page,
+    so even visitors who leave after a second are counted. If your site uses a
+    template or a content management system, paste the tag into the shared template
+    once and it will appear on every page automatically. If you use an AI-integrated
+    IDE &mdash; such as Visual Studio Code with an AI assistant &mdash; you can ask
+    the AI to help you open the HTML of every page you want to measure and paste the
+    Google Tag.
+  </p>
+
+  <h2>Step 6: Check that it works</h2>
+  <p>
+    Save your pages and open your website in a browser. Then go back to Google
+    Analytics and open the <strong>Realtime</strong> report on the left. You should
+    see your own visit appear within a few seconds. That is the quickest way to
+    confirm the tag is working.
+  </p>
+  <p>
+    The full reports &mdash; how many people visited each page, how they reached
+    your site (direct, referral, organic search, or an AI assistant), which pages
+    they looked at &mdash; take a few hours to process, so come back the next day to
+    see the first complete numbers.
+  </p>
+
+  <h2>What the numbers tell you</h2>
+  <p>
+    Once the tag is running, Google Analytics can show you:
+  </p>
+  <ul>
+    <li><strong>Views per page</strong> &mdash; how many times each page was opened.</li>
+    <li><strong>Traffic sources</strong> &mdash; how people reached your site: by
+      typing the address directly (<strong>direct</strong>), by clicking a link on
+      another website (<strong>referral</strong>), by clicking your link in a search
+      engine&rsquo;s results (<strong>organic search</strong>), or by clicking your
+      link inside an <strong>AI assistant</strong>.</li>
+    <li><strong>Devices</strong> &mdash; the operating system (Windows,
+      Macintosh, iOS, Android), platform / device category (desktop / mobile),
+      and browsers (Chrome, Edge, Safari, Safari in-app, Firefox) that visitors
+      used.</li>
+    <li><strong>Locations</strong> &mdash; which country or city the visitors
+      were in.</li>
+    <li><strong>Popular pages</strong> &mdash; which content attracts the most
+      attention.</li>
+  </ul>
+
+  <h2>Privacy and limitations</h2>
+  <ul>
+    <li>The tag collects <strong>aggregated, anonymous data</strong>. It does not
+      identify individuals, and you should not try to make it do so.</li>
+    <li>Visitors who use an <strong>ad blocker</strong> or who disable JavaScript
+      may not be counted at all, because the tag&rsquo;s script never runs. Visitors
+      who <strong>disable cookies</strong> are counted, but without the
+      <code>_ga</code> cookie Analytics cannot tell that the same browser is
+      returning, so every visit looks like a brand-new visitor &mdash; the number of
+      &ldquo;users&rdquo; can be inflated and you lose the ability to track
+      returning visitors.</li>
+    <li>There is a <strong>processing delay of a few hours before numbers become
+      final</strong>. The Realtime report shows visits within seconds, which is
+      useful only for checking that the tag is actually working. The complete
+      reports &mdash; page views, traffic sources, devices, and locations &mdash;
+      take a few hours to process.</li>
+    <li>If your site is covered by privacy laws such as the
+      <a href="https://commission.europa.eu/law/law-topic/data-protection/reform/what-general-data-protection-regulation-gdpr_en" target="_blank" rel="noopener">General Data Protection Regulation (GDPR)</a>
+      in the EU, the
+      <a href="https://oag.ca.gov/privacy/ccpa" target="_blank" rel="noopener">California Consumer Privacy Act (CCPA)</a>
+      in California, the
+      <a href="https://www.gov.cn/xinwen/2021-08/20/content_5632486.htm" target="_blank" rel="noopener">Personal Information Protection Law (PIPL)</a>
+      in mainland China, or the
+      <a href="https://www.pcpd.org.hk/english/about_pcpd/about.html" target="_blank" rel="noopener">Personal Data (Privacy) Ordinance (PDPO)</a>
+      in Hong Kong, tell your visitors in a privacy policy that you use Google
+      Analytics, and offer them a way to opt out if required.</li>
+  </ul>
+
+  <h2>Further reading</h2>
+  <ul>
+    <li><a href="https://support.google.com/analytics/answer/12964614?hl=en" target="_blank" rel="noopener">Add the Google tag directly to your website</a> &mdash; Google&rsquo;s official installation instructions.</li>
+    <li><a href="https://marketingplatform.google.com/about/analytics/" target="_blank" rel="noopener">Google Analytics</a> &mdash; the product page and sign-up.</li>
+    <li><a href="https://developers.google.com/analytics/devguides/collection/ga4/cookie-usage" target="_blank" rel="noopener">How Google Analytics uses cookies on websites</a> &mdash; Google&rsquo;s developer reference for the <code>_ga</code> cookie and the client ID.</li>
+  </ul>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', 'Copy code to clipboard');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', 'Copied to clipboard');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', 'Copy code to clipboard');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>
