@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="zh-Hans-CN">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>如何在网页中使用 LiveKit 和 Synthesia Avatar 并通过网页点餐（版本 6）——英语？ | 林邦源博士</title>
+<meta name="description" content="一个会说话、能替你点完整一顿晚餐的 AI 数字人：领班 Lin 带你走完四道菜，把你不能吃的菜变灰，打开菜品卡片，并在页面上维护一张实时账单。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note29.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note29.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note29.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note29.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note29.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何在网页中使用 LiveKit 和 Synthesia Avatar 并通过网页点餐（版本 6）——英语？">
+<meta property="og:description" content="一个会说话、能替你点完整一顿晚餐的 AI 数字人：领班 Lin 带你走完四道菜，把你不能吃的菜变灰，打开菜品卡片，并在页面上维护一张实时账单。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-CN/notes/ai-note29.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="../../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "如何在网页中使用 LiveKit 和 Synthesia Avatar 并通过网页点餐（版本 6）——英语？",
+  "description": "一个会说话、能替你点完整一顿晚餐的 AI 数字人：领班 Lin 带你走完四道菜，把你不能吃的菜变灰，打开菜品卡片，并在页面上维护一张实时账单。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-06",
+  "dateModified": "2026-11-06",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-CN/notes/ai-note29.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../../index.html">首页</a></li>
+        <li><a href="../../biography.html">个人简介</a></li>
+        <li><a href="../../research.html">研究</a></li>
+        <li><a href="../../cases.html">案例</a></li>
+        <li><a href="../../books.html">著作</a></li>
+        <li><a href="../../ai-programs.html">AI 笔记</a></li>
+        <li><a href="../../links/">链接</a></li>
+        <li><a href="../../glossary/">词汇表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <a href="/notes/ai-note29.html">English</a>
+  <a href="/zh-HK/notes/ai-note29.html">繁體中文</a>
+  <span class="current">简体中文</span>
+</div>
+
+<main>
+  <h1>如何在网页中使用 LiveKit 和 Synthesia Avatar 并通过网页点餐（版本 6）——英语？</h1>
+  <p class="paper-meta">林邦源博士 &middot; AI 笔记 &middot; 2026 年 11 月 6 日 &middot; 约 9 分钟阅读</p>
+
+  <p>
+    在<a href="/zh-CN/notes/ai-note26.html">早前的一篇笔记</a>中，餐厅接待员 Lin 搬进了一个
+    真正的网页。她只有一个工具 <code>show_section</code>，也只有一项任务：回答一个问题，
+    然后把页面滚动到她正在讲述的部分。
+  </p>
+  <p>
+    这篇笔记给她一份真正的工作。页面不再是三个部分加一段视频，而是一整个餐厅网站，
+    有菜单、酒单、价格、过敏原和账单。Lin 成为<strong>领班</strong>，她一道菜一道菜地
+    接受你的点单：前菜、头盘、主菜、甜点，然后是酒。她仍然会说话；现在她还会一边说话
+    一边在页面上<em>行动</em> &mdash; 把你不能吃的菜变灰，打开她正在介绍的菜品卡片，
+    并把你选的东西加到角落里那张不断更新的账单上。
+  </p>
+
+  <h2>回答问题与接受点单：一眼看清</h2>
+  <table class="comparison-table">
+    <thead>
+      <tr><th></th><th>版本 3（回答问题）</th><th>版本 6（接受点餐）</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>页面</td><td>一页、三个部分，数字人在角落</td><td>完整的餐厅网站：菜单、酒、用餐空间、实时账单</td></tr>
+      <tr><td>Lin 能调用的工具</td><td>1 个 &mdash; <code>show_section</code></td><td>4 个 &mdash; <code>show_section</code>、<code>filter_menu</code>、<code>focus_dish</code>、<code>add_to_order</code></td></tr>
+      <tr><td>她知道的内容</td><td><code>FAQs.txt</code> 里的 4 组问答</td><td>13 条 &mdash; 整份菜单、价格、饮食需求、过敏原和酒</td></tr>
+      <tr><td>对话</td><td>回答，然后停下</td><td>有引导：一次一道菜、两个选项，最后是酒</td></tr>
+      <tr><td>页面的反应方式</td><td>滚动并高亮</td><td>滚动、把菜变灰、打开菜品卡片、加入账单</td></tr>
+      <tr><td>折扣</td><td>无</td><td>每道菜各点一款时，餐费九折</td></tr>
+      <tr><td>耳朵</td><td>Cartesia <code>ink-2</code></td><td>相同，另加一份要留意的菜单词汇表</td></tr>
+      <tr><td>声音</td><td>Cartesia <code>sonic-3.6</code>，声音 Skylar</td><td>相同</td></tr>
+      <tr><td>网页文件</td><td>所有内容都放在 <code>index.html</code> 里</td><td><code>index.html</code>（很小）+ <code>site.js</code> + <code>site.css</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>开始之前你需要什么</h2>
+  <ul>
+    <li>早前版本需要的一切 &mdash; 完整清单见<a href="/zh-CN/notes/ai-note26.html">如何在网页中使用 LiveKit 和 Synthesia Avatar（版本 3）？</a>。</li>
+    <li>不需要新的账户、密钥或安装包。语音、声音和面孔仍是版本 3 的那三项服务。</li>
+  </ul>
+
+  <h2>在自己的电脑上运行</h2>
+  <p>
+    <a href="/notes/downloads/Folder-AI-LiveKit-Avatar-V6-Order.zip" download>下载 zip 文件</a>
+    并解压到一个文件夹。zip 内有 <code>agent.py</code>、<code>server.py</code>、
+    <code>index.html</code>、<code>site.js</code>、<code>site.css</code>、<code>FAQs.txt</code>、
+    <code>pyproject.toml</code> 和 <code>README.md</code>。和之前一样，加入你自己的
+    <code>.env</code> 文件，写入同样的五个密钥。
+  </p>
+
+  <h2>第 1 步：设置项目文件夹</h2>
+  <p>
+    如果你已经有早前的某个文件夹，保留 <code>server.py</code>、<code>pyproject.toml</code>
+    和 <code>.env</code>，替换 <code>agent.py</code>、<code>index.html</code> 和
+    <code>FAQs.txt</code>，并加入两个新文件 <code>site.js</code> 和 <code>site.css</code>。
+    在 <code>server.py</code> 里你还需要两条额外的路由，因为页面现在会请求这两个文件
+    （第 4 步会展示）。
+  </p>
+  <p>
+    <code>.env</code> 文件完全不用改：同样的 LiveKit 密钥、Synthesia 密钥和数字人 ID。
+  </p>
+
+  <h2>第 2 步：看看 agent.py &mdash; 改了什么</h2>
+  <p>
+    四处改动：新增三个工具，提示词变成领班的服务脚本，耳朵拿到一份菜单词汇表，
+    还有一个小助手函数负责发送所有工具消息。
+  </p>
+
+  <h3>改动 1：一个助手，四个工具</h3>
+  <pre class="code-block"><code>async def _ui(self, **message) -&gt; str:
+    """Send a tiny message to the browser. step09/site.js does the rest."""
+    await self.room.local_participant.publish_data(json.dumps(message), topic="ui")
+    return "Done."
+
+@function_tool
+async def show_section(self, section: str) -&gt; str:
+    """Scroll the page to a part of the menu and highlight it.
+
+    Args:
+        section: One of: meal, openers, first, mains, desserts, wine, room.
+    """
+    return await self._ui(action="show_section", section=section)
+
+@function_tool
+async def filter_menu(self, diet: str) -&gt; str:
+    """Grey out every dish on the page the guest cannot eat.
+
+    Args:
+        diet: One of: none, vegetarian, vegan, pescatarian, nut_free.
+    """
+    return await self._ui(action="filter_menu", diet=diet)
+
+@function_tool
+async def focus_dish(self, dish: str) -&gt; str:
+    """Open the detail card for one dish: kitchen note and allergens.
+
+    Args:
+        dish: A dish ID from the menu, for example salmon or tofu.
+    """
+    return await self._ui(action="focus_dish", dish=dish)</code></pre>
+  <p>
+    版本 3 在它唯一的工具里手工拼出 JSON。有四个工具的话，同样的两行就会被复制四遍，
+    所以一个很小的私有助手 <code>_ui</code> 把它一次做完：它把你传入的内容转成 JSON，
+    并在 <code>"ui"</code> 数据频道上发布。于是每个工具只剩一行，而它的文档字符串
+    &mdash; 模型真正会读的部分 &mdash; 说明这个工具接受什么。
+  </p>
+  <p>
+    注意这里<em>不再</em>有的东西：<code>SECTIONS</code> 检查。版本 3 会拒绝未知的部分
+    名称。现在页面自己会忽略它不认识的名称，所以代理可以保持简单；唯一仍然做校验的
+    地方是点单，因为一道不存在的菜绝不能出现在账单上。
+  </p>
+
+  <h3>改动 2：接受点单</h3>
+  <pre class="code-block"><code>@function_tool
+async def add_to_order(self, dish: str) -&gt; str:
+    """Add a dish or a glass of wine to the guest's order, shown as a running tab on the page.
+
+    Args:
+        dish: A dish ID from the menu, or a wine ID: red, white or alcoholfree.
+    """
+    # Accept "red", "Red Wine" or "alcohol-free" alike, the same way site.js does.
+    dish = re.sub(r"[^a-z]", "", dish.lower()).removeprefix("the").replace("wine", "")
+    if dish not in ORDER_IDS:  # tell the model, so it retries with a real ID
+        return f"Not added: {dish!r} is not an ID. Use one of: {', '.join(sorted(ORDER_IDS))}."
+    await self._ui(action="add_to_order", dish=dish)
+    # Remind the model to move the page along with the conversation.
+    section = next(c for c, dishes in COURSES.items() if dish in dishes)
+    if section in NEXT_SECTION:
+        nxt = NEXT_SECTION[section]
+        return f"Added {dish} to the order. When you introduce the next part, call show_section(\"{nxt}\") too."
+    return f"Added {dish} to the order."</code></pre>
+  <p>
+    有两个想法值得抄进你自己的代理。第一是那行清理代码：模型可能传来
+    <code>"Red Wine"</code>、<code>"red"</code> 或 <code>"alcohol-free"</code>，客人也可能
+    说“the red”；去掉所有非字母的字符，再去掉“the”和“wine”，它们都会变成页面使用的
+    同一个 ID。第二，<strong>回复</strong>本身就是一次推动。工具结果不只是收据：通过返回
+    “当你介绍下一部分时，也调用 show_section(&quot;mains&quot;)”，代理会悄悄把自己引导到
+    让页面和对话保持同步。
+  </p>
+  <p>
+    菜名列表本身放在类上方，紧挨着它们所属的提示词：
+  </p>
+  <pre class="code-block"><code>COURSES = {
+    "openers": ["oysters", "bread", "salad"],
+    "first": ["soup", "prawns", "dumplings"],
+    "mains": ["salmon", "beef", "chicken", "pork", "tofu"],
+    "desserts": ["cheesecake", "chocolate", "sorbet"],
+    "wine": ["red", "white", "alcoholfree"],
+}
+ORDER_IDS = {dish for dishes in COURSES.values() for dish in dishes}
+NEXT_SECTION = dict(zip(COURSES, list(COURSES)[1:]))  # openers -&gt; first -&gt; mains -&gt; desserts -&gt; wine</code></pre>
+  <p>
+    <code>COURSES</code> 必须与 <code>site.js</code> 中的 <code>MENU</code> 和
+    <code>WINES</code> 一致。如果你在那里加了一道菜，也要在这里加上，否则 Lin 会礼貌地
+    拒绝为你点它。
+  </p>
+
+  <h3>改动 3：提示词变成一份脚本</h3>
+  <p>
+    版本 3 的提示词是一本规则手册：从常见问题里找答案，某个问题就滚动到某个部分。
+    版本 6 的提示词是一份<strong>职位描述</strong>。事实搬出去了 &mdash; 价格、饮食需求
+    和过敏原现在都在 <code>FAQs.txt</code> 里 &mdash; 提示词只说明该怎么表现，以及各个
+    工具接受哪些 ID。正是这一部分让演示像一个餐厅，而不是一个聊天机器人：
+  </p>
+  <pre class="code-block"><code>Work like a real head waiter. Take the guest through the courses in order:
+openers, then first, then mains, then desserts, asking about one course at a time.
+Offer two options rather than ten. If they skip a course, let them, but mention
+once that one dish from each course gets 10% off. After desserts, offer a glass of
+wine once, and let the guest pick any one; if they say no, that is fine. Do not
+suggest a wine for a particular dish.</code></pre>
+  <p>
+    小规则，大效果。“两个选项而不是十个”让口头回答保持简短。“一次一道菜”给对话一个
+    形状，也让 <code>show_section</code> 在每一轮都有事可做。“不要为某道菜推荐搭配的酒”
+    阻止模型编造它不可能知道的搭配。
+  </p>
+  <p>
+    还有一段新的关于<strong>听错的词</strong>的说明，它是整个文件里最实用的一行：
+  </p>
+  <pre class="code-block"><code>What the guest says reaches you through speech-to-text, which sometimes mishears.
+If their words make no sense, they are probably not a question: think what they
+most likely said, given what you just asked. For example, right after you offer
+wine, "wet why" is probably "red wine" or "white wine". Check with them in a few
+words, such as "Red wine, is that right?", or ask them to say it again. Do not use
+the "Any other question?" answer for words you did not understand.</code></pre>
+  <p>
+    没有它，一个听错的菜名会把 Lin 送进兜底回答，听起来就像机器人放弃了。有了它，
+    她会改问一个简短的问题 &mdash; 正是服务员会做的事。
+  </p>
+
+  <h3>改动 4：耳朵拿到一份词汇表</h3>
+  <pre class="code-block"><code># Words the speech-to-text should listen out for, so "red wine" is not heard as "wet why".
+KEYTERMS = [
+    "YouFantasy", "Oysters", "Garlic Bread", "Green Salad", "Tomato Soup", "Grilled Prawns",
+    "Vegetable Dumplings", "Salmon", "Beef", "Roast Chicken", "Pork Belly", "Crispy Tofu",
+    "Cheesecake", "Chocolate Cake", "Mango Sorbet", "Red Wine", "White Wine", "Alcohol-Free",
+    "openers", "first course", "mains", "desserts", "vegetarian", "vegan", "nut free",
+]</code></pre>
+  <pre class="code-block"><code>stt=inference.STT(model="cartesia/ink-2", extra_kwargs={"keyterm": KEYTERMS}),  # speech -&gt; text</code></pre>
+  <p>
+    这些词作为 <strong>keyterms</strong> 传给语音识别器：是提示，不是规则。餐厅名、菜名
+    和饮食相关的词，正是通用模型容易听错的那一类；而菜名听错比形容词听错更糟 &mdash;
+    它会进账单。流水线的其余部分与版本 3 相同：<code>openai/gpt-4.1-mini</code> 当大脑，
+    <code>cartesia/sonic-3.6</code> 配 Skylar 的声音，轮次检测设为 <code>"stt"</code>，
+    以及同一个 Synthesia 数字人，带着三次尝试的冷启动重试。
+  </p>
+
+  <h2>第 3 步：完整的 agent.py</h2>
+  <p>
+    这里是完整文件，让你看到四处改动在上下文中的样子：
+  </p>
+  <pre class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>"""Version 6 (English): the full restaurant. Lin is a head waiter who takes the guest's whole order.
+
+The pipeline:
+    mic -&gt; VAD -&gt; STT -&gt; turn detection -&gt; LLM (+ tools) -&gt; TTS -&gt; Synthesia avatar -&gt; browser
+
+New in this version: the page is a whole restaurant website (site.js + site.css) and Lin has
+four tools instead of one - show_section, filter_menu, focus_dish and add_to_order - so she
+can grey out dishes for an allergy, open a dish card and keep a running tab. The prompt turns
+her into a head waiter who guides the guest through four courses, and the speech-to-text gets
+a list of menu words so "red wine" is not heard as "wet why".
+
+Run:  uv run agent.py dev    (terminal 1)
+      uv run server.py       (terminal 2, then open http://localhost:8080)
+"""
+
+import asyncio
+import json
+import os
+import re
+from pathlib import Path
+
+from dotenv import load_dotenv
+from livekit.agents import Agent, AgentSession, JobContext, WorkerOptions, cli, function_tool, inference
+from livekit.plugins import silero, synthesia
+
+load_dotenv(dotenv_path=Path(__file__).parent / ".env")
+
+AGENT_NAME = "avatar-demo"  # must match server.py
+AVATAR_ID = os.getenv("SYNTHESIA_AVATAR_ID") or "8788bef1-8020-46e0-a8f4-510ea9989b25"  # Jenny
+VOICE_ID = "db6b0ed5-d5d3-463d-ae85-518a07d3c2b4"  # Cartesia "Skylar"
+
+# Everything add_to_order accepts, by page section, in the order Lin takes the guest
+# through them. Must match MENU and WINES in step09/site.js.
+COURSES = {
+    "openers": ["oysters", "bread", "salad"],
+    "first": ["soup", "prawns", "dumplings"],
+    "mains": ["salmon", "beef", "chicken", "pork", "tofu"],
+    "desserts": ["cheesecake", "chocolate", "sorbet"],
+    "wine": ["red", "white", "alcoholfree"],
+}
+ORDER_IDS = {dish for dishes in COURSES.values() for dish in dishes}
+NEXT_SECTION = dict(zip(COURSES, list(COURSES)[1:]))  # openers -&gt; first -&gt; mains -&gt; desserts -&gt; wine
+
+# Words the speech-to-text should listen out for, so "red wine" is not heard as "wet why".
+KEYTERMS = [
+    "YouFantasy", "Oysters", "Garlic Bread", "Green Salad", "Tomato Soup", "Grilled Prawns",
+    "Vegetable Dumplings", "Salmon", "Beef", "Roast Chicken", "Pork Belly", "Crispy Tofu",
+    "Cheesecake", "Chocolate Cake", "Mango Sorbet", "Red Wine", "White Wine", "Alcohol-Free",
+    "openers", "first course", "mains", "desserts", "vegetarian", "vegan", "nut free",
+]
+
+FAQS_FILE = Path(__file__).parent / "FAQs.txt"  # the avatar's knowledge
+
+# {faqs} is replaced with the contents of FAQs.txt at the start of every call.
+# The facts (prices, diets, allergens, wine) live in FAQs.txt; this prompt only says
+# how to behave and which IDs the tools take.
+INSTRUCTIONS = """\
+You are Lin, the head waiter at YouFantasy, a made-up restaurant. You are a
+real-time avatar in a spoken conversation, so answer in one to three short
+sentences and never use markdown, lists, or URLs.
+
+Answer only from these FAQs:
+
+{faqs}
+
+Those are the only facts you know. If the guest asks for information the FAQs do
+not cover, use the answer to "Any other question?" word for word. Taking their
+order and guiding them through the courses is your job, not a question, so carry
+on with that normally.
+
+What the guest says reaches you through speech-to-text, which sometimes mishears.
+If their words make no sense, they are probably not a question: think what they
+most likely said, given what you just asked. For example, right after you offer
+wine, "wet why" is probably "red wine" or "white wine". Check with them in a few
+words, such as "Red wine, is that right?", or ask them to say it again. Do not use
+the "Any other question?" answer for words you did not understand.
+
+Your tools take these IDs. Say the dish names out loud, never the IDs, and never
+read prices as digits:
+
+  openers   oysters, bread (Garlic Bread), salad (Green Salad)
+  first     soup (Tomato Soup), prawns (Grilled Prawns), dumplings (Vegetable Dumplings)
+  mains     salmon, beef, chicken (Roast Chicken), pork (Pork Belly), tofu (Crispy Tofu)
+  desserts  cheesecake, chocolate (Chocolate Cake), sorbet (Mango Sorbet)
+  wine      red (Red Wine), white (White Wine), alcoholfree (Alcohol-Free)
+
+Use your tools while you talk, not instead of talking:
+
+- show_section when you move the guest to a new part of the page: meal for how
+  the menu works, a course name for that course, wine for wine, room for the
+  hours or the address
+- filter_menu the moment they mention a dietary need, and again if they change it
+- focus_dish when you describe one dish in any detail
+- add_to_order only once they have actually chosen something
+
+Every time you start talking about a course or the wine, call show_section for it
+in the same reply, so the page always shows what you are talking about. This
+matters most right after add_to_order: when you add a dish and move on to the next
+course, call both tools, for example add_to_order("soup") and show_section("mains").
+
+Work like a real head waiter. Take the guest through the courses in order:
+openers, then first, then mains, then desserts, asking about one course at a time.
+Offer two options rather than ten. If they skip a course, let them, but mention
+once that one dish from each course gets 10% off. After desserts, offer a glass of
+wine once, and let the guest pick any one; if they say no, that is fine. Do not
+suggest a wine for a particular dish.
+
+The guest can ask about or order wine at any time, not only after desserts. If
+they say "red wine", "white wine" or "alcohol-free", answer from the FAQs, and if
+they want it, add it with add_to_order, then carry on where you were."""
+
+
+class HeadWaiter(Agent):
+    def __init__(self, room, instructions: str) -&gt; None:
+        super().__init__(instructions=instructions)
+        self.room = room
+
+    async def _ui(self, **message) -&gt; str:
+        """Send a tiny message to the browser. step09/site.js does the rest."""
+        await self.room.local_participant.publish_data(json.dumps(message), topic="ui")
+        return "Done."
+
+    @function_tool
+    async def show_section(self, section: str) -&gt; str:
+        """Scroll the page to a part of the menu and highlight it.
+
+        Args:
+            section: One of: meal, openers, first, mains, desserts, wine, room.
+        """
+        return await self._ui(action="show_section", section=section)
+
+    @function_tool
+    async def filter_menu(self, diet: str) -&gt; str:
+        """Grey out every dish on the page the guest cannot eat.
+
+        Args:
+            diet: One of: none, vegetarian, vegan, pescatarian, nut_free.
+        """
+        return await self._ui(action="filter_menu", diet=diet)
+
+    @function_tool
+    async def focus_dish(self, dish: str) -&gt; str:
+        """Open the detail card for one dish: kitchen note and allergens.
+
+        Args:
+            dish: A dish ID from the menu, for example salmon or tofu.
+        """
+        return await self._ui(action="focus_dish", dish=dish)
+
+    @function_tool
+    async def add_to_order(self, dish: str) -&gt; str:
+        """Add a dish or a glass of wine to the guest's order, shown as a running tab on the page.
+
+        Args:
+            dish: A dish ID from the menu, or a wine ID: red, white or alcoholfree.
+        """
+        # Accept "red", "Red Wine" or "alcohol-free" alike, the same way site.js does.
+        dish = re.sub(r"[^a-z]", "", dish.lower()).removeprefix("the").replace("wine", "")
+        if dish not in ORDER_IDS:  # tell the model, so it retries with a real ID
+            return f"Not added: {dish!r} is not an ID. Use one of: {', '.join(sorted(ORDER_IDS))}."
+        await self._ui(action="add_to_order", dish=dish)
+        # Remind the model to move the page along with the conversation.
+        section = next(c for c, dishes in COURSES.items() if dish in dishes)
+        if section in NEXT_SECTION:
+            nxt = NEXT_SECTION[section]
+            return f"Added {dish} to the order. When you introduce the next part, call show_section(\"{nxt}\") too."
+        return f"Added {dish} to the order."
+
+
+def prewarm(proc) -&gt; None:
+    proc.userdata["vad"] = silero.VAD.load()
+
+
+async def entrypoint(ctx: JobContext) -&gt; None:
+    await ctx.connect()
+
+    # The brain: each line is one piece of the pipeline.
+    session = AgentSession(
+        vad=ctx.proc.userdata["vad"],                                   # is someone talking?
+        stt=inference.STT(model="cartesia/ink-2", extra_kwargs={"keyterm": KEYTERMS}),  # speech -&gt; text
+        llm=inference.LLM(model="openai/gpt-4.1-mini"),                 # text -&gt; reply (swap in any LLM)
+        tts=inference.TTS(model="cartesia/sonic-3.6", voice=VOICE_ID),  # reply -&gt; speech
+        turn_handling={
+            "turn_detection": "stt",                        # have they finished their thought?
+            "preemptive_generation": {"enabled": False},    # keep off when using tools
+        },
+    )
+
+    # The face: this is the whole Synthesia integration. Start it BEFORE session.start().
+    avatar = synthesia.AvatarSession(
+        synthesia.AvatarConfig(avatar_ids=[AVATAR_ID]),
+        join_timeout=60.0,
+    )
+    for attempt in range(3):  # cold starts occasionally time out, so retry
+        try:
+            await avatar.start(session, room=ctx.room)
+            break
+        except synthesia.SynthesiaError as e:
+            if not e.retryable or attempt == 2:
+                raise
+            await asyncio.sleep(2)
+
+    # Read the FAQs fresh for each call, so edits to FAQs.txt show up on the next call.
+    faqs = FAQS_FILE.read_text(encoding="utf-8").strip()
+    await session.start(agent=HeadWaiter(ctx.room, INSTRUCTIONS.replace("{faqs}", faqs)), room=ctx.room)
+    session.generate_reply(instructions="Welcome the guest to YouFantasy in one short sentence.")
+
+
+if __name__ == "__main__":
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, prewarm_fnc=prewarm, agent_name=AGENT_NAME, port=8081))</code></pre>
+
+  <h2>第 4 步：server.py、index.html、site.js 和 FAQs.txt</h2>
+  <p>
+    <code>server.py</code> 仍然在 <code>/</code> 提供页面，也仍然在 <code>/token</code>
+    签发令牌。它多了一条路由，因为 <code>index.html</code> 现在会向浏览器请求另外两个文件：
+  </p>
+  <pre class="code-block"><code>async def asset(request: web.Request) -&gt; web.FileResponse:
+    # /site.js and /site.css, next to index.html. Only .js and .css, so agent.py and FAQs stay private.
+    path = Path(__file__).parent / request.match_info["file"]
+    if not path.is_file():
+        raise web.HTTPNotFound()
+    return web.FileResponse(path, headers={"Cache-Control": "no-store"})
+
+
+app = web.Application()
+app.router.add_get("/", index)
+app.router.add_get("/token", token)
+app.router.add_get(r"/{file:[\w-]+\.(?:js|css)}", asset)</code></pre>
+  <p>
+    把路由限制为 <code>.js</code> 和 <code>.css</code> 是有意的：这意味着
+    <code>agent.py</code>、<code>FAQs.txt</code> 和你的 <code>.env</code> 都无法被访客
+    下载。
+  </p>
+  <p>
+    <code>index.html</code> 现在很小 &mdash; 大约八十行。它只放数字人视频、Start 按钮和
+    LiveKit 连接，别的什么都没有。整个餐厅由 <code>site.js</code> 搭建，而
+    <code>site.js</code> 对数字人、LiveKit 或 Synthesia 一无所知。它只是发布一个全局
+    对象，每个方法对应一个工具：
+  </p>
+  <pre class="code-block"><code>const SITE = {
+  show_section({ section }) { ... },   // scroll there and draw a ring around it
+  filter_menu({ diet }) { ... },       // grey out every dish the guest cannot eat
+  focus_dish({ dish }) { ... },        // open the card: kitchen note, allergens
+  add_to_order({ dish }) { ... },      // add it to the running tab
+};</code></pre>
+  <p>
+    两者之间的桥梁是 <code>index.html</code> 里的四行。每次工具调用都经由
+    <code>"ui"</code> 数据频道到达，动作名称决定调用哪个方法：
+  </p>
+  <pre class="code-block"><code>room.on(RoomEvent.DataReceived, (payload, participant, kind, topic) =&gt; {
+  if (topic !== 'ui') return;
+  const { action, ...args } = JSON.parse(new TextDecoder().decode(payload));
+  SITE[action]?.(args);
+});</code></pre>
+  <p>
+    这个拆分是这篇笔记里最可复用的想法。因为 <code>site.js</code> 根本不知道存在数字人，
+    所以同一个页面在代理关掉时也能用：你可以手动点击一道菜、打开它的卡片、把它加入
+    点单，看着九折出现。又因为代理不知道页面是怎么搭建的，你可以重新设计或重建网站，
+    而不用碰 <code>agent.py</code>。
+  </p>
+  <p>
+    <code>site.js</code> 还拥有两块与 AI 无关的餐厅逻辑：<strong>饮食筛选</strong>
+    （<code>none</code>、<code>vegetarian</code>、<code>vegan</code>、<code>pescatarian</code>、
+    <code>nut_free</code>）和<strong>账单</strong> &mdash; 食物按菜序分组，酒单独列出
+    且从不打折，四道菜齐了之后餐费九折。
+  </p>
+  <pre class="code-block"><code>const food = order.filter(courseOf);
+const fullMeal = COURSES.every((c) =&gt; food.some((d) =&gt; courseOf(d) === c));
+const discount = fullMeal ? food.reduce((t, d) =&gt; t + d.price, 0) * DISCOUNT : 0;</code></pre>
+  <p>
+    <code>FAQs.txt</code> 从四个问题增加到十三个：带价格的菜单、四道菜、单杯酒，
+    以及真实客人会问的问题 &mdash; 哪些菜是纯素、素食、海鲜，或者含坚果。Lin 每次通话
+    都会重新读取它，所以你可以改一个价格，在下一段对话里听到新的价格。
+  </p>
+
+  <h2>第 5 步：安装、设置密钥、运行</h2>
+  <p>
+    和之前一样。在项目文件夹里运行一次 <code>uv sync</code>，然后打开两个终端。
+  </p>
+  <p><strong>终端 1</strong> &mdash; 语音代理 + 数字人引擎：</p>
+  <pre class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>uv run agent.py dev</code></pre>
+  <p><strong>终端 2</strong> &mdash; 提供浏览器页面的网页服务器：</p>
+  <pre class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>uv run server.py</code></pre>
+
+  <h2>第 6 步：打开页面，点一餐</h2>
+  <p>
+    在浏览器打开 <code>http://localhost:8080</code>。餐厅网站加载出来，数字人小部件在
+    右下角。点击 <strong>Start</strong> 并允许麦克风。等 Lin 的欢迎语，然后试一顿完整的
+    饭：
+  </p>
+  <ul>
+    <li>“你有什么推荐？” &mdash; 她打开菜单，一道一道带你走，页面跟着她。</li>
+    <li>“我吃素。” &mdash; 你不能吃的菜会淡出，每道菜还会显示还剩几款。</li>
+    <li>“给我讲讲牛肉。” &mdash; 菜品卡片打开，显示厨房备注和过敏原。</li>
+    <li>“我要牛肉。” &mdash; 它出现在账单里，然后她转向甜点。</li>
+    <li>“来一杯红酒。” &mdash; 酒被加上，但从不会打折。</li>
+  </ul>
+  <p>
+    四道菜全部点完，账单会显示 <strong>整餐，餐费九折</strong> 和新的总额。如果你点菜单上
+    没有的菜，她不会编出来：点单工具会拒绝，而提示词告诉她要把菜名说出来，绝不说 ID，
+    也绝不把价格读成数字。
+  </p>
+
+  <h2>接下来可以试的想法</h2>
+  <ul>
+    <li>在 <code>site.js</code> 的 <code>MENU</code>、<code>FAQs.txt</code> 和 <code>agent.py</code> 的 <code>COURSES</code> 里各加一道菜 &mdash; 然后点它。</li>
+    <li>改 <code>site.js</code> 里的折扣（<code>const DISCOUNT = 0.10</code>），以及提示词里提到 10% 的那句话。</li>
+    <li>在饮食筛选开着的时候点一道菜：页面会把它变灰，但 Lin 仍然可以加它，因为筛选只是一种视图，点单才是事实。</li>
+    <li>给她第二份工作 &mdash; 比如 <code>book_table(day, time)</code> &mdash; 并给 <code>SITE</code> 加一个方法；套路是一样的。</li>
+  </ul>
+
+  <h2>接下来去哪里</h2>
+  <ul>
+    <li><a href="/zh-CN/notes/ai-note26.html">如何在网页中使用 LiveKit 和 Synthesia Avatar（版本 3）？</a> &mdash; 这个版本所基于的、会滚动页面的数字人。</li>
+    <li><a href="/zh-CN/notes/ai-note28.html">如何在网页中使用 LiveKit 和 Synthesia Avatar（版本 5）——粤语？</a> &mdash; 同一个数字人讲粤语。</li>
+    <li><a href="/zh-CN/notes/ai-note22.html">如何用 LiveKit + Synthesia 数字人（版本 2）？</a> &mdash; 同一个数字人，知识放在一个纯文本文件里。</li>
+    <li><a href="/zh-CN/notes/ai-note18.html">如何在 macOS 安装 Homebrew 套件管理程序？</a> &mdash; 如果你在 Mac 上还需要 <code>uv</code>。</li>
+  </ul>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&amp;hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', 'Copy code to clipboard');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', 'Copied to clipboard');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', 'Copy code to clipboard');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>
