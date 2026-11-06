@@ -12,7 +12,7 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>How to use LiveKit and Synthesia Avatar with webpage (version 4)-Cantonese? | Howard Lam, PhD</title>
+<title>How to use LiveKit and Synthesia Avatar with webpage (version 5)-Cantonese? | Howard Lam, PhD</title>
 <meta name="description" content="A talking AI avatar that lives inside a real web page and speaks Cantonese: as Lin answers in colloquial Hong Kong Cantonese, the page scrolls to the part she is talking about.">
 <link rel="canonical" href="https://pongyuenlam.github.io/notes/ai-note28.html">
 <link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note28.html">
@@ -21,7 +21,7 @@
 <link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note28.html">
 
 <meta property="og:type" content="article">
-<meta property="og:title" content="How to use LiveKit and Synthesia Avatar with webpage (version 4)-Cantonese?">
+<meta property="og:title" content="How to use LiveKit and Synthesia Avatar with webpage (version 5)-Cantonese?">
 <meta property="og:description" content="A talking AI avatar that lives inside a real web page and speaks Cantonese: as Lin answers in colloquial Hong Kong Cantonese, the page scrolls to the part she is talking about.">
 <meta property="og:url" content="https://pongyuenlam.github.io/notes/ai-note28.html">
 <meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
@@ -35,7 +35,7 @@
 {
   "@context": "https://schema.org",
   "@type": "BlogPosting",
-  "headline": "How to use LiveKit and Synthesia Avatar with webpage (version 4)-Cantonese?",
+  "headline": "How to use LiveKit and Synthesia Avatar with webpage (version 5)-Cantonese?",
   "description": "A talking AI avatar that lives inside a real web page and speaks Cantonese: as Lin answers in colloquial Hong Kong Cantonese, the page scrolls to the part she is talking about.",
   "author": {
     "@type": "Person",
@@ -73,7 +73,7 @@
 </div>
 
 <main>
-  <h1>How to use LiveKit and Synthesia Avatar with webpage (version 4)-Cantonese?</h1>
+  <h1>How to use LiveKit and Synthesia Avatar with webpage (version 5)-Cantonese?</h1>
   <p class="paper-meta">Howard Lam, PhD &middot; AI Notes &middot; November 6, 2026 &middot; 8 min read</p>
 
   <p>
@@ -95,7 +95,7 @@
   <h2>Putonghua vs. Cantonese at a glance</h2>
   <table class="comparison-table">
     <thead>
-      <tr><th></th><th>Version 3 (Putonghua)</th><th>Version 4 (Cantonese)</th></tr>
+      <tr><th></th><th>Version 3 (Putonghua)</th><th>Version 5 (Cantonese)</th></tr>
     </thead>
     <tbody>
       <tr><td>Conversation language</td><td>Putonghua (Mandarin Chinese)</td><td>Colloquial Hong Kong Cantonese</td></tr>
@@ -117,7 +117,7 @@
 
   <h2>Running it on your own computer</h2>
   <p>
-    <a href="downloads/Folder-AI-LiveKit-Avatar-V4-Cantonese.zip" download>Download the zip file</a> and
+    <a href="downloads/Folder-AI-LiveKit-Avatar-V5-Cantonese.zip" download>Download the zip file</a> and
     unzip it to a folder. The zip holds <code>agent.py</code>, <code>server.py</code>,
     <code>index.html</code>, <code>FAQs.txt</code>, <code>pyproject.toml</code>, and
     <code>README.md</code>. Add your own <code>.env</code> file with the same five keys as
@@ -210,7 +210,7 @@ cover, give the answer to "Any other question?", translated into Cantonese.</cod
   <p>
     Here is the complete file, so you can see the four changes in context:
   </p>
-  <pre class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>"""Version 4 (Cantonese): Lin speaks Cantonese. The guest asks in Cantonese and Lin answers in Cantonese.
+  <pre class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>"""Version 5 (Cantonese): Lin speaks Cantonese. The guest asks in Cantonese and Lin answers in Cantonese.
 
 The pipeline:
     mic -&gt; VAD -&gt; STT -&gt; turn detection -&gt; LLM (+ tools) -&gt; TTS -&gt; Synthesia avatar -&gt; browser
