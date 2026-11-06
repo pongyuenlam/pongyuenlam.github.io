@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-HK">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>如何在網頁中使用 LiveKit 和 Synthesia Avatar（版本 4）——普通話？ | 林邦源博士</title>
+<meta name="description" content="一個住在真正網頁裏、會說話、會講普通話的 AI 數位人：當 Lin 用普通話回答時，頁面會捲動到她正在講述的部份。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note27.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note27.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note27.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note27.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note27.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何在網頁中使用 LiveKit 和 Synthesia Avatar（版本 4）——普通話？">
+<meta property="og:description" content="一個住在真正網頁裏、會說話、會講普通話的 AI 數位人：當 Lin 用普通話回答時，頁面會捲動到她正在講述的部份。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-HK/notes/ai-note27.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="../../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "如何在網頁中使用 LiveKit 和 Synthesia Avatar（版本 4）——普通話？",
+  "description": "一個住在真正網頁裏、會說話、會講普通話的 AI 數位人：當 Lin 用普通話回答時，頁面會捲動到她正在講述的部份。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-06",
+  "dateModified": "2026-11-06",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-HK/notes/ai-note27.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../../index.html">首頁</a></li>
+        <li><a href="../../biography.html">個人簡介</a></li>
+        <li><a href="../../research.html">研究</a></li>
+        <li><a href="../../cases.html">案例</a></li>
+        <li><a href="../../books.html">著作</a></li>
+        <li><a href="../../ai-programs.html">AI 筆記</a></li>
+        <li><a href="../../links/">連結</a></li>
+        <li><a href="../../glossary/">詞彙表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <a href="/notes/ai-note27.html">English</a>
+  <span class="current">繁體中文</span>
+  <a href="/zh-CN/notes/ai-note27.html">简体中文</a>
+</div>
+
+<main>
+  <h1>如何在網頁中使用 LiveKit 和 Synthesia Avatar（版本 4）——普通話？</h1>
+  <p class="paper-meta">林邦源博士 &middot; AI 筆記 &middot; 2026 年 11 月 6 日 &middot; 約 8 分鐘閱讀</p>
+
+  <p>
+    在<a href="/notes/ai-note22.html">版本 2</a>（英文）中，餐廳接待員 Lin 用一個純文字檔案裏的知識，
+    回答你口頭提出的問題。在<a href="/zh-HK/notes/ai-note26.html">版本 3</a>中，她搬進了一個
+    真正的網頁：當她回答時，頁面會捲動到她正在講述的部份。
+  </p>
+  <p>
+    版本 4 再作一個改動：<strong>Lin 現在講普通話</strong>。你用普通話提問，她用普通話的聲音回答，
+    而頁面仍然會隨着她說話而捲動。有趣的地方是：她的知識檔案仍然是英文，網頁也是英文
+    &mdash; AI 模型即時把一切翻譯過來。
+  </p>
+
+  <h2>版本 3 與版本 4 一覽</h2>
+  <table>
+    <thead>
+      <tr><th></th><th>版本 3</th><th>版本 4</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>對話語言</td><td>英文</td><td>普通話</td></tr>
+      <tr><td>耳朵（語音轉文字）</td><td>Cartesia ink-2</td><td>Cartesia ink-whisper，設定為中文</td></tr>
+      <tr><td>聲音（文字轉語音）</td><td>Cartesia sonic-3.6，聲音「Skylar」</td><td>Cartesia sonic-3，聲音「Jing」（普通話）</td></tr>
+      <tr><td>判斷你何時說完</td><td>由 STT 模型告知</td><td>靜音偵測（VAD）</td></tr>
+      <tr><td>知識檔案 FAQs.txt</td><td>英文</td><td>英文 &mdash; 即時翻譯</td></tr>
+      <tr><td>網頁文字</td><td>英文</td><td>英文（不變）</td></tr>
+      <tr><td>頁面捲動並標示</td><td>是（show_section 工具）</td><td>是（show_section 工具）</td></tr>
+    </tbody>
+  </table>
+
+  <h2>開始之前你需要甚麼</h2>
+  <ul>
+    <li>版本 3 所需的全部東西 &mdash; 完整清單見 <a href="/zh-HK/notes/ai-note26.html">如何在網頁中使用 LiveKit 和 Synthesia Avatar（版本 3）？</a>。</li>
+    <li>不需要新的帳戶或金鑰：同一組 LiveKit 和 Synthesia 憑證就可以用。</li>
+  </ul>
+
+  <h2>在自己的電腦上運行</h2>
+  <p>
+    <a href="/notes/downloads/Folder-AI-LiveKit-Avatar-V4.zip" download>下載 zip 檔案</a>並解壓到
+    一個資料夾。zip 內有 <code>agent.py</code>、<code>server.py</code>、<code>index.html</code>、
+    <code>FAQs.txt</code>、<code>pyproject.toml</code> 和 <code>README.md</code>。加入你自己的
+    <code>.env</code> 檔案，用與版本 3 相同的五把金鑰。
+  </p>
+
+  <h2>步驟 1：設定專案資料夾</h2>
+  <p>
+    六個檔案中有四個 &mdash; <code>server.py</code>、<code>index.html</code>、<code>FAQs.txt</code>
+    和 <code>pyproject.toml</code> &mdash; 與版本 3 完全相同，所以如果你已經有那個資料夾，
+    可以複製它，只替換 <code>agent.py</code>。
+  </p>
+  <p>
+    載有你五把秘密金鑰的 <code>.env</code> 檔案與版本 3 完全一樣。<code>pyproject.toml</code>
+    裏的套件也沒有改變 &mdash; 講中文的模型來自 LiveKit 已經連接的同一個 Cartesia 服務。
+  </p>
+
+  <h2>步驟 2：看看 agent.py &mdash; 有甚麼改變</h2>
+  <p>
+    這個檔案與版本 3 幾乎相同。只有四處改動，而全部都與語言有關。
+  </p>
+
+  <h3>改動 1：會聽中文的新耳朵</h3>
+  <pre class="code-block"><code>stt=inference.STT(model="cartesia/ink-whisper", language="zh"),</code></pre>
+  <p>
+    <strong>語音轉文字</strong>模型 &mdash; Lin 的耳朵 &mdash; 由 <code>cartesia/ink-2</code>
+    改為 <code>cartesia/ink-whisper</code>，並加上 <code>language="zh"</code>
+    （zh 是中文的代碼）。這個模型聽普通話，並用中文字寫下你說的話。
+  </p>
+  <p>
+    這個切換是被迫的：<code>ink-2</code> 只懂英文，所以不能保留來處理普通話。
+    <code>ink-whisper</code> 才是能夠處理的多語言模型。
+  </p>
+
+  <h3>改動 2：新的普通話聲音</h3>
+  <pre class="code-block"><code>VOICE_ID = "6eb8965c-e295-47bd-a9e4-3eeebb3abcff"  # Cartesia "Jing", a Mandarin female voice</code></pre>
+  <pre class="code-block"><code>tts=inference.TTS(model="cartesia/sonic-3", voice=VOICE_ID, language="zh"),</code></pre>
+  <p>
+    <strong>文字轉語音</strong>的聲音改為 <em>Jing</em>，一把普通話女聲，同樣加上
+    <code>language="zh"</code>。數位人仍然像以前一樣透過 Synthesia 說話
+    &mdash; 只有她的聲音是新的。
+  </p>
+
+  <h3>改動 3：用另一種方式判斷你已經說完</h3>
+  <pre class="code-block"><code>turn_handling={
+    "turn_detection": "vad",                        # have they finished? (ink-whisper can't tell, so use silence)
+    "preemptive_generation": {"enabled": False},    # keep off when using tools
+},</code></pre>
+  <p>
+    在版本 3 中，STT 模型本身會報告你何時說完一句話。新的 ink-whisper 模型做不到
+    &mdash; 與 ink-2 不同，它沒有輪次偵測的訊號 &mdash; 所以我們把
+    <code>turn_detection</code> 改為 <code>"vad"</code>：程式現在只靠察覺一段沉默，
+    就判斷你已經說完。
+  </p>
+
+  <h3>改動 4：提示詞多了兩行</h3>
+  <pre class="code-block"><code>The guest speaks Putonghua (Mandarin Chinese). Always reply in Putonghua, written in
+simplified Chinese characters, even though the FAQs below are in English.</code></pre>
+  <p>
+    這就是版本 4 的核心。<code>FAQs.txt</code> 裏的常見問題仍然是英文，所以你仍然可以
+    像以前一樣編輯它們。LLM 讀取英文答案，然後用普通話說出來。後備句子也略有改變：
+  </p>
+  <pre class="code-block"><code>Those are the only things you know. If the guest asks anything the FAQs do not
+cover, give the answer to "Any other question?", translated into Putonghua.</code></pre>
+  <p>
+    而歡迎語現在也要求用普通話：
+  </p>
+  <pre class="code-block"><code>session.generate_reply(
+    instructions="Welcome the guest to YouFantasy and invite them to ask a question, in one short sentence of Putonghua."
+)</code></pre>
+  <p>
+    其他一切 &mdash; <code>show_section</code> 工具、數位人的重試迴圈、每次通話都重新讀取
+    FAQs.txt &mdash; 都與版本 3 相同。
+  </p>
+
+  <h2>步驟 3：完整的 agent.py</h2>
+  <p>
+    以下是完整檔案，讓你看清這四處改動的上下文：
+  </p>
+  <pre class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>"""Version 4: Lin speaks Putonghua. The guest asks in Putonghua and Lin answers in Putonghua.
+
+The pipeline:
+    mic -&gt; VAD -&gt; STT -&gt; turn detection -&gt; LLM (+ tools) -&gt; TTS -&gt; Synthesia avatar -&gt; browser
+    VAD: Voice Activity Detection, STT: Speech-to-Text, LLM: Large Language Model, TTS: Text-to-Speech
+
+New in version 4: the ears and the voice change to models that handle Chinese, and
+the prompt tells Lin to reply in Putonghua. FAQs.txt, the prompt and the web page
+stay in English: the LLM translates on the fly.
+
+Run:  uv run agent.py dev    (terminal 1)
+      uv run server.py       (terminal 2, then open http://localhost:8080)
+"""
+
+import asyncio
+import json
+import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+from livekit.agents import Agent, AgentSession, JobContext, WorkerOptions, cli, function_tool, inference
+from livekit.plugins import silero, synthesia
+
+load_dotenv(dotenv_path=Path(__file__).parent / ".env")
+
+AGENT_NAME = "avatar-demo"  # must match server.py
+AVATAR_ID = os.getenv("SYNTHESIA_AVATAR_ID") or "8788bef1-8020-46e0-a8f4-510ea9989b25"  # Jenny
+VOICE_ID = "6eb8965c-e295-47bd-a9e4-3eeebb3abcff"  # Cartesia "Jing", a Mandarin female voice
+
+FAQS_FILE = Path(__file__).parent / "FAQs.txt"  # the avatar's knowledge
+SECTIONS = {"hours", "mains", "location"}       # must match the section ids in index.html
+
+# {faqs} is replaced with the contents of FAQs.txt at the start of every call.
+INSTRUCTIONS = """\
+You are Lin, the host at YouFantasy, a made-up restaurant. You are a real-time
+avatar in a spoken conversation, so answer in one to three short sentences and never use
+markdown, lists, or URLs.
+
+The guest speaks Putonghua (Mandarin Chinese). Always reply in Putonghua, written in
+simplified Chinese characters, even though the FAQs below are in English.
+
+Answer only from these FAQs:
+
+{faqs}
+
+Those are the only things you know. If the guest asks anything the FAQs do not
+cover, give the answer to "Any other question?", translated into Putonghua.
+
+The guest is looking at our web page. Every time you answer one of the FAQs,
+also call show_section so the page scrolls to that part:
+
+- opening hours: show_section("hours")
+- main courses: show_section("mains")
+- address: show_section("location")
+
+Do not call show_section for any other question."""
+
+
+class Host(Agent):
+    def __init__(self, room, instructions: str) -&gt; None:
+        super().__init__(instructions=instructions)
+        self.room = room  # needed to send messages to the browser
+
+    @function_tool
+    async def show_section(self, section: str) -&gt; str:
+        """Scroll the guest's web page to one section and highlight it.
+
+        Args:
+            section: One of: hours, mains, location.
+        """
+        if section not in SECTIONS:  # tell the model, so it retries with a real name
+            return f"No section {section!r}. Use one of: hours, mains, location."
+        message = json.dumps({"action": "show_section", "section": section})
+        await self.room.local_participant.publish_data(message, topic="ui")  # index.html listens on "ui"
+        return "Done."
+
+
+def prewarm(proc) -&gt; None:
+    proc.userdata["vad"] = silero.VAD.load()
+
+
+async def entrypoint(ctx: JobContext) -&gt; None:
+    await ctx.connect()
+
+    # The brain: each line is one piece of the pipeline.
+    session = AgentSession(
+        vad=ctx.proc.userdata["vad"],                                              # is someone talking?
+        stt=inference.STT(model="cartesia/ink-whisper", language="zh"),            # Chinese speech -&gt; text
+        llm=inference.LLM(model="openai/gpt-4.1-mini"),                            # text -&gt; reply (+ tool calls)
+        tts=inference.TTS(model="cartesia/sonic-3", voice=VOICE_ID, language="zh"),  # Chinese reply -&gt; speech
+        turn_handling={
+            "turn_detection": "vad",                        # have they finished? (ink-whisper can't tell, so use silence)
+            "preemptive_generation": {"enabled": False},    # keep off when using tools
+        },
+    )
+
+    # The face. Start it BEFORE session.start().
+    avatar = synthesia.AvatarSession(
+        synthesia.AvatarConfig(avatar_ids=[AVATAR_ID]),
+        join_timeout=60.0,
+    )
+    for attempt in range(3):  # cold starts occasionally time out, so retry
+        try:
+            await avatar.start(session, room=ctx.room)
+            break
+        except synthesia.SynthesiaError as e:
+            if not e.retryable or attempt == 2:
+                raise
+            await asyncio.sleep(2)
+
+    # Read the FAQs fresh for each call, so edits to FAQs.txt show up on the next call.
+    faqs = FAQS_FILE.read_text(encoding="utf-8").strip()
+    await session.start(agent=Host(ctx.room, INSTRUCTIONS.replace("{faqs}", faqs)), room=ctx.room)
+    session.generate_reply(
+        instructions="Welcome the guest to YouFantasy and invite them to ask a question, in one short sentence of Putonghua."
+    )
+
+
+if __name__ == "__main__":
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, prewarm_fnc=prewarm, agent_name=AGENT_NAME, port=8081))</code></pre>
+
+  <h2>步驟 4：server.py、index.html 和 FAQs.txt &mdash; 沒有改動</h2>
+  <p>
+    <code>server.py</code> 與版本 3 是同一個檔案：它仍然在 <code>/</code> 提供頁面，
+    並且仍然在 <code>/token</code> 發出權杖。
+  </p>
+  <p>
+    <code>index.html</code> 保留相同的部份（<code>hours</code>、<code>mains</code>、
+    <code>location</code>）、相同的金色高亮外框，以及相同的 <code>"ui"</code> 數據頻道監聽器。
+    只有那一行介紹文字，現在邀請訪客用普通話提問：
+  </p>
+  <pre class="code-block"><code>&lt;p&gt;Ask Lin, our host, in Putonghua about our hours, our main courses or where to find us.&lt;/p&gt;</code></pre>
+  <p>
+    頁面本身仍然是英文，這讓示範更容易跟隨：Lin 講中文，而英文頁面隨着她捲動。
+  </p>
+  <p>
+    <code>FAQs.txt</code> 同樣沒有被改動 &mdash; 同樣四組英文問答，由 LLM 在通話時翻譯。
+  </p>
+
+  <h2>步驟 5：安裝、設定你的金鑰、運行</h2>
+  <p>
+    與版本 3 完全相同。在專案資料夾中執行一次 <code>uv sync</code>，然後開兩個終端機：
+  </p>
+  <pre class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>uv run agent.py dev</code></pre>
+  <p>然後在第二個終端機：</p>
+  <pre class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>uv run server.py</code></pre>
+
+  <h2>步驟 6：開啟頁面，用普通話跟 Lin 說話</h2>
+  <p>
+    在瀏覽器開啟 <code>http://localhost:8080</code>。餐廳頁面會載入，數位人小工具在右下角。
+    點擊 <strong>Start</strong> 並允許咪高峰權限。
+  </p>
+  <p>
+    等候 Lin 的歡迎語，然後用普通話提問，例如：
+  </p>
+  <ul>
+    <li>「你們幾點開門？」 &mdash; 她會回答營業時間，頁面會跳到<strong>營業時間</strong>。</li>
+    <li>「你們在哪裏？」 &mdash; 她會回答地址，頁面會跳到<strong>在哪裏找到我們</strong>。</li>
+    <li>「你們有停車位嗎？」 &mdash; 這不在常見問題裏，所以她會給出「還有其他問題嗎？」的答案，並翻譯成普通話，頁面不會移動。</li>
+  </ul>
+
+  <h2>接下來可以試試</h2>
+  <ul>
+    <li>在 FAQs.txt 新增一組問答 &mdash; 仍然是英文 &mdash; 儲存檔案，然後重新整理頁面。Lin 會在下一次通話中用新知識回答，而且是普通話。</li>
+    <li>在 index.html 中重新命名一個部份，並同步更新 agent.py 裏的 <code>SECTIONS</code> 和規則手冊。</li>
+    <li>試另一種語言：更改 <code>language</code> 代碼和聲音 &mdash; 例如用 <code>"yue"</code> 配一把相配的 Cartesia 聲音來說廣東話。</li>
+  </ul>
+
+  <h2>下一步看甚麼</h2>
+  <ul>
+    <li><a href="/zh-HK/notes/ai-note26.html">如何在網頁中使用 LiveKit 和 Synthesia Avatar（版本 3）？</a> &mdash; 這個版本所依據的頁面捲動數位人。</li>
+    <li><a href="/notes/ai-note22.html">如何使用 LiveKit 和 Synthesia Avatar（版本 2）？</a>（英文） &mdash; 同一個數位人，知識放在純文字檔案裏。</li>
+    <li><a href="/notes/ai-note19.html">如何使用 LiveKit 語音代理查詢天氣？</a>（英文） &mdash; 第一篇關於給代理工具的筆記。</li>
+    <li><a href="/notes/ai-note18.html">如何在 macOS 安裝 Homebrew？</a>（英文） &mdash; 如果你還需要在 Mac 上安裝 <code>uv</code>。</li>
+  </ul>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&amp;hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+function copyCode(btn) {
+  var code = btn.parentElement.querySelector('code').innerText;
+  navigator.clipboard.writeText(code).then(function () {
+    btn.textContent = 'Copied!';
+    setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
+  });
+}
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  if (block.querySelector('.copy-btn')) return;
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', 'Copy code to clipboard');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', 'Copied to clipboard');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', 'Copy code to clipboard');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>
