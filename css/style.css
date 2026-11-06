@@ -391,3 +391,48 @@ ol.endnotes a.backlink {
   color: #fff;
   font-weight: 600;
 }
+
+/* AI note filters (topic chips, above the note cards) */
+
+.note-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 1.5rem;
+}
+
+.note-filters .chip {
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--color-muted);
+  cursor: pointer;
+}
+
+.note-filters .chip:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.note-filters .chip.is-active {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.note-filters .chip:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.note-series {
+  margin: 0 0 0.25rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
