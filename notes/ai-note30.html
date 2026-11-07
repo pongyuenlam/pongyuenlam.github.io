@@ -156,7 +156,9 @@
 
   <h2>Step 4: Check the file is reachable</h2>
   <p>
-    Open a new browser tab and visit the address above. If you see the single line
+    Open a new browser tab and visit
+    <code>https://username.github.io/googlexx...html</code> (with your own username
+    and file name). If you see the single line
     of text from Step 2, the file is in the right place. If you see a
     &ldquo;404 not found&rdquo; error instead, wait a minute and refresh, or check
     that the file really is in the top folder and not inside a sub-folder.
@@ -173,32 +175,16 @@
   <p>
     Google re-checks the file from time to time. If you delete or rename it, Google
     may decide you are no longer the owner and your access to Search Console data
-    will stop. The file is tiny and harmless &mdash; just leave it where it is.
+    will stop. The file is tiny &mdash; just leave it where it is.
     This website, for example, still keeps its own verification file
     (<code>googlexx...html</code>) in its top folder for exactly this
     reason.
   </p>
 
-  <h2>The other ways to verify, in brief</h2>
-  <table class="comparison-table">
-    <thead>
-      <tr><th>Method</th><th>What you do</th><th>When it suits you</th></tr>
-    </thead>
-    <tbody>
-      <tr><td><strong>HTML file upload</strong></td><td>Put Google&rsquo;s small file in the top folder of your site.</td><td>You can add files to your site. Works everywhere, including GitHub Pages.</td></tr>
-      <tr><td><strong>HTML tag</strong></td><td>Paste a one-line <code>&lt;meta&gt;</code> tag into the <code>&lt;head&gt;</code> of your home page.</td><td>You can edit the page HTML but cannot easily upload files.</td></tr>
-      <tr><td><strong>Google Analytics</strong></td><td>Google checks that your Analytics tag is on the page.</td><td>You already use Google Analytics (see <a href="ai-note24.html">AI Note 24</a>) with the same Google account.</td></tr>
-      <tr><td><strong>DNS record</strong></td><td>Add a short text record to your domain&rsquo;s settings at your registrar.</td><td>You own a full domain and want to cover every address on it at once.</td></tr>
-    </tbody>
-  </table>
-
   <h2>Good to know</h2>
   <ul>
     <li>Verification is <strong>free</strong> and only needs to succeed once.</li>
-    <li>A Google Analytics tag alone does <strong>not</strong> verify your site
-      unless you pick the Analytics method and the accounts match &mdash; adding
-      the tag from <a href="ai-note24.html">AI Note 24</a> and verifying in Search
-      Console are two separate steps.</li>
+    <li>A Google Analytics tag alone does <strong>not</strong> verify your site.</li>
     <li>After verifying, ask Google to look at your pages by submitting your
       <code>sitemap.xml</code> in Search Console.</li>
   </ul>
