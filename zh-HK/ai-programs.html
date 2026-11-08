@@ -64,21 +64,28 @@
     <button type="button" class="chip is-active" data-filter="all" aria-pressed="true">全部</button>
     <button type="button" class="chip" data-filter="basics" aria-pressed="false">入門</button>
     <button type="button" class="chip" data-filter="avatar" aria-pressed="false">數位人</button>
-    <button type="button" class="chip" data-filter="voice" aria-pressed="false">語音代理</button>
+    <button type="button" class="chip" data-filter="agent" aria-pressed="false">代理</button>
     <button type="button" class="chip" data-filter="rag" aria-pressed="false">RAG 與文字</button>
     <button type="button" class="chip" data-filter="vision" aria-pressed="false">臉部與鏡頭</button>
     <button type="button" class="chip" data-filter="web" aria-pressed="false">網站</button>
     <button type="button" class="chip" data-filter="video" aria-pressed="false">影片</button>
   </div>
+  <div class="note-filters note-filters--sub" role="group" aria-label="收窄代理相關筆記" hidden>
+    <button type="button" class="chip is-active" data-sub="all" aria-pressed="true">全部代理</button>
+    <button type="button" class="chip" data-sub="voice" aria-pressed="false">語音代理</button>
+    <button type="button" class="chip" data-sub="tools" aria-pressed="false">代理工具</button>
+    <button type="button" class="chip" data-sub="react" aria-pressed="false">Agent ReAct</button>
+    <button type="button" class="chip" data-sub="research" aria-pressed="false">代理研究</button>
+  </div>
   <noscript><p class="meta">篩選功能需要 JavaScript。所有筆記仍列於下方。</p></noscript>
 
-  <div class="card" data-track="basics">
+  <div class="card" data-track="agent" data-sub="tools">
     <h3><a href="/zh-HK/notes/ai-note36.html">如何為 AI 代理建立天氣工具？</a></h3>
     <p class="meta">林邦源 &middot; 2026年11月8日 &middot; 閱讀時間約 4 分鐘</p>
     <p>AI 代理無法走到戶外，也不知道你身在何處。兩個免費服務加一個 Python 函數，就能讓它用一句話說出當前氣溫。</p>
   </div>
 
-  <div class="card" data-track="basics">
+  <div class="card" data-track="agent" data-sub="tools">
     <h3><a href="/zh-HK/notes/ai-note35.html">如何為 AI 代理建立時間工具？</a></h3>
     <p class="meta">林邦源 &middot; 2026年11月8日 &middot; 閱讀時間約 3 分鐘</p>
     <p>AI 代理不知道當下的時間和日期。寫一個九行的 Python 函數回傳兩者，並在代理使用之前先測試它。</p>
@@ -171,13 +178,13 @@
     <p>在瀏覽器裡做一個會說話的 AI 數位人——對著麥克風開口，Synthesia 數位人就會即時回答你，由 LiveKit Agents 驅動。</p>
   </div>
 
-  <div class="card" data-track="voice">
+  <div class="card" data-track="agent" data-sub="voice">
     <h3><a href="/zh-HK/notes/ai-note20.html">如何用 LiveKit 語音代理聊天？</a></h3>
     <p class="meta">林邦源 &middot; 2026年11月4日 &middot; 閱讀時間約 5 分鐘</p>
     <p>在終端機跑起一個即時語音代理——語音辨識、LLM、文字轉語音——只需要兩條指令。</p>
   </div>
 
-  <div class="card" data-track="voice">
+  <div class="card" data-track="agent" data-sub="voice">
     <h3><a href="/zh-HK/notes/ai-note19.html">如何用 LiveKit 語音代理查天氣？</a></h3>
     <p class="meta">林邦源 &middot; 2026年11月4日 &middot; 閱讀時間約 6 分鐘</p>
     <p>一個語音代理，會說話的 LLM，還能呼叫外部 API——問它「東京現在下雨嗎？」，它會去抓即時天氣。</p>
@@ -306,29 +313,61 @@
 </footer>
 <script>
 (function () {
-  var chips = document.querySelectorAll('.note-filters .chip');
+  var topBar = document.querySelector('.note-filters');
+  var subBar = document.querySelector('.note-filters--sub');
+  var topChips = topBar.querySelectorAll('.chip');
+  var subChips = subBar.querySelectorAll('.chip');
   var cards = document.querySelectorAll('main .card[data-track]');
-  function apply(track) {
+
+  // Hide sub-categories that have no notes yet.
+  subChips.forEach(function (chip) {
+    if (chip.dataset.sub === 'all') return;
+    chip.hidden = !document.querySelector(
+      'main .card[data-track="agent"][data-sub="' + chip.dataset.sub + '"]');
+  });
+
+  function setActive(chips, key, value) {
     chips.forEach(function (chip) {
-      var on = chip.dataset.filter === track;
+      var on = chip.dataset[key] === value;
       chip.classList.toggle('is-active', on);
       chip.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
+  }
+
+  function apply(track, sub) {
+    track = track || 'all';
+    sub = track === 'agent' ? (sub || 'all') : 'all';
+    setActive(topChips, 'filter', track);
+    subBar.hidden = track !== 'agent';
+    setActive(subChips, 'sub', sub);
     cards.forEach(function (card) {
-      card.hidden = track !== 'all' && card.dataset.track !== track;
+      var on;
+      if (track === 'all') on = true;
+      else if (track === 'agent') {
+        on = card.dataset.track === 'agent' && (sub === 'all' || card.dataset.sub === sub);
+      } else on = card.dataset.track === track;
+      card.hidden = !on;
     });
     // Keep the choice when the reader switches language.
-    document.querySelectorAll('.lang-switcher a').forEach(function (a) {
-      a.search = track === 'all' ? '' : '?filter=' + track;
-    });
-    history.replaceState(null, '', location.pathname + (track === 'all' ? '' : '?filter=' + track));
+    var q = [];
+    if (track !== 'all') q.push('filter=' + track);
+    if (track === 'agent' && sub !== 'all') q.push('sub=' + sub);
+    var search = q.length ? '?' + q.join('&') : '';
+    document.querySelectorAll('.lang-switcher a').forEach(function (a) { a.search = search; });
+    history.replaceState(null, '', location.pathname + search);
   }
-  chips.forEach(function (chip) {
+
+  topChips.forEach(function (chip) {
     chip.addEventListener('click', function () { apply(chip.dataset.filter); });
   });
-  var wanted = new URLSearchParams(location.search).get('filter');
-  if (wanted && document.querySelector('.note-filters .chip[data-filter="' + wanted + '"]')) {
-    apply(wanted);
+  subChips.forEach(function (chip) {
+    chip.addEventListener('click', function () { apply('agent', chip.dataset.sub); });
+  });
+
+  var params = new URLSearchParams(location.search);
+  var wanted = params.get('filter');
+  if (wanted && topBar.querySelector('.chip[data-filter="' + wanted + '"]')) {
+    apply(wanted, params.get('sub'));
   }
 })();
 </script>

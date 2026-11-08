@@ -63,21 +63,28 @@
     <button type="button" class="chip is-active" data-filter="all" aria-pressed="true">All</button>
     <button type="button" class="chip" data-filter="basics" aria-pressed="false">Start here</button>
     <button type="button" class="chip" data-filter="avatar" aria-pressed="false">Avatar</button>
-    <button type="button" class="chip" data-filter="voice" aria-pressed="false">Voice agents</button>
+    <button type="button" class="chip" data-filter="agent" aria-pressed="false">Agents</button>
     <button type="button" class="chip" data-filter="rag" aria-pressed="false">RAG &amp; text</button>
     <button type="button" class="chip" data-filter="vision" aria-pressed="false">Face &amp; camera</button>
     <button type="button" class="chip" data-filter="web" aria-pressed="false">Website</button>
     <button type="button" class="chip" data-filter="video" aria-pressed="false">Video</button>
   </div>
+  <div class="note-filters note-filters--sub" role="group" aria-label="Narrow the agent notes" hidden>
+    <button type="button" class="chip is-active" data-sub="all" aria-pressed="true">All agents</button>
+    <button type="button" class="chip" data-sub="voice" aria-pressed="false">Voice agents</button>
+    <button type="button" class="chip" data-sub="tools" aria-pressed="false">Agent tools</button>
+    <button type="button" class="chip" data-sub="react" aria-pressed="false">Agent ReAct</button>
+    <button type="button" class="chip" data-sub="research" aria-pressed="false">Agent research</button>
+  </div>
   <noscript><p class="meta">Filtering needs JavaScript. All notes are listed below.</p></noscript>
 
-  <div class="card" data-track="basics">
+  <div class="card" data-track="agent" data-sub="tools">
     <h3><a href="notes/ai-note36.html">How to create a weather tool for an AI agent?</a></h3>
     <p class="meta">Howard Pong Yuen Lam &middot; November 8, 2026 &middot; 4 min read</p>
     <p>An agent cannot feel the weather or know where you are. Two free services and one Python function find the city from your IP address, ask Open-Meteo for the temperature, and return one sentence the agent can quote.</p>
   </div>
 
-  <div class="card" data-track="basics">
+  <div class="card" data-track="agent" data-sub="tools">
     <h3><a href="notes/ai-note35.html">How to create a time tool for an AI agent?</a></h3>
     <p class="meta">Howard Pong Yuen Lam &middot; November 8, 2026 &middot; 3 min read</p>
     <p>An agent cannot know the current date and time. Write one nine-line Python function that returns both, understand what each line does, and test it before the agent uses it.</p>
@@ -176,13 +183,13 @@
     <p>Build a talking AI avatar in your browser — speak into the mic and watch a Synthesia avatar answer you in real time, powered by LiveKit Agents.</p>
   </div>
 
-  <div class="card" data-track="voice">
+  <div class="card" data-track="agent" data-sub="voice">
     <h3><a href="notes/ai-note20.html">How to use LiveKit Voice Agent to Chat?</a></h3>
     <p class="meta">Howard Pong Yuen Lam &middot; November 4, 2026 &middot; 5 min read</p>
     <p>Run a real-time voice agent in your Terminal — speech recognition, an LLM, and text-to-speech — with just two commands.</p>
   </div>
 
-  <div class="card" data-track="voice">
+  <div class="card" data-track="agent" data-sub="voice">
     <h3><a href="notes/ai-note19.html">How to use LiveKit Voice Agent with Weather Tool?</a></h3>
     <p class="meta">Howard Pong Yuen Lam &middot; November 4, 2026 &middot; 6 min read</p>
     <p>A voice agent that speaks to a real LLM and can call an external API — ask it "is it raining in Tokyo?" and it fetches live weather.</p>
@@ -311,29 +318,61 @@
 </footer>
 <script>
 (function () {
-  var chips = document.querySelectorAll('.note-filters .chip');
+  var topBar = document.querySelector('.note-filters');
+  var subBar = document.querySelector('.note-filters--sub');
+  var topChips = topBar.querySelectorAll('.chip');
+  var subChips = subBar.querySelectorAll('.chip');
   var cards = document.querySelectorAll('main .card[data-track]');
-  function apply(track) {
+
+  // Hide sub-categories that have no notes yet.
+  subChips.forEach(function (chip) {
+    if (chip.dataset.sub === 'all') return;
+    chip.hidden = !document.querySelector(
+      'main .card[data-track="agent"][data-sub="' + chip.dataset.sub + '"]');
+  });
+
+  function setActive(chips, key, value) {
     chips.forEach(function (chip) {
-      var on = chip.dataset.filter === track;
+      var on = chip.dataset[key] === value;
       chip.classList.toggle('is-active', on);
       chip.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
+  }
+
+  function apply(track, sub) {
+    track = track || 'all';
+    sub = track === 'agent' ? (sub || 'all') : 'all';
+    setActive(topChips, 'filter', track);
+    subBar.hidden = track !== 'agent';
+    setActive(subChips, 'sub', sub);
     cards.forEach(function (card) {
-      card.hidden = track !== 'all' && card.dataset.track !== track;
+      var on;
+      if (track === 'all') on = true;
+      else if (track === 'agent') {
+        on = card.dataset.track === 'agent' && (sub === 'all' || card.dataset.sub === sub);
+      } else on = card.dataset.track === track;
+      card.hidden = !on;
     });
     // Keep the choice when the reader switches language.
-    document.querySelectorAll('.lang-switcher a').forEach(function (a) {
-      a.search = track === 'all' ? '' : '?filter=' + track;
-    });
-    history.replaceState(null, '', location.pathname + (track === 'all' ? '' : '?filter=' + track));
+    var q = [];
+    if (track !== 'all') q.push('filter=' + track);
+    if (track === 'agent' && sub !== 'all') q.push('sub=' + sub);
+    var search = q.length ? '?' + q.join('&') : '';
+    document.querySelectorAll('.lang-switcher a').forEach(function (a) { a.search = search; });
+    history.replaceState(null, '', location.pathname + search);
   }
-  chips.forEach(function (chip) {
+
+  topChips.forEach(function (chip) {
     chip.addEventListener('click', function () { apply(chip.dataset.filter); });
   });
-  var wanted = new URLSearchParams(location.search).get('filter');
-  if (wanted && document.querySelector('.note-filters .chip[data-filter="' + wanted + '"]')) {
-    apply(wanted);
+  subChips.forEach(function (chip) {
+    chip.addEventListener('click', function () { apply('agent', chip.dataset.sub); });
+  });
+
+  var params = new URLSearchParams(location.search);
+  var wanted = params.get('filter');
+  if (wanted && topBar.querySelector('.chip[data-filter="' + wanted + '"]')) {
+    apply(wanted, params.get('sub'));
   }
 })();
 </script>
