@@ -120,9 +120,11 @@ print(result)</code></pre>
     <li><code>requests</code> 是這裡唯一的外部程式庫，並不屬於 Python 本身。它
       列在專案的 <code>pyproject.toml</code> 內，所以 <code>uv sync</code> 會替
       你安裝。</li>
-    <li>第一次呼叫去 <strong>ipinfo.io</strong>。它以一個小 JSON 物件回覆，
-      <code>loc</code> 把緯度和經度存成一個字串，
-      <code>"22.3193,114.1694"</code>，所以程式以逗號把它分開。</li>
+    <li>第一次呼叫去 <strong>ipinfo.io</strong>。它以一個小 <code>JSON</code> 物件回覆：
+      純文字，把資料存成一個一個有標籤的值，例如
+      <code>{"city": "Hong Kong"}</code>，程式可以逐個欄位讀取。<code>loc</code>
+      把緯度和經度存成一個字串，<code>"22.3193,114.1694"</code>，所以程式以逗號
+      把它分開。</li>
     <li>這個位置來自對外 IP 位址，所以只準確到城市，不會到街道。對天氣問題來說
       已經足夠。這個呼叫也會把你的對外 IP 位址送到 ipinfo.io，那是唯一離開你
       電腦的個人資料。</li>
@@ -151,8 +153,7 @@ uv run tool02_weather.py</code></pre>
   </p>
   <p>
     你應該會看到一行，例如 <code>Current: 24.6°C</code>。跟你手機上的天氣應用
-    比較一下。有兩個細節值得注意：氣溫保留一位小數，而且永遠是攝氏，因為請求
-    要求的是攝氏。
+    比較一下。
   </p>
   <p>
     如果這一行始終沒有出現，原因幾乎總是以下三種之一：沒有連接互聯網、IP 位址

@@ -120,9 +120,11 @@ print(result)</code></pre>
     <li><code>requests</code> 是这里唯一的外部库，并不属于 Python 本身。它
       列在项目的 <code>pyproject.toml</code> 内，所以 <code>uv sync</code> 会替
       你安装。</li>
-    <li>第一次请求去 <strong>ipinfo.io</strong>。它返回一个小的 JSON 对象，
-      <code>loc</code> 把纬度和经度存成一个字符串，
-      <code>"22.3193,114.1694"</code>，所以程序用逗号把它分开。</li>
+    <li>第一次请求去 <strong>ipinfo.io</strong>。它返回一个小的 <code>JSON</code> 对象：
+      纯文本，把数据存成一个一个有标签的值，例如
+      <code>{"city": "Hong Kong"}</code>，程序可以逐个字段读取。<code>loc</code>
+      把纬度和经度存成一个字符串，<code>"22.3193,114.1694"</code>，所以程序用逗号
+      把它分开。</li>
     <li>这个位置来自对外 IP 地址，所以只准确到城市，不会到街道。对天气问题来说
       已经足够。这个请求也会把你的对外 IP 地址送到 ipinfo.io，那是唯一离开你
       电脑的个人资料。</li>
@@ -151,8 +153,7 @@ uv run tool02_weather.py</code></pre>
   </p>
   <p>
     你应该会看到一行，例如 <code>Current: 24.6°C</code>。跟你手机上的天气应用
-    比较一下。有两个细节值得注意：气温保留一位小数，而且永远是摄氏，因为请求
-    要求的是摄氏。
+    比较一下。
   </p>
   <p>
     如果这一行始终没有出现，原因几乎总是以下三种之一：没有连接互联网、IP 地址

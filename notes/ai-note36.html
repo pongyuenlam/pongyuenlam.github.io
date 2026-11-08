@@ -123,9 +123,10 @@ print(result)</code></pre>
       Python itself. It is listed in the project's <code>pyproject.toml</code>, so
       <code>uv sync</code> installs it for you.</li>
     <li>The first call goes to <strong>ipinfo.io</strong>. It answers with a small
-      JSON object, and <code>loc</code> holds the latitude and longitude as one
-      string, <code>"22.3193,114.1694"</code>, which is why the code splits it on the
-      comma.</li>
+      <code>JSON</code> object: plain text that stores data as labelled values, such
+      as <code>{"city": "Hong Kong"}</code>, so a program can read one field at a
+      time. <code>loc</code> holds the latitude and longitude as one string,
+      <code>"22.3193,114.1694"</code>, which is why the code splits it on the comma.</li>
     <li>That position comes from the public IP address, so it is accurate to a city,
       not to a street. For a weather question that is enough. The call also sends
       your public IP address to ipinfo.io, which is the only thing about you that
@@ -137,7 +138,7 @@ print(result)</code></pre>
     <li><code>timeout=10</code> appears twice. Without it, a slow network leaves the
       agent waiting with no answer. With it, each call gives up after ten seconds and
       raises an error instead of hanging.</li>
-    <li>The function returns a sentence, not a JSON object:
+    <li>The function returns a sentence:
       <code>Current: 24.6°C</code>. The model gets text it can quote directly.</li>
     <li>The last two lines call the function and print the result, so the tool can be
       checked from a terminal before any agent is involved.</li>
@@ -159,9 +160,7 @@ uv run tool02_weather.py</code></pre>
   </p>
   <p>
     You should see a single line, for instance <code>Current: 24.6°C</code>. Compare
-    it with the weather app on your phone. Two details are worth noticing: the
-    temperature carries one decimal place, and it is always Celsius, because the
-    request asked for Celsius.
+    it with the weather app on your phone.
   </p>
   <p>
     If the line never appears, the cause is almost always one of three things: no
