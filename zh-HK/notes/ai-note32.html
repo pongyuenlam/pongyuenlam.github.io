@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-HK">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>如何使用 Seedance 2.5 製作長影片（版本 2）？ | 林邦源博士</title>
+<meta name="description" content="要製作有多個步驟的 Seedance 2.5 長影片，可以把提示詞分成多個階段 —— 每個階段都有初始狀態、一個主要事件和結束狀態 —— 再加上一段保持一致性的說明，令人物、服裝和道具維持不變。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note32.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note32.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note32.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note32.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note32.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何使用 Seedance 2.5 製作長影片（版本 2）？">
+<meta property="og:description" content="要製作有多個步驟的 Seedance 2.5 長影片，可以把提示詞分成多個階段 —— 每個階段都有初始狀態、一個主要事件和結束狀態 —— 再加上一段保持一致性的說明，令人物、服裝和道具維持不變。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-HK/notes/ai-note32.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="../../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "如何使用 Seedance 2.5 製作長影片（版本 2）？",
+  "description": "要製作有多個步驟的 Seedance 2.5 長影片，可以把提示詞分成多個階段 —— 每個階段都有初始狀態、一個主要事件和結束狀態 —— 再加上一段保持一致性的說明，令人物、服裝和道具維持不變。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-08",
+  "dateModified": "2026-11-08",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-HK/notes/ai-note32.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../../index.html">首頁</a></li>
+        <li><a href="../../biography.html">個人簡介</a></li>
+        <li><a href="../../research.html">研究</a></li>
+        <li><a href="../../cases.html">案例</a></li>
+        <li><a href="../../books.html">著作</a></li>
+        <li><a href="../../ai-programs.html">AI 筆記</a></li>
+        <li><a href="../../links/">連結</a></li>
+        <li><a href="../../glossary/">詞彙表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <a href="/notes/ai-note32.html">English</a>
+  <span class="current">繁體中文</span>
+  <a href="/zh-CN/notes/ai-note32.html">简体中文</a>
+</div>
+
+<main>
+  <h1>如何使用 Seedance 2.5 製作長影片（版本 2）？</h1>
+  <p class="paper-meta">林邦源博士 &middot; AI 筆記 &middot; 2026 年 11 月 8 日 &middot; 約 6 分鐘閱讀</p>
+
+  <p>
+    <a href="ai-note31.html" target="_blank" rel="noopener">第一篇筆記</a>介紹了生成一段
+    短片的六部份公式：一個主體在一個場景做一件事。但很多影片是一個
+    <em>過程</em> &mdash; 花藝師包裝一張訂單、廚師烹調一道菜、
+    包裹從貨架送到門前。把這一切寫成一大段文字，
+    模型就會跟不上：人物中途換了衣服、道具四處亂跳、
+    手上拿着早已放下的東西。
+  </p>
+  <p>
+    Seedance 2.5 有辦法令較長的影片保持連貫：<strong>把提示詞
+    分成多個階段</strong>。每個階段說明開始時的狀態、發生的
+    一件主要事情，以及結束時的狀態。一個階段的結束，
+    就是下一個階段的開始。
+  </p>
+
+  <h2>開始之前你需要甚麼</h2>
+  <ul>
+    <li>一個 <a href="https://jimeng.jianying.com/ai-tool/home" target="_blank" rel="noopener">Jimeng</a> 帳戶（免費開始使用）。</li>
+    <li>來自<a href="ai-note31.html" target="_blank" rel="noopener">版本 1</a> 的六部份提示詞公式 &mdash; 階段是建基於它的。</li>
+    <li>一個有多個步驟的過程構思 &mdash; 包裝訂單、烹調菜式、擺設餐桌。</li>
+  </ul>
+
+  <h2>長影片範本</h2>
+  <p>
+    這是 ByteDance 的官方長影片範本。
+    <span class="meta">（資料來源：ByteDance 的
+    <a href="https://bytedance.larkoffice.com/docx/A88jd0B47oAd8zxWp5ycZFMfnxh" target="_blank" rel="noopener">Seedance
+    2.5 prompt guide</a> 和
+    <a href="https://bytedance.larkoffice.com/docx/OsiUdR1OxoDqvnxsK8LczYx7nPd" target="_blank" rel="noopener">prompt
+    examples</a>。）</span>
+  </p>
+  <pre class="code-block"><code>[Generation Goal]
+Generate a &lt;video type&gt;. The central subject is &lt;subject&gt;, and the
+primary event is &lt;story summary&gt;.
+
+[Stage 1]
+Initial state: &lt;initial state of characters, props, and scene&gt;.
+Primary event: &lt;one primary action or event&gt;.
+End state: &lt;character positions, prop ownership, or visible scene state&gt;.
+
+[Stage 2]
+Continue from the previous stage: &lt;state that must remain unchanged&gt;.
+Primary event: &lt;one primary action or event&gt;.
+End state: &lt;observable state&gt;.
+
+[Stage 3]
+Primary event: &lt;closing event&gt;.
+End state: &lt;final visible state&gt;.
+
+[Maintain Consistency]
+Keep &lt;character identity, number of characters, clothing, prop ownership,
+spatial direction, and audio relationships&gt; consistent.</code></pre>
+
+  <h2>四個組成部份</h2>
+  <ul>
+    <li><strong>Generation Goal（生成目標）</strong> &mdash; 用一兩句話概括整段
+      影片：這是甚麼類型的影片、主角是誰、整體發生
+      甚麼事。</li>
+    <li><strong>Stage（階段）</strong> &mdash; 過程中的一個步驟，有三行：
+      <em>初始狀態</em>（誰在哪裏、桌上有甚麼）、
+      <em>主要事件</em>（只寫一個動作 &mdash; 不是兩三個），以及
+      <em>結束狀態</em>（步驟完成後鏡頭應該看到的畫面）。</li>
+    <li><strong>Continue from the previous stage（承接上一階段）</strong> &mdash;
+      由階段 2 起，說明必須仍然成立的事情：同樣的人、
+      同樣的衣服、花束仍在花藝師手上。階段之間
+      就是這樣連接起來的。</li>
+    <li><strong>Maintain Consistency（保持一致）</strong> &mdash; 最後一張清單，
+      列出整段影片中不可改變的一切：身份、服裝、
+      人物面向的方向、誰拿着哪件道具，以及
+      聲音之間的關係。</li>
+  </ul>
+  <p>
+    要養成的習慣是：<strong>結束狀態比動作更重要</strong>。如果
+    每個階段的結束都寫得清楚（「剪刀放回工作桌
+    右側」），下一個階段就有穩固的起點。
+  </p>
+
+  <h2>一個完整示例</h2>
+  <p>
+    一間花店包裝一張外送訂單，分三個階段。它是
+    ByteDance 自家 Seedance 2.5 材料中的示例。
+    <span class="meta">（資料來源：ByteDance 的
+    <a href="https://bytedance.larkoffice.com/docx/A88jd0B47oAd8zxWp5ycZFMfnxh" target="_blank" rel="noopener">Seedance
+    2.5 prompt guide</a> 和
+    <a href="https://bytedance.larkoffice.com/docx/OsiUdR1OxoDqvnxsK8LczYx7nPd" target="_blank" rel="noopener">prompt
+    examples</a>。）</span>
+  </p>
+  <pre class="code-block"><code>[Generation Goal]
+Generate an instructional video showing a flower shop's order-packing
+process. &lt;Florist&gt; and &lt;Store Assistant&gt; arrange, wrap, and hand off
+a bouquet together.
+
+[Stage 1]
+Initial state: &lt;Florist&gt; stands behind the workbench. Loose flower stems,
+scissors, and wrapping paper lie on the tabletop.
+Primary event: &lt;Florist&gt; arranges the stems and trims them to length.
+End state: &lt;Florist&gt; holds the bouquet in the left hand, and the scissors
+are back on the right side of the workbench.
+
+[Stage 2]
+Continue from the previous stage: both characters retain the same identities
+and clothing, and &lt;Florist&gt; still holds the bouquet.
+Primary event: &lt;Store Assistant&gt; unfolds the wrapping paper. &lt;Florist&gt;
+places the bouquet inside and ties it with a green ribbon.
+End state: the wrapped bouquet lies flat in the center of the workbench, with
+the ribbon bow facing the camera.
+
+[Stage 3]
+Primary event: &lt;Store Assistant&gt; picks up the bouquet and places it on
+the pickup shelf.
+End state: the bouquet is centered on the pickup shelf, and both characters
+stand behind the workbench inspecting the finished order.
+
+[Maintain Consistency]
+Keep &lt;Florist&gt; and &lt;Store Assistant&gt;'s identities, clothing,
+workbench orientation, scissors position, and bouquet ownership consistent.</code></pre>
+  <p>
+    留意這些細節有多小 &mdash; 是<em>哪一隻手</em>拿着花束、
+    剪刀放在<em>哪一邊</em>、絲帶結朝向<em>哪個方向</em>。
+    這些正是你不說時 AI 就會弄錯的細節。
+  </p>
+
+  <h2>觀看示範影片</h2>
+  <iframe
+    src="https://drive.google.com/file/d/1jO4Zr8ioP-fgrMlXDBMj2zv3oGjRAUIb/preview"
+    title="Seedance 2.5 long-video demo: the flower shop prompt"
+    style="width:100%; aspect-ratio:16/9; border:0;"
+    loading="lazy"
+    allowfullscreen></iframe>
+  <p class="paper-meta">
+    如果影片無法載入，請在 Google Drive 開啟：
+    <a href="https://drive.google.com/file/d/1jO4Zr8ioP-fgrMlXDBMj2zv3oGjRAUIb/view?usp=sharing" target="_blank" rel="noopener">影片</a>
+    （無需帳戶）。
+  </p>
+  <p>
+    影片展示了上面的分階段提示詞如何變成一段連貫的片段：
+    花藝師在工作桌前整理和修剪粉紅玫瑰，助手
+    包好花束並綁上綠色絲帶，包好的花束最終
+    置於桌面中央、蝴蝶結朝向鏡頭，兩人站在桌後
+    &mdash; 一個階段接一個階段，全程人物、服裝和道具一致。
+    角落的「AI生成」（「AI 生成」）標記
+    是平台加上的。
+  </p>
+
+  <h2>其他須知</h2>
+  <ul>
+    <li>三個階段是很好的起步長度；只有當過程
+      真的有更多步驟時才再增加。</li>
+    <li>用尖括號為人物命名（&lt;Florist&gt;、&lt;Store
+      Assistant&gt;），可以方便地一次又一次指同一個人
+      而不會混淆。</li>
+    <li>如果你想連接已有的影片，而不是寫一條長提示詞，請看
+      <a href="ai-note33.html" target="_blank" rel="noopener">如何使用 Seedance 2.5 影片接影片（版本 3）？</a></li>
+  </ul>
+
+  <h2>延伸閱讀</h2>
+  <ul>
+    <li><a href="https://bytedance.larkoffice.com/docx/A88jd0B47oAd8zxWp5ycZFMfnxh" target="_blank" rel="noopener">Seedance 2.5 prompt guide</a> &mdash; ByteDance 的官方提示詞指南。</li>
+    <li><a href="https://bytedance.larkoffice.com/docx/OsiUdR1OxoDqvnxsK8LczYx7nPd" target="_blank" rel="noopener">Seedance 2.5 prompt examples</a> &mdash; 更多來自 ByteDance 的提示詞示例。</li>
+    <li><a href="https://jimeng.jianying.com/ai-tool/home" target="_blank" rel="noopener">Jimeng</a> &mdash; 使用 Seedance 的網站。</li>
+  </ul>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&amp;hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', 'Copy code to clipboard');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', 'Copied to clipboard');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', 'Copy code to clipboard');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>

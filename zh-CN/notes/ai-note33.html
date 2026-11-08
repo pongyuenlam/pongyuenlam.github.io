@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-Hans-CN">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>如何使用 Seedance 2.5 视频接视频（版本 3）？ | 林邦源博士</title>
+<meta name="description" content="Seedance 2.5 可以从你已有的视频片段出发：把它们称为 @Video 1、@Video 2，再写一句话告诉镜头如何从一段素材走进下一段。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note33.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note33.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note33.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note33.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note33.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何使用 Seedance 2.5 视频接视频（版本 3）？">
+<meta property="og:description" content="Seedance 2.5 可以从你已有的视频片段出发：把它们称为 @Video 1、@Video 2，再写一句话告诉镜头如何从一段素材走进下一段。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-CN/notes/ai-note33.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="../../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "如何使用 Seedance 2.5 视频接视频（版本 3）？",
+  "description": "Seedance 2.5 可以从你已有的视频片段出发：把它们称为 @Video 1、@Video 2，再写一句话告诉镜头如何从一段素材走进下一段。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-08",
+  "dateModified": "2026-11-08",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-CN/notes/ai-note33.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../../index.html">首页</a></li>
+        <li><a href="../../biography.html">个人简介</a></li>
+        <li><a href="../../research.html">研究</a></li>
+        <li><a href="../../cases.html">案例</a></li>
+        <li><a href="../../books.html">著作</a></li>
+        <li><a href="../../ai-programs.html">AI 笔记</a></li>
+        <li><a href="../../links/">链接</a></li>
+        <li><a href="../../glossary/">词汇表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <a href="/notes/ai-note33.html">English</a>
+  <a href="/zh-HK/notes/ai-note33.html">繁體中文</a>
+  <span class="current">简体中文</span>
+</div>
+
+<main>
+  <h1>如何使用 Seedance 2.5 视频接视频（版本 3）？</h1>
+  <p class="paper-meta">林邦源博士 &middot; AI 笔记 &middot; 2026 年 11 月 8 日 &middot; 约 4 分钟阅读</p>
+
+  <p>
+    这个系列的前两篇笔记都纯粹从文字出发：
+    <a href="ai-note31.html" target="_blank" rel="noopener">一条提示词生成一段视频</a>，
+    <a href="ai-note32.html" target="_blank" rel="noopener">分阶段搭出一个较长的视频</a>。
+    <strong>视频接视频</strong>则从另一个地方开始：从已经存在的视频片段出发。
+    你上传这些片段，Seedance 会把它们延展，或拼接成一段连续的旅程。
+  </p>
+
+  <h2>开始之前你需要什么</h2>
+  <ul>
+    <li>一个 <a href="https://jimeng.jianying.com/ai-tool/home" target="_blank" rel="noopener">Jimeng（即梦）</a>账号（免费开始）。</li>
+    <li>两段或以上要连接的短视频 &mdash; 你自己拍摄的素材，或者你之前用
+      <a href="ai-note31.html" target="_blank" rel="noopener">文字生成视频（版本 1）</a>
+      生成的片段。这篇笔记里的三段视频都是用 Seedance 本身生成的，仅作演示。</li>
+  </ul>
+
+  <h2>@Video 的概念</h2>
+  <p>
+    你每上传一段视频，它就会得到一个名字：<code>@Video 1</code>，然后是
+    <code>@Video 2</code>、<code>@Video 3</code>，依此类推。在提示词里，你用
+    这些名字指代各段视频，并用平实的语言描述镜头应该如何从一段走进下一段。
+    提示词可以短得出乎意料 &mdash; 视频片段本身已经承载了大部分视觉信息，
+    所以你不再需要<a href="ai-note31.html" target="_blank" rel="noopener">版本 1</a>
+    里的六部分公式。
+  </p>
+
+  <h2>一个完整示例</h2>
+  <p>
+    三段视频：黄昏时分飞越城市、驶向一扇亮着灯的窗户；一间美术馆的内部；
+    以及挂在美术馆墙上的一幅画。一句话把它们连起来：
+  </p>
+  <pre class="code-block"><code>Extend @Video 1; after the window opens, enter the art gallery interior
+in @Video 2; finally, the shot moves into the painting in @Video 3.</code></pre>
+  <p>
+    结果是一个连贯不断的镜头运动：镜头在第一段视频的结尾滑入窗户，在第二段里
+    穿过美术馆，在第三段里最终进入<em>画作内部</em>。三段各自独立的视频变成
+    了一个镜头。
+  </p>
+
+  <h2>观看演示视频</h2>
+  <iframe
+    src="https://drive.google.com/file/d/1A2sE9Yj-7bespgHDw1mOQsqGuTMFIdCu/preview"
+    title="Seedance 2.5 视频接视频演示：完整流程"
+    style="width:100%; aspect-ratio:16/9; border:0;"
+    loading="lazy"
+    allowfullscreen></iframe>
+  <p class="paper-meta">
+    如果视频无法加载，请在 Google Drive 中打开：
+    <a href="https://drive.google.com/file/d/1A2sE9Yj-7bespgHDw1mOQsqGuTMFIdCu/view?usp=sharing" target="_blank" rel="noopener">视频</a>
+    （无需账户）。
+  </p>
+  <p>
+    视频展示了完整流程：上传三段视频，一句话的提示词把它们称为
+    <code>@Video 1</code>、<code>@Video 2</code> 和 <code>@Video 3</code>，
+    拼接好的视频作为一个连续的镜头返回。
+  </p>
+
+  <h2>观看示例视频</h2>
+  <p>
+    下面是三段视频 &mdash; <code>@Video 1</code>、<code>@Video 2</code> 和
+    <code>@Video 3</code> &mdash; 以及 Seedance 用它们拼接出的视频。下载这
+    三段视频，自己试试这条链接。
+    <span class="meta">（来源：字节跳动的
+    <a href="https://bytedance.larkoffice.com/docx/A88jd0B47oAd8zxWp5ycZFMfnxh" target="_blank" rel="noopener">Seedance
+    2.5 prompt guide</a> 和
+    <a href="https://bytedance.larkoffice.com/docx/OsiUdR1OxoDqvnxsK8LczYx7nPd" target="_blank" rel="noopener">prompt
+    examples</a>。）</span>
+  </p>
+
+  <h3>@Video 1 &mdash; 城市飞行</h3>
+  <iframe
+    src="https://drive.google.com/file/d/1DIsAhzEnsk2wBCuTTjLJL1Sgqj2ibP-o/preview"
+    title="视频 1：黄昏时分飞越城市，驶向一扇亮着灯的窗户"
+    style="width:100%; aspect-ratio:16/9; border:0;"
+    loading="lazy"
+    allowfullscreen></iframe>
+  <p class="paper-meta">
+    在 Google Drive 中打开：
+    <a href="https://drive.google.com/file/d/1DIsAhzEnsk2wBCuTTjLJL1Sgqj2ibP-o/view?usp=sharing" target="_blank" rel="noopener">视频</a>
+    &middot; <a href="https://drive.google.com/uc?export=download&amp;id=1DIsAhzEnsk2wBCuTTjLJL1Sgqj2ibP-o" target="_blank" rel="noopener">下载这段视频</a>
+  </p>
+
+  <h3>@Video 2 &mdash; 美术馆</h3>
+  <iframe
+    src="https://drive.google.com/file/d/1sGkjV79BujHdPqHwAxPci72IFsjKKtb7/preview"
+    title="视频 2：美术馆内部"
+    style="width:100%; aspect-ratio:16/9; border:0;"
+    loading="lazy"
+    allowfullscreen></iframe>
+  <p class="paper-meta">
+    在 Google Drive 中打开：
+    <a href="https://drive.google.com/file/d/1sGkjV79BujHdPqHwAxPci72IFsjKKtb7/view?usp=sharing" target="_blank" rel="noopener">视频</a>
+    &middot; <a href="https://drive.google.com/uc?export=download&amp;id=1sGkjV79BujHdPqHwAxPci72IFsjKKtb7" target="_blank" rel="noopener">下载这段视频</a>
+  </p>
+
+  <h3>@Video 3 &mdash; 画作</h3>
+  <iframe
+    src="https://drive.google.com/file/d/1czUr7zqk2hvYkrRdssuTcAJUa7H5zpQ_/preview"
+    title="视频 3：挂在美术馆墙上的画作"
+    style="width:100%; aspect-ratio:16/9; border:0;"
+    loading="lazy"
+    allowfullscreen></iframe>
+  <p class="paper-meta">
+    在 Google Drive 中打开：
+    <a href="https://drive.google.com/file/d/1czUr7zqk2hvYkrRdssuTcAJUa7H5zpQ_/view?usp=sharing" target="_blank" rel="noopener">视频</a>
+    &middot; <a href="https://drive.google.com/uc?export=download&amp;id=1czUr7zqk2hvYkrRdssuTcAJUa7H5zpQ_" target="_blank" rel="noopener">下载这段视频</a>
+  </p>
+
+  <h3>拼接结果</h3>
+  <iframe
+    src="https://drive.google.com/file/d/1AoZh6SqiIqyaXZjRgT-OWs6RpM8X5C0H/preview"
+    title="拼接后的视频：从城市出发，穿过窗户，越过美术馆，进入画作"
+    style="width:100%; aspect-ratio:16/9; border:0;"
+    loading="lazy"
+    allowfullscreen></iframe>
+  <p class="paper-meta">
+    在 Google Drive 中打开：
+    <a href="https://drive.google.com/file/d/1AoZh6SqiIqyaXZjRgT-OWs6RpM8X5C0H/view?usp=sharing" target="_blank" rel="noopener">视频</a>
+  </p>
+  <p>
+    一个连续的镜头：镜头在黄昏中飞过城市，滑入那扇亮着灯的窗户，穿过美术馆，
+    最终进入画作内部 &mdash; 正是那句一句话提示词所描述的旅程。
+  </p>
+
+  <h2>怎样才算一条好的链接</h2>
+  <ul>
+    <li><strong>每段视频应当承接上一段在视觉上结束的地方。</strong>
+      一扇窗户通向室内；一幅画挂在美术馆的墙上。连接越自然，拼接出的视频
+      就越可信。</li>
+    <li><strong>把顺序说清楚。</strong>使用“after”“then”“finally”
+      这样的词，让模型知道哪段视频排第一、第二、第三。</li>
+    <li><strong>提示词保持简短。</strong>只描述视频之间的旅程，不要描述
+      视频里的一切 &mdash; 那些视频本身已经展示了。</li>
+  </ul>
+
+  <h2>实用提示</h2>
+  <ul>
+    <li>你连接的视频本身也可以是 AI 生成的，所以你可以把一段长视频一点一点
+      搭出来：先生成一段，延展它，再连接下一段。</li>
+    <li>这项功能的官方文档在
+      <a href="https://docs.volcengine.com/docs/82379/2607688?lang=zh" target="_blank" rel="noopener">火山引擎网站</a>
+      上（中文）。</li>
+  </ul>
+
+  <h2>延伸阅读</h2>
+  <ul>
+    <li><a href="https://docs.volcengine.com/docs/82379/2607688?lang=zh" target="_blank" rel="noopener">Video-to-video reference</a> &mdash; 火山引擎官方文档（中文）。</li>
+    <li><a href="https://bytedance.larkoffice.com/docx/A88jd0B47oAd8zxWp5ycZFMfnxh" target="_blank" rel="noopener">Seedance 2.5 prompt guide</a> &mdash; 字节跳动的官方提示词指南。</li>
+    <li><a href="https://jimeng.jianying.com/ai-tool/home" target="_blank" rel="noopener">Jimeng</a> &mdash; 使用 Seedance 的网站。</li>
+  </ul>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', 'Copy code to clipboard');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', 'Copied to clipboard');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', 'Copy code to clipboard');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>
