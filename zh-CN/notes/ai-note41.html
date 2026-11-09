@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 代理如何处理追问（ReAct，版本 5，无记忆）？ | 林邦源博士</title>
+<meta name="description" content="连续调用代理两次：先问“Mark 何时推出 Muse？”，然后问“香港现在能用了吗？”。第一次成功；第二次却分不清“它”是什么，因为每次调用这个函数，都是从一张白纸开始。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note41.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note41.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note41.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note41.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note41.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="AI 代理如何处理追问（ReAct，版本 5，无记忆）？">
+<meta property="og:description" content="连续调用代理两次：先问“Mark 何时推出 Muse？”，然后问“香港现在能用了吗？”。第一次成功；第二次却分不清“它”是什么，因为每次调用这个函数，都是从一张白纸开始。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-CN/notes/ai-note41.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="../../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "AI 代理如何处理追问（ReAct，版本 5，无记忆）？",
+  "description": "连续调用代理两次：先问“Mark 何时推出 Muse？”，然后问“香港现在能用了吗？”。第一次成功；第二次却分不清“它”是什么，因为每次调用这个函数，都是从一张白纸开始。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-09",
+  "dateModified": "2026-11-09",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-CN/notes/ai-note41.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../../index.html">首页</a></li>
+        <li><a href="../../biography.html">个人简介</a></li>
+        <li><a href="../../research.html">研究</a></li>
+        <li><a href="../../cases.html">案例</a></li>
+        <li><a href="../../books.html">著作</a></li>
+        <li><a href="../../ai-programs.html">AI 笔记</a></li>
+        <li><a href="../../links/">链接</a></li>
+        <li><a href="../../glossary/">词汇表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <a href="/notes/ai-note41.html">English</a>
+  <a href="/zh-HK/notes/ai-note41.html">繁體中文</a>
+  <span class="current">简体中文</span>
+</div>
+
+<main>
+  <h1>AI 代理如何处理追问（ReAct，版本 5，无记忆）？</h1>
+  <p class="paper-meta">林邦源博士 &middot; AI 笔记 &middot; 2026 年 11 月 9 日 &middot; 约 3 分钟阅读</p>
+
+  <p>
+    <a href="ai-note40.html" target="_blank" rel="noopener">版本 4</a>把代理变成了一
+    个可以重复使用的函数。版本 5 连续调用它两次：先问<em>“Mark 何时推出 Muse？”</em>，
+    然后是一个自然的追问，<em>“香港现在能用了吗？”</em>。人类读者一听就知“它”指
+    什么，代理却不知道 —— 而看着它发现这一点，正是这一课。
+  </p>
+
+  <h2>脚本</h2>
+  <p>
+    这是 <code>ReAct05.py</code>。除了最后两行，每一行都与版本 4 完全相同
+    —— 现在有两次调用：
+  </p>
+  <pre class="code-block"><code>def perform_task(task):
+    """Run the Think -&gt; Act -&gt; Observe loop for one task and return the answer."""
+    prompt = f"""Task: {task}
+You can use ONE tool: search[query] searches the web (Tavily) and returns the top results.
+Today is {datetime.now().strftime('%Y-%m-%d')}.
+Work in steps. Each step has a Thought, an Action, and an Observation."""
+
+    for step in range(1, 6):          # at most 5 rounds, so it cannot loop forever
+        thought = ask(prompt + f"\n\nThought {step}: (reason briefly about what to do next; do not act yet)",
+                      stop=["Action"])
+        print(f"=== Round {step} - Thought ===")
+        print(thought)
+
+        prompt = prompt + f"\n\nThought {step}: {thought}"
+        action = ask(prompt + "\n\nWhat action should be taken based on that? "
+                     "Reply with ONLY: search[query] or finish[answer]").strip()
+        print(f"=== Round {step} - Action chosen by the model ===")
+        print(action)
+
+        if action.startswith("finish"):
+            found = re.search(r"finish\[(.*)\]", action, re.S)
+            answer = found.group(1) if found else action
+            print("=== Final Answer ===")
+            print(answer)
+            return answer
+
+        query = re.search(r"search\[(.*)\]", action, re.S)
+        observation = search_tavily(query.group(1)) if query else "Invalid action."
+        print(f"=== Round {step} - Observation from Tavily web search ===")
+        print(observation)
+        prompt = prompt + f"\nAction {step}: {action}\nObservation {step}: {observation}"
+    else:
+        print("=== Stopped: no answer after 5 rounds ===")
+
+perform_task("When did Mark launch Muse")
+perform_task("Is it available in Hong Kong yet?")</code></pre>
+  <p class="paper-meta">
+    文件顶部的 import、两个 API 客户端、<code>ask()</code> 和
+    <code>search_tavily()</code> 都与
+    <a href="ai-note39.html" target="_blank" rel="noopener">版本 3</a>相同，所以这里
+    省略。
+  </p>
+
+  <h2>代码中唯一要看的地方</h2>
+  <p>
+    看 <code>perform_task</code> 内的第一行：每次调用这个函数，提示词都是
+    <strong>从零开始</strong>建立的。第一次调用的任何东西 —— 问题、搜索、答案
+    —— 都不会留到第二次。函数可以重复使用，但同时也是<strong>无状态</strong>的：
+    两次调用就是两个陌生人。
+  </p>
+
+  <h2>一次真实运行</h2>
+  <pre class="code-block"><code>--- Task 1: "When did Mark launch Muse" ---
+...four rounds of searching; sources disagree by one day...
+=== Final Answer ===
+Meta (Mark Zuckerberg) launched Muse, its personal AI agent, on September 8, 2026 (with some outlets citing September 9, 2026).
+
+--- Task 2: "Is it available in Hong Kong yet?" ---
+=== Round 1 - Thought ===
+Thought 1: The query is ambiguous because "it" isn't specified. I need to figure out what product or service the user is asking about. Since the user only wrote "Is it available in Hong Kong yet?" with no prior context, I don't know the referent... The correct move in a real scenario is to ask the user. But the format forces me to do a search. I'll do a broad search on "available in Hong Kong 2026"...
+=== Round 1 - Action chosen by the model ===
+search[available in Hong Kong 2026]
+=== Round 1 - Observation from Tavily web search ===
+[Hong Kong 2026 | CanJam] ...headphone festival, tickets...
+[Hong Kong Eats 2026 - Hungry Onion] ...restaurant chat...
+[Hong Kong Conditions Report 2026 - US Department of State] ...policy report...
+=== Round 2 - Thought ===
+Thought 2: The search results ... don't reveal what product or service the user is asking about... I cannot determine the answer. I should state that clarification is needed...
+=== Round 2 - Action chosen by the model ===
+finish[I can't determine whether "it" is available in Hong Kong because the item/service isn't specified. Please tell me what "it" refers to (e.g., a product, app, game, streaming service, payment feature), and I'll check availability in Hong Kong.]</code></pre>
+  <p class="paper-meta">节选已缩短（&hellip;）；完整运行会打印出两个任务的全部内容。</p>
+  <p>
+    任务 1 一如以往运行正常。任务 2 才是有趣的失败：模型立刻察觉到含糊之处，用一次
+    搜索证明盲目查询只会换来耳机节和签证报告，然后用 <code>finish[]</code> 做唯一
+    诚实的事 —— 要求澄清。这个行为值得欣赏，但设计上的缺陷在我们身上：我们向一个
+    记不起第一个问题的代理，问了一个追问。
+  </p>
+
+  <h2>补救方法：把上下文交给代理</h2>
+  <p>有两种做法。</p>
+
+  <h3>做法一：自己带着上下文</h3>
+  <p>
+    在这个层次，“记忆”只是你一路传递的文字。你可以把两个问题合并成一个任务：
+  </p>
+  <pre class="code-block"><code>perform_task("When did Mark launch Muse, and is it available in Hong Kong yet?")</code></pre>
+  <p>或者把第一个答案喂回第二个任务：</p>
+  <pre class="code-block"><code>answer1 = perform_task("When did Mark launch Muse")
+perform_task(f"Context: {answer1} Is it available in Hong Kong yet?")</code></pre>
+  <p>
+    第二种写法就是聊天机器人运行的雏形：它们好像记得整段对话，其实只是应用程序
+    每收到一条消息，都悄悄地把整段历史重新发送出去。
+  </p>
+
+  <h3>做法二：给代理记忆</h3>
+  <p>
+    手动传递文字，应付两个问题还可以，但应付不了一场真实对话。正确的补救方法是让
+    代理拥有自己的记忆，这样每次调用都能看到之前发生过什么。这就是这个系列下一篇
+    AI 笔记的主题。
+  </p>
+
+  <h2>在自己的电脑上运行</h2>
+  <p>
+    <a href="/notes/downloads/Folder-AI-ReAct05.zip">下载演示程序
+    （Folder-AI-ReAct05.zip）</a>。zip 内有三个文件：
+    <code>ReAct05.py</code>（完整脚本）、<code>pyproject.toml</code> 和
+    <code>README.md</code>。
+  </p>
+  <ol>
+    <li>在 Visual Studio Code 打开这个文件夹。</li>
+    <li>
+      在文件夹内创建一个名为 <code>.env</code> 的文件，写上两行：
+      <pre class="code-block"><code>DEEPSEEK_API_KEY=your-deepseek-key
+TAVILY_API_KEY=your-tavily-key</code></pre>
+      密钥：<a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek
+      控制台</a>和 <a href="https://app.tavily.com/" target="_blank" rel="noopener">Tavily</a>
+      （两者都有免费的起始额度）。
+    </li>
+    <li>在终端运行：
+      <pre class="code-block"><code>uv sync
+uv run ReAct05.py</code></pre>
+      然后试试上面两种补救方法，比较任务 2 的回答有何不同。
+    </li>
+  </ol>
+
+  <h2>为什么这个实验值得关注</h2>
+  <ul>
+    <li>
+      <strong>遗忘是默认状态。</strong>调用模型的函数，在两次调用之间什么都不记得。
+      如果你的代理需要记忆，就要自己建立 —— 以文字向前传递的方式。
+    </li>
+    <li>
+      <strong>追问是一场记忆测试。</strong>“它”、“那一个”、“第二个选择”这类字眼，
+      只有在上下文与问题同行时才安全。
+    </li>
+    <li>
+      <strong>宁可说“我不知道”，也不要凭空编造。</strong>面对一个不可能完成的任务，
+      代理承认自己不知道，而不是自信地编出一个错误答案。当我们要求 AI 做更多事情时，
+      这种行为值得保护。
+    </li>
+  </ul>
+
+  <h2>延伸阅读</h2>
+  <ul>
+    <li><a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">ReAct: Synergizing Reasoning and Acting in Language Models</a> —— 就是为这个系列所建立的模式命名的论文。</li>
+    <li><a href="https://docs.tavily.com/" target="_blank" rel="noopener">Tavily 文档</a> —— 搜索选项、免费额度与价格。</li>
+    <li><a href="https://api-docs.deepseek.com/" target="_blank" rel="noopener">DeepSeek API 文档</a> —— 模型、密钥与价格。</li>
+  </ul>
+
+</main>
+
+<footer class="site-footer">
+  <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+  <p><a href="../../index.html">首页</a> &middot; <a href="../../ai-programs.html">AI 笔记</a> &middot; <a href="../../links/">链接</a> &middot; <a href="../../glossary/">词汇表</a></p>
+</footer>
+
+</body>
+</html>

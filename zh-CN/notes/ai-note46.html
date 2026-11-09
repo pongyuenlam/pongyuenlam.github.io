@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>多个 AI 代理如何在主管之下运作（ReAct，版本 10）？ | 林邦源博士</title>
+<meta name="description" content="版本 10 给代理一个团队。一个主管代理手上握着三个工具：读取网页、翻译、改写成粤语，而其中两个工具本身就是代理。代码从不固定顺序，由主管决定。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note46.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note46.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note46.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note46.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note46.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="多个 AI 代理如何在主管之下运作（ReAct，版本 10）？">
+<meta property="og:description" content="版本 10 给代理一个团队。一个主管代理手上握着三个工具：读取网页、翻译、改写成粤语，而其中两个工具本身就是代理。代码从不固定顺序，由主管决定。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-CN/notes/ai-note46.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="../../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "多个 AI 代理如何在主管之下运作（ReAct，版本 10）？",
+  "description": "版本 10 给代理一个团队。一个主管代理手上握着三个工具：读取网页、翻译、改写成粤语，而其中两个工具本身就是代理。代码从不固定顺序，由主管决定。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-09",
+  "dateModified": "2026-11-09",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-CN/notes/ai-note46.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../../index.html">首页</a></li>
+        <li><a href="../../biography.html">个人简介</a></li>
+        <li><a href="../../research.html">研究</a></li>
+        <li><a href="../../cases.html">案例</a></li>
+        <li><a href="../../books.html">著作</a></li>
+        <li><a href="../../ai-programs.html">AI 笔记</a></li>
+        <li><a href="../../links/">链接</a></li>
+        <li><a href="../../glossary/">词汇表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <a href="/notes/ai-note46.html">English</a>
+  <a href="/zh-HK/notes/ai-note46.html">繁體中文</a>
+  <span class="current">简体中文</span>
+</div>
+
+<main>
+  <h1>多个 AI 代理如何在主管之下运作（ReAct，版本 10）？</h1>
+  <p class="paper-meta">林邦源博士 &middot; AI 笔记 &middot; 2026 年 11 月 9 日 &middot; 约 5 分钟阅读</p>
+
+  <p>
+    版本 9 给了代理一双眼睛：它能读取网页。版本 10 给它一个团队。一个名叫主管
+    的代理，手上得到三个工具 —— 而其中两个工具本身就是代理。你要求一个网页的
+    粤语版本，主管会自己推断：应该先读取网页，然后翻译，再把中文转成粤语。我们
+    的代码从未写明这个顺序。主管只知道每个工具做什么，由它自己决定。
+  </p>
+
+  <h2>一个主管，三个下属代理</h2>
+  <ul>
+    <li>
+      <strong><code>scrap_web</code></strong> &mdash; 下载网页，返回它的句子，
+      并加上编号。纯 Python，取自版本 9。
+    </li>
+    <li>
+      <strong><code>translate_en_to_zh</code></strong> &mdash; 一个代理，把编号的
+      英文句子翻译成繁体中文。
+    </li>
+    <li>
+      <strong><code>zh_to_cantonese</code></strong> &mdash; 一个代理，把中文句子
+      改写成粤语口语，然后列出哪些句子有改动。
+    </li>
+  </ul>
+  <p>
+    本身就是代理的工具，有时称为下属代理。主管对网页和粤语并没有特别认识；它
+    只知道这三个工具存在，以及每个工具用来做什么。
+  </p>
+
+  <h2>一个函数如何变成工具</h2>
+  <pre class="code-block"><code>@tool
+def scrap_web(url: str) -&gt; str:
+    """Download a web page and return its English sentences, one per line, numbered."""</code></pre>
+  <p>
+    <code>@tool</code> 是一个标签，把普通函数变成模型可以调用的东西。三引号里的
+    那句话不是装饰：主管在决定这个工具是否适合这个请求时，读的就是它。这里的
+    描述含糊，是代理团队出问题的常见原因。
+  </p>
+
+  <h2>下属代理 1：用纯 Python 读取网页</h2>
+  <pre class="code-block"><code>    response = requests.get(url, headers={"User-Agent": USER_AGENT}, timeout=10)
+    soup = BeautifulSoup(response.text, "html.parser")
+    sentences = []
+    for element in soup.find_all(["h1", "h2", "h3", "p", "li"]):
+        text = re.sub(r"\s+", " ", element.get_text(" ", strip=True))
+        if text:
+            sentences.extend(re.split(r"(?&lt;=[.!?])\s+", text))
+    result = "\n".join(f"{number}. {sentence}"
+                       for number, sentence in enumerate(sentences, start=1))
+    return result</code></pre>
+  <p>
+    这就是版本 9，只改了一处：它不再打印，而是把编号的句子连成一段文字返回。
+    这一点很重要，因为工具的答案会交回主管，主管可以再把它交给下一个工具。
+  </p>
+
+  <h2>下属代理 2：包装成工具的翻译员</h2>
+  <pre class="code-block"><code>    translator_agent = create_agent(
+        model=my_model,
+        tools=[],
+        system_prompt="""You are a professional English to Traditional Chinese (繁體中文) translator.
+Translate each numbered sentence into formal written Traditional Chinese.
+Keep the same numbers, one sentence per line. Keep names, URLs and abbreviations (e.g. PhD, AI) as they are.
+Reply with ONLY the numbered translations.""",
+    )
+    return ask_agent(translator_agent, sentences)</code></pre>
+  <p>
+    <code>create_agent</code> 创建一个代理，这里 <code>tools=[]</code> 表示这个
+    下属代理没有自己的工具。它全部的任务都写在指示里：翻译、保留编号、保留名称。
+    指示越窄，下属代理就越可靠。
+  </p>
+
+  <h2>把输入交给下属代理的辅助函数</h2>
+  <pre class="code-block"><code>def ask_agent(agent, message):
+    """Give a worker agent its input and return its final reply."""
+    result = agent.invoke({"messages": [{"role": "user", "content": message}]})
+    return result["messages"][-1].content</code></pre>
+  <p>
+    代理不接受一句普通句子。它接受的是一段简短对话：一串消息，每个消息带有一个
+    角色，例如 <code>"user"</code>。这个只有两行的辅助函数把我们的文字变成那段
+    只有一条消息的对话，然后从 <code>result["messages"][-1]</code> 读出回复。在
+    Python 里，<code>-1</code> 表示列表中最后一项，所以 <code>[-1]</code> 取到
+    最新的消息 —— 也就是代理的答案。把这两件事收在同一个辅助函数里，每个工具
+    就能保持简短易读。
+  </p>
+
+  <h2>下属代理 3：粤语，加上前后对照清单</h2>
+  <pre class="code-block"><code>    before = dict(re.findall(r"^(\d+)\.\s*(.*)$", sentences, re.M))
+    after = dict(re.findall(r"^(\d+)\.\s*(.*)$", result, re.M))
+    changes = [f"{number}. {before[number]}\n   -&gt; {after[number]}"
+               for number in before
+                if (number in after) and (before[number] != after[number])]</code></pre>
+  <p>
+    粤语编辑的工作方式和翻译员完全相同 —— 一个有指示、没有工具的代理。新的是
+    之后的核对。模式
+    <strong><code>^(\d+)\.\s*(.*)$</code></strong> 把每一行编号读进一个字典，
+    以编号作为键：它把 <code>1. 首頁</code> 拆开，把 <code>1</code> 和
+    <code>首頁</code> 留成一对。<br>
+    把这个模式拆成六小块来看：<br>
+    <strong><code>^</code></strong> 表示一行的开始。<br>
+    <strong><code>(\d+)</code></strong> 表示一个或多个数字。<br>
+    <strong><code>\.</code></strong> 是编号后面的句点。<br>
+    <strong><code>\s*</code></strong> 是那个句点之后的所有空格。<br>
+    <strong><code>(.*)</code></strong> 表示这一行其余的内容。<br>
+    <strong><code>$</code></strong> 表示一行的结束。<br>
+    所以每次匹配都会交回两样东西：一个编号和一句句子。
+    <code>dict(...)</code> 把它们存成键和值。一个字典装中文，一个装粤语，而
+    列表只留下两者不同的编号。这样最后的输出就可以说“30 句里有 19 句改了”，
+    并逐项引用改动，不必由人工逐行对照。
+  </p>
+  <p>
+    建立这个清单的四行，从中间向外读会比较容易。
+    <strong><code>for number in before</code></strong> 逐个走过中文版的句子编号。
+    <strong><code>if</code></strong> 然后只留下同时出现在粤语版、而文字真的有
+    分别的编号，所以没有改动的句子会被丢掉。两个括号把两个测试分开：先问
+    <strong><code>(number in after)</code></strong>，只有结果为真时，才问
+    <strong><code>(before[number] != after[number])</code></strong>。对于每一个
+    通过的编号，第一行会建立一个小小的两行条目：编号和中文句子，然后是
+    <code>-&gt;</code> 和粤语句子。把这个做法套用到全部 30 句，你就得到报告：
+    只有改动过的句子，每句都显示改动前和改动后。
+  </p>
+
+  <h2>主管</h2>
+  <pre class="code-block"><code>supervisor = create_agent(
+    model=my_model,
+    tools=[scrap_web, translate_en_to_zh, zh_to_cantonese],
+    system_prompt="""You are a supervisor managing a team of tools.
+Plan which tools are needed for the user's request, and call them in a sensible order.
+When you pass one tool's output to the next tool, pass ALL of it, exactly as it is: do not shorten or change it.
+At the end, reply with the final numbered sentences, followed by the list of changed sentences if a tool gave one.""",
+)</code></pre>
+  <p>
+    主管有一个模型（<code>my_model</code>）、三个工具和一个系统提示词。
+  </p>
+
+  <h2>输出结果</h2>
+  <pre class="code-block no-copy"><code>########## SUPERVISOR gets the request ##########
+Give me the Cantonese version of every sentence on https://pongyuenlam.github.io/biography.html
+
+########## TOOL: scrap_web ##########
+1. Home
+2. Biography
+...
+
+########## SUPERVISOR's plan (tools called, in order) ##########
+- scrap_web
+- translate_en_to_zh
+- zh_to_cantonese</code></pre>
+  <p>
+    有趣的是那份计划。我们从未按那个顺序写下这三个名称；是主管自己选的。最后
+    它打印粤语清单，然后是改动：
+  </p>
+  <pre class="code-block no-copy"><code>Changed sentences (19 of 30), before -&gt; after:
+1. 首頁
+   -&gt; 主頁
+10. 逾三十年來於董事會與課堂之間，將大膽構想轉化為可衡量的成果。
+   -&gt; 過去三十幾年，喺董事會同課堂之間，將大膽嘅構想變成可以衡量嘅成果。
+...</code></pre>
+  <p>
+    30 句里有 19 句改了：菜单标签（“首頁”变成“主頁”）、书面中文（“他”、
+    “的”、“沒有”）变成香港读者会用的口语（“佢”、“嘅”、“冇”），而未改动的
+    11 句，大多是名称、网址和缩写，本来就不应该改。
+  </p>
+
+  <h2>完整程序</h2>
+  <pre class="code-block"><code># MULTIPLE AGENTS with a SUPERVISOR (manager), built with LangChain.
+# The supervisor is an agent whose tools are other workers:
+#   1) scrap_web          -&gt; reads a web page and lists every sentence (plain Python, code from ReAct09.py)
+#   2) translate_en_to_zh -&gt; a translator AGENT, wrapped as a tool
+#   3) zh_to_cantonese    -&gt; a Cantonese editor AGENT, wrapped as a tool
+# We do NOT fix the order in our code: the supervisor (the AI) decides which tool to call, and when.
+import os
+import re
+import requests
+from bs4 import BeautifulSoup
+from langchain_core.tools import tool
+from langchain_openai import ChatOpenAI
+from langchain.agents import create_agent
+from dotenv import load_dotenv
+load_dotenv()
+
+URL = "https://pongyuenlam.github.io/biography.html"
+USER_AGENT = "ReAct10-class-demo"   # tells the website who is visiting
+
+my_model = ChatOpenAI(
+    model="deepseek-flash",
+    api_key=os.environ.get('DEEPSEEK_API_KEY'),
+    base_url="https://api.deepseek.com")
+
+def ask_agent(agent, message):
+    """Give a worker agent its input and return its final reply."""
+    result = agent.invoke({"messages": [{"role": "user", "content": message}]})
+    return result["messages"][-1].content
+
+# ---- Three tools for the supervisor ----
+@tool
+def scrap_web(url: str) -&gt; str:
+    """Download a web page and return its English sentences, one per line, numbered."""
+    response = requests.get(url, headers={"User-Agent": USER_AGENT}, timeout=10)
+    soup = BeautifulSoup(response.text, "html.parser")
+    sentences = []
+    for element in soup.find_all(["h1", "h2", "h3", "p", "li"]):
+        text = re.sub(r"\s+", " ", element.get_text(" ", strip=True))
+        if text:
+            sentences.extend(re.split(r"(?&lt;=[.!?])\s+", text))
+    result = "\n".join(f"{number}. {sentence}"
+                       for number, sentence in enumerate(sentences, start=1))
+    print(f"\n########## TOOL: scrap_web ##########\n{result}")
+    return result
+
+@tool
+def translate_en_to_zh(sentences: str) -&gt; str:
+    """Translate numbered English sentences into numbered Traditional Chinese sentences."""
+    # A worker agent: same model, its own job (system_prompt), no tools
+    translator_agent = create_agent(
+        model=my_model,
+        tools=[],
+        system_prompt="""You are a professional English to Traditional Chinese (繁體中文) translator.
+Translate each numbered sentence into formal written Traditional Chinese.
+Keep the same numbers, one sentence per line. Keep names, URLs and abbreviations (e.g. PhD, AI) as they are.
+Reply with ONLY the numbered translations.""",
+    )
+    result = ask_agent(translator_agent, sentences)
+    print(f"\n########## TOOL: translate_en_to_zh ##########\n{result}")
+    return result
+
+@tool
+def zh_to_cantonese(sentences: str) -&gt; str:
+    """Rewrite numbered Traditional Chinese sentences into numbered spoken Cantonese sentences,
+    then list the sentences that changed (before -&gt; after)."""
+    # A worker agent: same model, its own job (system_prompt), no tools
+    cantonese_agent = create_agent(
+        model=my_model,
+        tools=[],
+        system_prompt="""You are a Hong Kong Cantonese editor.
+Rewrite each numbered Traditional Chinese sentence into natural spoken Cantonese (廣東話口語),
+the way a Hong Kong person would say it, e.g. 是 -&gt; 係, 的 -&gt; 嘅, 他 -&gt; 佢, 沒有 -&gt; 冇.
+Keep the same numbers, one sentence per line. Keep names, URLs and abbreviations as they are.
+Reply with ONLY the numbered Cantonese sentences.""",
+    )
+    result = ask_agent(cantonese_agent, sentences)
+
+    # Another list: compare before (Chinese) and after (Cantonese), sentence by sentence, using the numbers
+    before = dict(re.findall(r"^(\d+)\.\s*(.*)$", sentences, re.M))   # {"1": "他是...", "2": ...}
+    after = dict(re.findall(r"^(\d+)\.\s*(.*)$", result, re.M))
+    changes = [f"{number}. {before[number]}\n   -&gt; {after[number]}"
+               for number in before
+                if (number in after) and (before[number] != after[number])]
+    result = (result + f"\n\nChanged sentences ({len(changes)} of {len(before)}), before -&gt; after:\n"
+              + "\n".join(changes))
+    print(f"\n########## TOOL: zh_to_cantonese ##########\n{result}")
+    return result
+
+# ---- The supervisor: decides which tools to use, and in what order ----
+supervisor = create_agent(
+    model=my_model,
+    tools=[scrap_web, translate_en_to_zh, zh_to_cantonese],
+    system_prompt="""You are a supervisor managing a team of tools.
+Plan which tools are needed for the user's request, and call them in a sensible order.
+When you pass one tool's output to the next tool, pass ALL of it, exactly as it is: do not shorten or change it.
+At the end, reply with the final numbered sentences, followed by the list of changed sentences if a tool gave one.""",
+)
+
+request = f"Give me the Cantonese version of every sentence on {URL}"
+print(f"########## SUPERVISOR gets the request ##########\n{request}")
+result = supervisor.invoke({"messages": [{"role": "user", "content": request}]})
+
+# Show the plan the supervisor made: which tools it called, in order
+print("\n########## SUPERVISOR's plan (tools called, in order) ##########")
+for message in result["messages"]:
+    for call in getattr(message, "tool_calls", None) or []:
+        print(f"- {call['name']}")
+
+print("\n########## SUPERVISOR's final answer ##########")
+print(result["messages"][-1].content)
+
+# Try it: change the request to "Give me the Traditional Chinese version of every sentence on ..."
+# Does the supervisor still call zh_to_cantonese? It should not - the AI chooses the tools.</code></pre>
+
+  <h2>在自己的电脑上运行</h2>
+  <p>
+    <a href="/notes/downloads/Folder-AI-ReAct10.zip" download>下载演示程序
+    （Folder-AI-ReAct10.zip）</a>。zip 里有三个文件：
+    <code>ReAct10.py</code>（完整脚本）、<code>pyproject.toml</code> 和
+    <code>README.md</code>。这个版本会调用语言模型三次，所以需要 DeepSeek
+    密钥。
+  </p>
+  <ol>
+    <li>在 Visual Studio Code 中打开这个文件夹。</li>
+    <li>
+      在文件夹里创建一个名为 <code>.env</code> 的文件，内容只有一行：
+      <pre class="code-block"><code>DEEPSEEK_API_KEY=your-deepseek-key</code></pre>
+      密钥可以从
+      <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek
+      控制台</a>获取。用量由模型提供商计费，所以运行之前，请先在那里查看
+      当前的收费条款。
+    </li>
+    <li>在终端里逐行运行以下三行：
+      <pre class="code-block"><code>uv python pin 3.12.10</code></pre>
+      <pre class="code-block"><code>uv sync</code></pre>
+      <pre class="code-block"><code>uv run ReAct10.py</code></pre>
+    </li>
+    <li>你应该会看到请求、每个工具一个区块、计划，以及最后的答案。三次模型调用
+      需要一点时间，给它一分钟。</li>
+  </ol>
+  <p>
+    如果你还没有配置好 uv，请先看
+    <a href="ai-note05.html">如何安装 Visual Studio Code？</a>，然后看 uv 笔记的
+    <a href="ai-note03.html">Windows</a> 或
+    <a href="ai-note04.html">Mac</a> 版本。
+  </p>
+
+  <h2>局限</h2>
+  <ul>
+    <li>
+      <strong>下属代理既花钱也花时间。</strong>每个代理都是一次模型调用，而一个
+      长网页会被送三次：一次给 <code>translate_en_to_zh</code>，一次给
+      <code>zh_to_cantonese</code>，一次回到主管。
+    </li>
+    <li>
+      <strong>主管可能会选错。</strong>它可能跳过一个工具、把同一个工具调用两次，
+      或者选错工具。它打印的计划就是你的审计记录。
+    </li>
+    <li>
+      <strong>网页必须是纯 HTML。</strong>由 JavaScript 生成的网页，能给
+      <code>scrap_web</code> 的几乎是零，整条链之后就没有东西可翻译。
+    </li>
+  </ul>
+
+  <h2>延伸阅读</h2>
+  <ul>
+    <li><a href="https://docs.langchain.com/" target="_blank" rel="noopener">LangChain —— 文档</a> —— <code>create_agent</code>、工具与多代理模式。</li>
+    <li><a href="https://api-docs.deepseek.com/" target="_blank" rel="noopener">DeepSeek API —— 文档</a> —— 模型、密钥与收费。</li>
+    <li><a href="ai-note45.html">AI 代理如何读取网页（ReAct，版本 9）？</a> —— <code>scrap_web</code> 里的代码。</li>
+    <li><a href="ai-note43.html">如何在 AI 代理中使用 LangChain？（ReAct，版本 7）</a> —— <code>create_agent</code> 在本系列首次出现的地方。</li>
+  </ul>
+
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&amp;hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', 'Copy code to clipboard');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', 'Copied to clipboard');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', 'Copy code to clipboard');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>

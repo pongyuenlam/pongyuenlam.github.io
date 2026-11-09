@@ -79,6 +79,96 @@
   </div>
   <noscript><p class="meta">筛选功能需要 JavaScript。所有笔记仍列于下方。</p></noscript>
 
+  <div class="card" data-track="agent" data-sub="research">
+    <h3><a href="/zh-CN/notes/ai-note51.html">如何使用 AI 代理删除草稿中的重复句子（Research，版本 5）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月9日 &middot; 阅读时间约 5 分钟</p>
+    <p>代理加入第四个工具。<code>enhance_draft</code> 读取七句的草稿，永远保留第 1 句，并删去只重复已出现数字的句子 —— 最后输出五句和五条尾注，程序还会打印它跳过了什么。</p>
+  </div>
+
+  <div class="card" data-track="agent" data-sub="research">
+    <h3><a href="/zh-CN/notes/ai-note50.html">如何使用 AI 代理撰写附有尾注的草稿（Research，版本 4）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月9日 &middot; 阅读时间约 5 分钟</p>
+    <p>代理加入第三个工具。模型从七个保留的结果中各挑一句，逐字照抄，<code>write_draft</code> 再为尾注编号 —— 文字没有被摘要，所以每句都可以追溯回它的来源网页。</p>
+  </div>
+
+  <div class="card" data-track="agent" data-sub="research">
+    <h3><a href="/zh-CN/notes/ai-note49.html">如何使用 AI 代理挑选有用的搜索结果（Research，版本 3）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月9日 &middot; 阅读时间约 4 分钟</p>
+    <p>代理加入第二个工具：<code>generate_draft</code> 读取已保存的搜索，保留分数 0.5 或以上的结果，并按网址剔除 Wikipedia —— 十个结果变成七个，数字和链接原封不动。</p>
+  </div>
+
+  <div class="card" data-track="agent" data-sub="research">
+    <h3><a href="/zh-CN/notes/ai-note48.html">如何使用 AI 代理搜索网页（Research，版本 2）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月9日 &middot; 阅读时间约 4 分钟</p>
+    <p>版本 1 的 Tavily 调用变成一个工具，由模型决定何时调用，<code>return_direct=True</code> 让运行到此为止 —— 十个原始结果原样返回，上面没有加上任何摘要。</p>
+  </div>
+
+  <div class="card" data-track="agent" data-sub="research">
+    <h3><a href="/zh-CN/notes/ai-note47.html">如何用 Python 搜索网页（Research，版本 1）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月9日 &middot; 阅读时间约 4 分钟</p>
+    <p>这个系列从没有代理开始：一个问题送到 Tavily，回来十个结果，每个都打印分数、链接和网页前 200 个字符 —— 这是之后每个版本加工的材料。</p>
+  </div>
+
+  <div class="card" data-track="agent" data-sub="react">
+    <h3><a href="/zh-CN/notes/ai-note46.html">多个 AI 代理如何在主管之下运作（ReAct，版本 10）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月9日 &middot; 阅读时间约 5 分钟</p>
+    <p>一个主管代理，手上三个工具 —— 读取网页、翻译、改写成粤语 —— 而其中两个工具本身就是代理。代码从不固定顺序；主管自己规划，并把计划打印出来让你核对。</p>
+  </div>
+
+  <div class="card" data-track="agent" data-sub="react">
+    <h3><a href="/zh-CN/notes/ai-note45.html">AI 代理如何读取网页（ReAct，版本 9）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月9日 &middot; 阅读时间约 4 分钟</p>
+    <p>版本 9 终于读取真实网页：<code>requests</code> 下载 HTML，<code>BeautifulSoup</code> 只保留标题、段落和列表项，版本 8 的句子规则再为页面上每句编号。</p>
+  </div>
+
+  <div class="card" data-track="agent" data-sub="react">
+    <h3><a href="/zh-CN/notes/ai-note44.html">程序如何把一段文字分成句子（ReAct，版本 8）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月9日 &middot; 阅读时间约 3 分钟</p>
+    <p>版本 9 将要读取网页，所以文字必须先切成句子。一行就能做到 —— 带后顾断言的 <code>re.split</code> —— 本篇逐步拆解那一行，包括为什么 HK$60.10 不会被切开。</p>
+  </div>
+
+  <div class="card" data-track="agent" data-sub="react">
+    <h3><a href="/zh-CN/notes/ai-note43.html">如何在 AI 代理中使用 LangChain（ReAct，版本 7）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月9日 &middot; 阅读时间约 4 分钟</p>
+    <p>与版本 6 同一个代理 —— Tavily 搜索加 <code>memory.json</code> —— 但改用 LangChain 重写。<code>create_agent()</code> 替我们跑思考 &rarr; 行动 &rarr; 观察的循环：不用解析 <code>search[...]</code> 文本，没有停止词，也不用自己累积提示词字符串。</p>
+  </div>
+
+  <div class="card" data-track="agent" data-sub="react">
+    <h3><a href="/zh-CN/notes/ai-note42.html">如何让 AI 代理拥有记忆（ReAct，版本 6，memory.json）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月9日 &middot; 阅读时间约 4 分钟</p>
+    <p>版本 5 因为代理忘记了任务 1，在追问上失手。版本 6 加入一个小文件：每个完成的答案都存到 <code>memory.json</code>，再载入下一个提示词，所以“香港有了吗？”终于知道“它”是什么。</p>
+  </div>
+
+  <div class="card" data-track="agent" data-sub="react">
+    <h3><a href="/zh-CN/notes/ai-note41.html">AI 代理如何处理追问（ReAct，版本 5，无记忆）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月9日 &middot; 阅读时间约 3 分钟</p>
+    <p>把可复用的代理连续调用两次：先问“Mark 何时推出 Muse？”，再问“香港有了吗？”。第二次调用完全不知道“它”是什么，因为每次调用都从空白提示词开始。补救方法：把上下文交给代理。</p>
+  </div>
+
+  <div class="card" data-track="agent" data-sub="react">
+    <h3><a href="/zh-CN/notes/ai-note40.html">如何让 AI 代理可以复用（ReAct，版本 4，一个函数，任何任务）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月9日 &middot; 阅读时间约 3 分钟</p>
+    <p>同一个研究代理，两个结构改动：循环搬进 <code>perform_task(task)</code>，任何问题都可以研究；函数把答案以文本返回，让你的程序可以保存、发送或显示 —— 不只是打印出来。</p>
+  </div>
+
+  <div class="card" data-track="agent" data-sub="react">
+    <h3><a href="/zh-CN/notes/ai-note39.html">AI 代理如何研究一个问题（ReAct，版本 3，在循环中进行网上搜索）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月9日 &middot; 阅读时间约 5 分钟</p>
+    <p>同一个问题，一个工具：真实的网上搜索。代理思考、搜索、阅读，再思考，最多五轮；它发现两个来源对日期说法不一，于是收窄查询，最后交出有出处的答案，而不是“我不知道”。</p>
+  </div>
+
+  <div class="card" data-track="agent" data-sub="react">
+    <h3><a href="/zh-CN/notes/ai-note38.html">AI 代理如何在没有任何工具的情况下回答（ReAct，版本 2，只推理）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月9日 &middot; 阅读时间约 3 分钟</p>
+    <p>只推理，不行动，不观察：问“Mark 何时推出 Muse？”，看一个会思考但无法查证的模型。答案可能出错 —— 或者代理干脆回答“我不知道”。</p>
+  </div>
+
+  <div class="card" data-track="agent" data-sub="react">
+    <h3><a href="/zh-CN/notes/ai-note37.html">AI 代理如何思考、行动与观察（ReAct，版本 1）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月9日 &middot; 阅读时间约 5 分钟</p>
+    <p>最小的 ReAct 代理：模型写下推理，指名一个要调用的工具，Python 真实执行它，最终答案建立在观察到的结果之上 —— 而不是猜测。</p>
+  </div>
+
   <div class="card" data-track="agent" data-sub="tools">
     <h3><a href="/zh-CN/notes/ai-note36.html">如何为 AI 代理创建天气工具？</a></h3>
     <p class="meta">林邦源 &middot; 2026年11月8日 &middot; 阅读时间约 4 分钟</p>

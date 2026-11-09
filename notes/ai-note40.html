@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How do you make an AI agent reusable (ReAct, version 4, one function, any task)? | Howard Lam, PhD</title>
+<meta name="description" content="The research agent so far answers one hard-coded question. Wrap the loop in a function that takes any task, and the same code researches anything you point it at — and hands the answer back to your program, not just the screen.">
+<link rel="canonical" href="https://pongyuenlam.github.io/notes/ai-note40.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note40.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note40.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note40.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note40.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="How do you make an AI agent reusable (ReAct, version 4, one function, any task)?">
+<meta property="og:description" content="The research agent so far answers one hard-coded question. Wrap the loop in a function that takes any task, and the same code researches anything you point it at — and hands the answer back to your program, not just the screen.">
+<meta property="og:url" content="https://pongyuenlam.github.io/notes/ai-note40.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="Howard Lam, PhD">
+
+<link rel="stylesheet" href="../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "How do you make an AI agent reusable (ReAct, version 4, one function, any task)?",
+  "description": "The research agent so far answers one hard-coded question. Wrap the loop in a function that takes any task, and the same code researches anything you point it at — and hands the answer back to your program, not just the screen.",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-09",
+  "dateModified": "2026-11-09",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/notes/ai-note40.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../biography.html">Biography</a></li>
+        <li><a href="../research.html">Research</a></li>
+        <li><a href="../cases.html">Cases</a></li>
+        <li><a href="../books.html">Books</a></li>
+        <li><a href="../ai-programs.html">AI Notes</a></li>
+        <li><a href="../links/">Links</a></li>
+        <li><a href="../glossary/">Glossary</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <span class="current">English</span>
+  <a href="/zh-HK/notes/ai-note40.html">繁體中文</a>
+  <a href="/zh-CN/notes/ai-note40.html">简体中文</a>
+</div>
+
+<main>
+  <h1>How do you make an AI agent reusable (ReAct, version 4, one function, any task)?</h1>
+  <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 9, 2026 &middot; 3 min read</p>
+
+  <p>
+    <a href="ai-note39.html" target="_blank" rel="noopener">The previous note</a>
+    built an agent that researches a question with web search &mdash; but the
+    question is written into the script, and the answer only appears on screen.
+    This note makes two structural changes and no others: the loop moves into a
+    function, <code>perform_task(task)</code>, that accepts <em>any</em> question,
+    and the function <strong>returns</strong> the answer as text. The agent
+    becomes something your program can call, not something you read once.
+  </p>
+
+  <h2>The script</h2>
+  <p>This is <code>ReAct04.py</code> as it stands:</p>
+  <pre class="code-block"><code># Same ReAct idea as react01.py, but this task needs MORE THAN ONE action,
+# so we repeat Think -&gt; Act -&gt; Observe in a loop until the model says "finish".
+# Step 1: THINK  -&gt; ask the model to reason about what to do next
+# Step 2: ACT    -&gt; ask for ONE action: search[...] or finish[...]
+# Step 3: OBSERVE-&gt; run the Tavily web search (a real tool), add the result to the prompt, loop again
+import os
+import re
+from datetime import datetime
+from tavily import TavilyClient
+from openai import OpenAI
+from dotenv import load_dotenv
+load_dotenv()
+
+client = OpenAI(
+    api_key=os.environ.get('DEEPSEEK_API_KEY'),
+    base_url="https://api.deepseek.com")
+tavily = TavilyClient(api_key=os.environ.get('TAVILY_API_KEY'))
+
+def ask(prompt, stop=None):
+    """Send one prompt to the model and return its text reply."""
+    response = client.chat.completions.create(
+        model="deepseek-flash",
+        messages=[{"role": "user", "content": prompt}],
+        stop=stop,   # stop writing when this text appears
+    )
+    return response.choices[0].message.content
+
+# The only tool (action) our agent can use
+def search_tavily(query):
+    """Return the top web results from Tavily (title, url, short content)."""
+    results = tavily.search(query=query, max_results=3)["results"]
+    if not results:
+        return f"No web results found for '{query}'."
+    return "\n".join(f"[{r['title']}] ({r['url']}) {r['content'][:400]}"
+                     for r in results)
+
+def perform_task(task):
+    """Run the Think -&gt; Act -&gt; Observe loop for one task and return the answer."""
+    prompt = f"""Task: {task}
+You can use ONE tool: search[query] searches the web (Tavily) and returns the top results.
+Today is {datetime.now().strftime('%Y-%m-%d')}.
+Work in steps. Each step has a Thought, an Action, and an Observation."""
+
+    for step in range(1, 6):          # at most 5 rounds, so it cannot loop forever
+        # ---- Step 1: THINK (Reasoning) ----
+        thought = ask(prompt + f"\n\nThought {step}: (reason briefly about what to do next; do not act yet)",
+                      stop=["Action"])   # stop the model inventing its own Action/Observation
+        print(f"=== Round {step} - Thought ===")
+        print(thought)
+
+        # ---- Step 2: ACT — append the reasoning trace, then ask for an action ----
+        prompt = prompt + f"\n\nThought {step}: {thought}"
+        action = ask(prompt + "\n\nWhat action should be taken based on that? "
+                     "Reply with ONLY: search[query] or finish[answer]").strip()
+        print(f"=== Round {step} - Action chosen by the model ===")
+        print(action)
+
+        if action.startswith("finish"):
+            found = re.search(r"finish\[(.*)\]", action, re.S)
+            answer = found.group(1) if found else action
+            print("=== Final Answer ===")
+            print(answer)
+            return answer
+
+        # ---- Step 3: OBSERVE — our Python code (not the model) runs the tool ----
+        query = re.search(r"search\[(.*)\]", action, re.S)
+        observation = search_tavily(query.group(1)) if query else "Invalid action."
+        print(f"=== Round {step} - Observation from Tavily web search ===")
+        print(observation)
+        prompt = prompt + f"\nAction {step}: {action}\nObservation {step}: {observation}"
+    else:
+        print("=== Stopped: no answer after 5 rounds ===")
+
+perform_task("When did Mark launch Muse")</code></pre>
+
+  <h2>What changed from the previous script</h2>
+  <p>
+    Line for line, this is the same agent. The difference is packaging:
+  </p>
+  <ul>
+    <li>
+      <strong>The loop now lives inside <code>perform_task(task)</code>.</strong>
+      The task is a parameter, so the same code researches any question without
+      editing the middle of the script. The question moved to the last line,
+      where it belongs: <code>perform_task("When did Mark launch Muse")</code>.
+    </li>
+    <li>
+      <strong>The function returns the answer.</strong> Before, the answer was
+      only printed. Now <code>return answer</code> hands it back as text, so
+      calling code can save it, email it, show it on a web page, or feed it into
+      the next step of a larger program.
+    </li>
+    <li>
+      <strong>Everything else is untouched</strong> &mdash; same two keys, same
+      one tool, same five-round budget, same <code>stop=["Action"]</code> guard
+      rail. If any of those are unfamiliar, they are explained in the
+      <a href="ai-note39.html" target="_blank" rel="noopener">previous note</a>.
+    </li>
+  </ul>
+
+  <h2>One real run</h2>
+  <pre class="code-block"><code>=== Round 1 - Thought ===
+Thought 1: I need to find out when Mark (likely Mark Zuckerberg) launched Muse. I should search the web for this information, but I need to be careful because "Muse" could refer to different things...
+=== Round 1 - Action chosen by the model ===
+search[Mark launch Muse date]
+=== Round 1 - Observation from Tavily web search ===
+[Mark Zuckerberg announces Muse Spark, a new Meta AI model ... | Mashable] ...after Meta launched Muse, an autonomous personal artificial intelligence agent.
+[Muse Spark - Wikipedia] ...Muse Spark ... introduced in April 2026 and launched as Muse Spark 1.1 on July 9, 2026...
+[Everything new coming to Meta's AI agent Muse | TechCrunch] Muse, which launched in early September...
+=== Round 2 - Thought ===
+Thought 2: The search results give conflicting dates depending on what "Muse" refers to. I need to distinguish between the Muse AI agent and the underlying Muse Spark model...
+=== Round 2 - Action chosen by the model ===
+search[Mark Zuckerberg Meta launched Muse AI agent exact date September 2026]
+...two more rounds of searching...
+=== Round 4 - Action chosen by the model ===
+finish[Mark Zuckerberg/Meta launched **Muse**, the personal AI agent, on **September 8, 2026**. If the question refers to **Muse Spark**, that model was introduced in **April 2026** and launched as **Muse Spark 1.1 on July 9, 2026**.]
+=== Final Answer ===
+Mark Zuckerberg/Meta launched **Muse**, the personal AI agent, on **September 8, 2026**. If the question refers to **Muse Spark**, that model was introduced in **April 2026** and launched as **Muse Spark 1.1 on July 9, 2026**.</code></pre>
+  <p class="paper-meta">Extracts shortened (&hellip;) for readability; the full run prints every round in full.</p>
+  <p>
+    Two things are worth noticing. First, round&nbsp;2 does something the earlier
+    run did not: it separates <em>Muse</em> the agent from <em>Muse Spark</em>
+    the underlying model, because the search results mixed the two. The final
+    answer reports both dates and says which is which &mdash; the ambiguity in
+    the question is resolved openly, not silently. Second, the answer text
+    contains <code>**</code> marks: the model wrote markdown bold. When you print
+    it, you see the marks; when another program displays it as markdown, they
+    become real bold text. That is a small preview of why returning the answer
+    matters &mdash; the same text now has two possible lives.
+  </p>
+
+  <h2>Running it on your own computer</h2>
+  <p>
+    <a href="downloads/Folder-AI-ReAct04.zip">Download the demo program
+    (Folder-AI-ReAct04.zip)</a>. The zip holds three files:
+    <code>ReAct04.py</code> (the script above), <code>pyproject.toml</code> (the
+    package list) and <code>README.md</code>.
+  </p>
+  <ol>
+    <li>Open the folder in Visual Studio Code.</li>
+    <li>
+      Create a file named <code>.env</code> in the folder with two lines:
+      <pre class="code-block"><code>DEEPSEEK_API_KEY=your-deepseek-key
+TAVILY_API_KEY=your-tavily-key</code></pre>
+      Get the first from the
+      <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek
+      console</a> and the second from
+      <a href="https://app.tavily.com/" target="_blank" rel="noopener">Tavily</a>;
+      both have free starting credit.
+    </li>
+    <li>In the Terminal, run:
+      <pre class="code-block"><code>uv sync
+uv run ReAct04.py</code></pre>
+      <code>uv sync</code> is needed only the first time; it reads
+      <code>pyproject.toml</code> and installs <code>openai</code>,
+      <code>tavily-python</code> and <code>python-dotenv</code> into the project.
+    </li>
+  </ol>
+  <p>
+    Now the experiment is in the last line. Change it to
+    <code>perform_task("What were the three biggest news stories in my city this week?")</code>
+    &mdash; or anything else &mdash; and run again. One line, a different
+    research project.
+  </p>
+
+  <h2>Why this small change matters</h2>
+  <ul>
+    <li>
+      <strong>Reuse without editing.</strong> The agent's logic is settled; the
+      question is data. Keeping them apart is what lets you research ten
+      questions with ten lines instead of ten scripts.
+    </li>
+    <li>
+      <strong>The answer can go somewhere.</strong> A returned value can be
+      stored, sent or shown anywhere. A printed value ends at the screen.
+    </li>
+    <li>
+      <strong>It is the shape of real systems.</strong> A scheduled job that
+      checks the news every morning, or a web page that answers visitor
+      questions, both look like this: one function, called with a task,
+      returning an answer. That is where this series is heading.
+    </li>
+  </ul>
+
+  <h2>Further reading</h2>
+  <ul>
+    <li><a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">ReAct: Synergizing Reasoning and Acting in Language Models</a> &mdash; the paper that named the pattern this series builds.</li>
+    <li><a href="https://docs.tavily.com/" target="_blank" rel="noopener">Tavily documentation</a> &mdash; search options, free tier and pricing.</li>
+    <li><a href="https://api-docs.deepseek.com/" target="_blank" rel="noopener">DeepSeek API documentation</a> &mdash; models, keys and pricing.</li>
+  </ul>
+
+</main>
+
+<footer class="site-footer">
+  <p>&copy; 2026 Howard Pong Yuen Lam. All rights reserved.</p>
+  <p><a href="../index.html">Home</a> &middot; <a href="../ai-programs.html">AI Notes</a> &middot; <a href="../links/">Links</a> &middot; <a href="../glossary/">Glossary</a></p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>如何让 AI 代理可以复用（ReAct，版本 4，一个函数，任何任务）？ | 林邦源博士</title>
+<meta name="description" content="目前的研究代理只会回答一个写死在程序里的问题。把循环包进一个能接受任何任务的函数，同一份代码就能研究你指定的任何题目 —— 并且把答案交回你的程序，而不只是显示在屏幕上。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note40.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note40.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note40.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note40.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note40.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何让 AI 代理可以复用（ReAct，版本 4，一个函数，任何任务）？">
+<meta property="og:description" content="目前的研究代理只会回答一个写死在程序里的问题。把循环包进一个能接受任何任务的函数，同一份代码就能研究你指定的任何题目 —— 并且把答案交回你的程序，而不只是显示在屏幕上。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-CN/notes/ai-note40.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="../../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "如何让 AI 代理可以复用（ReAct，版本 4，一个函数，任何任务）？",
+  "description": "目前的研究代理只会回答一个写死在程序里的问题。把循环包进一个能接受任何任务的函数，同一份代码就能研究你指定的任何题目 —— 并且把答案交回你的程序，而不只是显示在屏幕上。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-09",
+  "dateModified": "2026-11-09",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-CN/notes/ai-note40.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../../index.html">首页</a></li>
+        <li><a href="../../biography.html">个人简介</a></li>
+        <li><a href="../../research.html">研究</a></li>
+        <li><a href="../../cases.html">案例</a></li>
+        <li><a href="../../books.html">著作</a></li>
+        <li><a href="../../ai-programs.html">AI 笔记</a></li>
+        <li><a href="../../links/">链接</a></li>
+        <li><a href="../../glossary/">词汇表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <a href="/notes/ai-note40.html">English</a>
+  <a href="/zh-HK/notes/ai-note40.html">繁體中文</a>
+  <span class="current">简体中文</span>
+</div>
+
+<main>
+  <h1>如何让 AI 代理可以复用（ReAct，版本 4，一个函数，任何任务）？</h1>
+  <p class="paper-meta">林邦源博士 &middot; AI 笔记 &middot; 2026 年 11 月 9 日 &middot; 约 3 分钟阅读</p>
+
+  <p>
+    <a href="ai-note39.html" target="_blank" rel="noopener">上一篇笔记</a>
+    建立了一个会用网上搜索研究问题的代理 —— 但问题是写在脚本里的，答案也只会
+    出现在屏幕上。这篇笔记只做两项结构上的改动，其他一概不变：循环搬进一个
+    函数，<code>perform_task(task)</code>，它接受<em>任何</em>问题；而函数会把
+    答案以文字形式<strong>返回</strong>。代理于是变成你的程序可以调用的东西，
+    而不是你只能读一次的东西。
+  </p>
+
+  <h2>脚本</h2>
+  <p>这是 <code>ReAct04.py</code> 目前的内容：</p>
+  <pre class="code-block"><code># Same ReAct idea as react01.py, but this task needs MORE THAN ONE action,
+# so we repeat Think -&gt; Act -&gt; Observe in a loop until the model says "finish".
+# Step 1: THINK  -&gt; ask the model to reason about what to do next
+# Step 2: ACT    -&gt; ask for ONE action: search[...] or finish[...]
+# Step 3: OBSERVE-&gt; run the Tavily web search (a real tool), add the result to the prompt, loop again
+import os
+import re
+from datetime import datetime
+from tavily import TavilyClient
+from openai import OpenAI
+from dotenv import load_dotenv
+load_dotenv()
+
+client = OpenAI(
+    api_key=os.environ.get('DEEPSEEK_API_KEY'),
+    base_url="https://api.deepseek.com")
+tavily = TavilyClient(api_key=os.environ.get('TAVILY_API_KEY'))
+
+def ask(prompt, stop=None):
+    """Send one prompt to the model and return its text reply."""
+    response = client.chat.completions.create(
+        model="deepseek-flash",
+        messages=[{"role": "user", "content": prompt}],
+        stop=stop,   # stop writing when this text appears
+    )
+    return response.choices[0].message.content
+
+# The only tool (action) our agent can use
+def search_tavily(query):
+    """Return the top web results from Tavily (title, url, short content)."""
+    results = tavily.search(query=query, max_results=3)["results"]
+    if not results:
+        return f"No web results found for '{query}'."
+    return "\n".join(f"[{r['title']}] ({r['url']}) {r['content'][:400]}"
+                     for r in results)
+
+def perform_task(task):
+    """Run the Think -&gt; Act -&gt; Observe loop for one task and return the answer."""
+    prompt = f"""Task: {task}
+You can use ONE tool: search[query] searches the web (Tavily) and returns the top results.
+Today is {datetime.now().strftime('%Y-%m-%d')}.
+Work in steps. Each step has a Thought, an Action, and an Observation."""
+
+    for step in range(1, 6):          # at most 5 rounds, so it cannot loop forever
+        # ---- Step 1: THINK (Reasoning) ----
+        thought = ask(prompt + f"\n\nThought {step}: (reason briefly about what to do next; do not act yet)",
+                      stop=["Action"])   # stop the model inventing its own Action/Observation
+        print(f"=== Round {step} - Thought ===")
+        print(thought)
+
+        # ---- Step 2: ACT — append the reasoning trace, then ask for an action ----
+        prompt = prompt + f"\n\nThought {step}: {thought}"
+        action = ask(prompt + "\n\nWhat action should be taken based on that? "
+                     "Reply with ONLY: search[query] or finish[answer]").strip()
+        print(f"=== Round {step} - Action chosen by the model ===")
+        print(action)
+
+        if action.startswith("finish"):
+            found = re.search(r"finish\[(.*)\]", action, re.S)
+            answer = found.group(1) if found else action
+            print("=== Final Answer ===")
+            print(answer)
+            return answer
+
+        # ---- Step 3: OBSERVE — our Python code (not the model) runs the tool ----
+        query = re.search(r"search\[(.*)\]", action, re.S)
+        observation = search_tavily(query.group(1)) if query else "Invalid action."
+        print(f"=== Round {step} - Observation from Tavily web search ===")
+        print(observation)
+        prompt = prompt + f"\nAction {step}: {action}\nObservation {step}: {observation}"
+    else:
+        print("=== Stopped: no answer after 5 rounds ===")
+
+perform_task("When did Mark launch Muse")</code></pre>
+
+  <h2>与上一个脚本相比有什么改变</h2>
+  <p>
+    逐行来看，这是同一个代理。差别在于包装方式：
+  </p>
+  <ul>
+    <li>
+      <strong>循环现在住在 <code>perform_task(task)</code> 里面。</strong>
+      任务是一个参数，所以同一份代码可以研究任何问题，不必修改脚本中段。
+      问题搬到最后一行，那才是它该在的地方：
+      <code>perform_task("When did Mark launch Muse")</code>。
+    </li>
+    <li>
+      <strong>函数会返回答案。</strong>以往答案只会被打印出来。现在
+      <code>return answer</code> 把答案以文字形式交回，所以调用它的程序
+      可以保存、发邮件、显示在网页上，或把它交给更大程序的下一步使用。
+    </li>
+    <li>
+      <strong>其他一切都不变</strong> —— 同样两把密钥、同样一个工具、
+      同样五轮的预算、同样的 <code>stop=["Action"]</code> 防护栏。如果你对
+      其中任何一项感到陌生，
+      <a href="ai-note39.html" target="_blank" rel="noopener">上一篇笔记</a>
+      有解释。
+    </li>
+  </ul>
+
+  <h2>一次真实运行</h2>
+  <pre class="code-block"><code>=== Round 1 - Thought ===
+Thought 1: I need to find out when Mark (likely Mark Zuckerberg) launched Muse. I should search the web for this information, but I need to be careful because "Muse" could refer to different things...
+=== Round 1 - Action chosen by the model ===
+search[Mark launch Muse date]
+=== Round 1 - Observation from Tavily web search ===
+[Mark Zuckerberg announces Muse Spark, a new Meta AI model ... | Mashable] ...after Meta launched Muse, an autonomous personal artificial intelligence agent.
+[Muse Spark - Wikipedia] ...Muse Spark ... introduced in April 2026 and launched as Muse Spark 1.1 on July 9, 2026...
+[Everything new coming to Meta's AI agent Muse | TechCrunch] Muse, which launched in early September...
+=== Round 2 - Thought ===
+Thought 2: The search results give conflicting dates depending on what "Muse" refers to. I need to distinguish between the Muse AI agent and the underlying Muse Spark model...
+=== Round 2 - Action chosen by the model ===
+search[Mark Zuckerberg Meta launched Muse AI agent exact date September 2026]
+...two more rounds of searching...
+=== Round 4 - Action chosen by the model ===
+finish[Mark Zuckerberg/Meta launched **Muse**, the personal AI agent, on **September 8, 2026**. If the question refers to **Muse Spark**, that model was introduced in **April 2026** and launched as **Muse Spark 1.1 on July 9, 2026**.]
+=== Final Answer ===
+Mark Zuckerberg/Meta launched **Muse**, the personal AI agent, on **September 8, 2026**. If the question refers to **Muse Spark**, that model was introduced in **April 2026** and launched as **Muse Spark 1.1 on July 9, 2026**.</code></pre>
+  <p class="paper-meta">摘录为求易读而经过缩短（&hellip;）；完整运行会把每一轮完整打印出来。</p>
+  <p>
+    有两点值得注意。第一，第&nbsp;2 轮做了一件之前那次运行没有做的事：它把代理
+    <em>Muse</em> 与背后的模型 <em>Muse Spark</em> 分开，因为搜索结果把两者混在
+    一起。最后的答案同时报告两个日期，并说明哪个是哪个 —— 问题中的含糊之处
+    是公开解决的，而不是静静带过。第二，答案文字里有 <code>**</code> 符号：
+    模型写的是 markdown 粗体。你把它打印出来时，看到的是符号；当另一个程序以
+    markdown 显示它时，它们就会变成真正的粗体文字。这是返回答案为何重要的一
+    个小预览 —— 同一段文字现在有两种可能的生命。
+  </p>
+
+  <h2>在自己的电脑上运行</h2>
+  <p>
+    <a href="/notes/downloads/Folder-AI-ReAct04.zip">下载演示程序
+    （Folder-AI-ReAct04.zip）</a>。zip 内包含三个文件：
+    <code>ReAct04.py</code>（就是上面的脚本）、<code>pyproject.toml</code>
+    （包清单）和 <code>README.md</code>。
+  </p>
+  <ol>
+    <li>在 Visual Studio Code 打开这个文件夹。</li>
+    <li>
+      在文件夹内创建一个名为 <code>.env</code> 的文件，内容有两行：
+      <pre class="code-block"><code>DEEPSEEK_API_KEY=your-deepseek-key
+TAVILY_API_KEY=your-tavily-key</code></pre>
+      第一个密钥从
+      <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek
+      控制台</a>获取，第二个从
+      <a href="https://app.tavily.com/" target="_blank" rel="noopener">Tavily</a>获取；
+      两者都有免费的起始额度。
+    </li>
+    <li>在终端运行：
+      <pre class="code-block"><code>uv sync
+uv run ReAct04.py</code></pre>
+      <code>uv sync</code> 只需要第一次运行；它会读取
+      <code>pyproject.toml</code>，并把 <code>openai</code>、
+      <code>tavily-python</code> 和 <code>python-dotenv</code> 装进这个项目。
+    </li>
+  </ol>
+  <p>
+    现在实验就在最后一行。把它改成
+    <code>perform_task("What were the three biggest news stories in my city this week?")</code>
+    —— 或者任何其他问题 —— 再运行一次。改一行，就是另一个研究项目。
+  </p>
+
+  <h2>为什么这个小改动重要</h2>
+  <ul>
+    <li>
+      <strong>不必修改就能复用。</strong>代理的逻辑已经定下来；问题是数据。
+      把两者分开，你就能用十行研究十个问题，而不是写十个脚本。
+    </li>
+    <li>
+      <strong>答案可以去别的地方。</strong>返回的值可以被保存、发送或显示在
+      任何地方。打印出来的值，到屏幕就结束了。
+    </li>
+    <li>
+      <strong>这就是真实系统的形状。</strong>一个每天早上检查新闻的定时任务，
+      或一个回答访客问题的网页，两者都是这个样子：一个函数，用一个任务去调用，
+      返回一个答案。这个系列正朝着这个方向走。
+    </li>
+  </ul>
+
+  <h2>延伸阅读</h2>
+  <ul>
+    <li><a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">ReAct: Synergizing Reasoning and Acting in Language Models</a> —— 为这个模式命名的论文，也是本系列所建立的基础。</li>
+    <li><a href="https://docs.tavily.com/" target="_blank" rel="noopener">Tavily 文档</a> —— 搜索选项、免费方案与定价。</li>
+    <li><a href="https://api-docs.deepseek.com/" target="_blank" rel="noopener">DeepSeek API 文档</a> —— 模型、密钥与定价。</li>
+  </ul>
+
+</main>
+
+<footer class="site-footer">
+  <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+  <p><a href="../../index.html">首页</a> &middot; <a href="../../ai-programs.html">AI 笔记</a> &middot; <a href="../../links/">链接</a> &middot; <a href="../../glossary/">词汇表</a></p>
+</footer>
+
+</body>
+</html>

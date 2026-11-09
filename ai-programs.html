@@ -78,20 +78,92 @@
   </div>
   <noscript><p class="meta">Filtering needs JavaScript. All notes are listed below.</p></noscript>
 
-  <div class="card" data-track="agent" data-sub="react">
-    <h3><a href="notes/ai-note39.html">How does an AI agent research a question with web search?</a></h3>
+  <div class="card" data-track="agent" data-sub="research">
+    <h3><a href="notes/ai-note51.html">How to use an AI agent to remove repeated sentences from a draft (Research, version 5)?</a></h3>
     <p class="meta">Howard Pong Yuen Lam &middot; November 9, 2026 &middot; 5 min read</p>
-    <p>Same question, one tool: a real web search. The agent thinks, searches, reads and thinks again for up to five rounds &mdash; notices two sources disagree about the date, sharpens its query, and finishes with a sourced answer instead of &ldquo;I don&rsquo;t know&rdquo;.</p>
+    <p>A fourth tool joins the agent. <code>enhance_draft</code> reads the seven-sentence draft, always keeps sentence 1, and drops the sentences that only repeat a figure already given &mdash; so five sentences and five endnotes come out, and the program prints exactly what it skipped.</p>
+  </div>
+
+  <div class="card" data-track="agent" data-sub="research">
+    <h3><a href="notes/ai-note50.html">How to use an AI agent to write a draft with endnotes (Research, version 4)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 9, 2026 &middot; 5 min read</p>
+    <p>A third tool joins the agent. The model picks one sentence from each of the seven kept results and copies it word for word, and <code>write_draft</code> numbers the endnotes &mdash; the text is not summarised, so every sentence can be traced back to its page.</p>
+  </div>
+
+  <div class="card" data-track="agent" data-sub="research">
+    <h3><a href="notes/ai-note49.html">How to use an AI agent to select useful search results (Research, version 3)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 9, 2026 &middot; 4 min read</p>
+    <p>A second tool joins the agent: <code>generate_draft</code> reads the saved search, keeps results scoring 0.5 or higher, and drops Wikipedia by URL &mdash; ten results become seven, and the numbers and links survive untouched.</p>
+  </div>
+
+  <div class="card" data-track="agent" data-sub="research">
+    <h3><a href="notes/ai-note48.html">How to use an AI agent to search the web (Research, version 2)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 9, 2026 &middot; 4 min read</p>
+    <p>The Tavily call from version 1 becomes a tool, the model decides to call it, and <code>return_direct=True</code> ends the run there &mdash; so the ten raw results come back untouched, with no summary written on top of them.</p>
+  </div>
+
+  <div class="card" data-track="agent" data-sub="research">
+    <h3><a href="notes/ai-note47.html">How to search the web from Python (Research, version 1)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 9, 2026 &middot; 4 min read</p>
+    <p>The series starts without an agent: one question goes to Tavily, ten results come back, and each one is printed with its score, its link and the first 200 characters of the page &mdash; the raw material every later version works on.</p>
   </div>
 
   <div class="card" data-track="agent" data-sub="react">
-    <h3><a href="notes/ai-note38.html">How does an AI agent answer when it has no tools?</a></h3>
+    <h3><a href="notes/ai-note46.html">How do multiple AI agents work under a supervisor (ReAct, version 10)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 9, 2026 &middot; 5 min read</p>
+    <p>One supervisor agent with three tools &mdash; read a page, translate it, rewrite it in Cantonese &mdash; and two of those tools are agents themselves. The code never fixes the order; the supervisor plans it, and prints the plan so you can check.</p>
+  </div>
+
+  <div class="card" data-track="agent" data-sub="react">
+    <h3><a href="notes/ai-note45.html">How does an AI agent read a web page (ReAct, version 9)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 9, 2026 &middot; 4 min read</p>
+    <p>Version 9 finally reads a real page: <code>requests</code> downloads the HTML, <code>BeautifulSoup</code> keeps only the headings, paragraphs and list items, and the sentence rule from version 8 numbers every sentence on the page.</p>
+  </div>
+
+  <div class="card" data-track="agent" data-sub="react">
+    <h3><a href="notes/ai-note44.html">How does a program split a text into sentences (ReAct, version 8)?</a></h3>
     <p class="meta">Howard Pong Yuen Lam &middot; November 9, 2026 &middot; 3 min read</p>
-    <p>Reason only, no action, no observation: ask &ldquo;When did Mark launch Muse?&rdquo; and watch a model that can think but cannot check &mdash; honest this time, but with nothing to stop a confident wrong answer next time.</p>
+    <p>Version 9 will read web pages, so the text must be cut into sentences first. One line does it &mdash; <code>re.split</code> with a look-behind &mdash; and this note walks through that line step by step, including why HK$60.10 is not cut.</p>
   </div>
 
   <div class="card" data-track="agent" data-sub="react">
-    <h3><a href="notes/ai-note37.html">How does an AI agent think, act and observe?</a></h3>
+    <h3><a href="notes/ai-note43.html">How to use LangChain in an AI agent (ReAct, version 7)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 9, 2026 &middot; 4 min read</p>
+    <p>Same agent as version 6 &mdash; Tavily search plus <code>memory.json</code> &mdash; but rebuilt with LangChain. <code>create_agent()</code> runs the Think &rarr; Act &rarr; Observe loop for us: no <code>search[...]</code> text to parse, no stop words, no prompt string to accumulate by hand.</p>
+  </div>
+
+  <div class="card" data-track="agent" data-sub="react">
+    <h3><a href="notes/ai-note42.html">How do you give an AI agent memory (ReAct, version 6, memory.json)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 9, 2026 &middot; 4 min read</p>
+    <p>Version 5 failed the follow-up because the agent forgot task 1. Version 6 adds one tiny file: every finished answer is saved to <code>memory.json</code> and loaded into the next prompt, so &ldquo;Is it available in Hong Kong yet?&rdquo; finally knows what &ldquo;it&rdquo; is.</p>
+  </div>
+
+  <div class="card" data-track="agent" data-sub="react">
+    <h3><a href="notes/ai-note41.html">How does an AI agent handle a follow-up question (ReAct, version 5, no memory)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 9, 2026 &middot; 3 min read</p>
+    <p>Call the reusable agent twice: first &ldquo;When did Mark launch Muse?&rdquo;, then &ldquo;Is it available in Hong Kong yet?&rdquo;. The second call has no idea what &ldquo;it&rdquo; is, because every call starts from a blank prompt. The fix: give the agent the context.</p>
+  </div>
+
+  <div class="card" data-track="agent" data-sub="react">
+    <h3><a href="notes/ai-note40.html">How do you make an AI agent reusable (ReAct, version 4, one function, any task)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 9, 2026 &middot; 3 min read</p>
+    <p>Same research agent, two structural changes: the loop moves into <code>perform_task(task)</code> so any question can be researched, and the function returns the answer as text your program can store, send or display &mdash; not just print.</p>
+  </div>
+
+  <div class="card" data-track="agent" data-sub="react">
+    <h3><a href="notes/ai-note39.html">How does an AI agent research a question (ReAct, version 3, web search in a loop)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 9, 2026 &middot; 5 min read</p>
+    <p>Same question, one tool: a real web search. The agent thinks, searches, reads and thinks again for up to five rounds, notices two sources disagree about the date, sharpens its query, and finishes with a sourced answer instead of &ldquo;I don&rsquo;t know&rdquo;.</p>
+  </div>
+
+  <div class="card" data-track="agent" data-sub="react">
+    <h3><a href="notes/ai-note38.html">How does an AI agent answer with no tools (ReAct, version 2, reason only)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 9, 2026 &middot; 3 min read</p>
+    <p>Reason only, no action, no observation: ask &ldquo;When did Mark launch Muse?&rdquo; and watch a model that can think but cannot check. The answer may be wrong &mdash; or the agent may simply answer &ldquo;I don&rsquo;t know&rdquo;.</p>
+  </div>
+
+  <div class="card" data-track="agent" data-sub="react">
+    <h3><a href="notes/ai-note37.html">How does an AI agent think, act and observe (ReAct, version 1)?</a></h3>
     <p class="meta">Howard Pong Yuen Lam &middot; November 9, 2026 &middot; 5 min read</p>
     <p>The smallest ReAct agent: the model writes its reasoning, names one tool to call, Python runs it for real, and the final answer is grounded in the observed result &mdash; not a guess.</p>
   </div>

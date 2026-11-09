@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to use an AI agent to write a draft with endnotes (Research, version 4)? | Howard Lam, PhD</title>
+<meta name="description" content="Version 4 adds a third tool: the model picks one sentence from each of the seven kept results, copies it word for word, and write_draft joins them into a draft with numbered endnotes.">
+<link rel="canonical" href="https://pongyuenlam.github.io/notes/ai-note50.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note50.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note50.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note50.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note50.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to use an AI agent to write a draft with endnotes (Research, version 4)?">
+<meta property="og:description" content="Version 4 adds a third tool: the model picks one sentence from each of the seven kept results, copies it word for word, and write_draft joins them into a draft with numbered endnotes.">
+<meta property="og:url" content="https://pongyuenlam.github.io/notes/ai-note50.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="Howard Lam, PhD">
+
+<link rel="stylesheet" href="../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "How to use an AI agent to write a draft with endnotes (Research, version 4)?",
+  "description": "Version 4 adds a third tool: the model picks one sentence from each of the seven kept results, copies it word for word, and write_draft joins them into a draft with numbered endnotes.",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-09",
+  "dateModified": "2026-11-09",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/notes/ai-note50.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../biography.html">Biography</a></li>
+        <li><a href="../research.html">Research</a></li>
+        <li><a href="../cases.html">Cases</a></li>
+        <li><a href="../books.html">Books</a></li>
+        <li><a href="../ai-programs.html">AI Notes</a></li>
+        <li><a href="../links/">Links</a></li>
+        <li><a href="../glossary/">Glossary</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <span class="current">English</span>
+  <a href="/zh-HK/notes/ai-note50.html">繁體中文</a>
+  <a href="/zh-CN/notes/ai-note50.html">简体中文</a>
+</div>
+
+<main>
+  <h1>How to use an AI agent to write a draft with endnotes (Research, version 4)?</h1>
+  <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 9, 2026 &middot; 5 min read</p>
+
+  <p>
+    The previous version used two tools:
+    <strong><code>search_internet</code></strong> brought back ten results, and
+    <strong><code>generate_draft</code></strong> kept seven of them. This version adds
+    a third tool that turns those seven results into a short draft, with one
+    numbered endnote for each sentence.
+  </p>
+  <p>
+    The important word is <em>copied</em>. The draft is not a summary written by
+    the model. Each sentence in it is taken word for word from a page, and the
+    endnote says which page it came from. That is a promise you can check.
+  </p>
+
+  <h2>A second place to keep results</h2>
+  <p>
+    The two earlier versions used one shared variable. This one needs a second,
+    because the new tool works on the results that the filter kept, not on the
+    ten that the search returned.
+  </p>
+  <pre class="code-block"><code># Keeps the latest search response so generate_draft can use it
+last_search = {}
+# Keeps the results selected by generate_draft so write_draft can use them
+selected_results = []</code></pre>
+  <p>
+    The reason is the same as before. Each tool is a separate function, and a
+    variable made inside one function disappears when that function ends. Both
+    variables sit outside the functions, so one tool can leave something there
+    and the next tool can pick it up.
+  </p>
+
+  <h2>Tool three: <strong><code>write_draft</code></strong></h2>
+  <p>
+    <strong><code>return_direct=True</code></strong> sits on the tool whose result
+    should be the final answer. Here that is the draft, so the run ends as soon
+    as <strong><code>write_draft</code></strong> is completed.
+  </p>
+  <pre class="code-block"><code>@tool(return_direct=True)
+def write_draft(sentences: list[str]):
+    """
+    Write a draft with endnotes from the results of generate_draft.
+    sentences: one sentence per result from generate_draft, in the same order.
+    Each sentence must be copied exactly from that result's content, and be
+    the sentence closest in meaning to the user's query.
+    Use an empty string "" for a result that has no complete sentence.
+    """</code></pre>
+  <p>
+    Look at what the tool receives: <strong><code>sentences: list[str]</code></strong>.
+    A list of text. The tool never opens a page
+    and never reads a search result. The model does that part, and hands over
+    only the sentences it chose.
+  </p>
+  <p>
+    That split is deliberate. Choosing the sentence closest in meaning to the
+    question is a judgement, and a model is good at judgements. Joining text,
+    numbering endnotes and skipping empty entries is exact work with no
+    judgement in it, and Python never gets that wrong. Each side does what it
+    does well.
+  </p>
+  <p>
+    The docstring is where the model learns the rules: one sentence per kept
+    result, in the same order, copied exactly, the one closest in meaning to the
+    question, and
+    <strong><code>""</code></strong> when a page has no complete sentence to
+    offer.
+  </p>
+
+  <h2>Inside the tool</h2>
+  <pre class="code-block"><code>    s = ""
+    endnotes = ""
+    endnote_num = 1
+    for sentence, r in zip(sentences, selected_results):
+        if sentence.strip() == "":
+            continue  # skip results with no complete sentence
+        s = s + sentence + "[" + str(endnote_num) + "] "
+        endnotes = endnotes + f"[{endnote_num}] {r['url']}\n"
+        endnote_num = endnote_num + 1
+
+    s = s + "\n\nEndnotes:\n" + endnotes
+
+    return s</code></pre>
+  <p>
+    Three empty things are made first: the draft <strong><code>s</code></strong>,
+    the endnote list, and a counter that starts at 1.
+  </p>
+  <p>
+    <strong><code>zip</code></strong> walks the two lists side by side. On the
+    first pass it hands over the first sentence and the first kept result, on the
+    second pass the second of each, and so on. That is why the model was told to
+    keep the same order: the pairing is done by position, not by matching
+    anything.
+  </p>
+  <p>
+    The <strong><code>if</code></strong> catches the empty strings.
+    <strong><code>strip()</code></strong> removes spaces first, so a sentence
+    that is only a space also counts as empty. When it matches,
+    <strong><code>continue</code></strong> jumps to the next pair, and the rest
+    of the loop body is skipped, so no endnote number is wasted. That is why the
+    seven kept results can produce fewer than seven endnotes.
+  </p>
+  <p>
+    The next line builds one sentence of the draft: the text, then its number in
+    square brackets, then a space.
+    <strong><code>str()</code></strong> turns the counter into text, because a
+    number cannot be glued to a string. Only a space is added at the end, which
+    is why all the sentences appear on one long line in the output.
+  </p>
+  <p>
+    The endnote line uses an f-string, and
+    <strong><code>{r['url']}</code></strong> fills in the link of the matching
+    result. A line break is added at the end, so each endnote sits on its own
+    line.
+  </p>
+  <p>
+    The last step adds a blank line, the heading
+    <strong><code>Endnotes:</code></strong> and the whole endnote list after the
+    sentences, then returns the finished draft.
+  </p>
+
+  <h2>The AI Agent</h2>
+  <pre class="code-block"><code>agent = create_agent(
+    model=my_model,
+    tools=[search_internet, generate_draft, write_draft],
+    system_prompt=(
+        "You are a helpful assistant. "
+        "Always call search_internet, using the user's message exactly as the query. "
+        "Do not rephrase, shorten, translate, or add anything to it. "
+        "Then call generate_draft to select the useful results. "
+        "Then go through each sentence in each selected result, pick the one sentence "
+        "closest in meaning to the user's query, and copy it exactly. "
+        "A complete sentence has a subject and a verb and ends with a full stop; "
+        "table rows, headings, menus and fragments are not complete sentences. "
+        "If a result has no complete sentence, use an empty string \"\" for it. "
+        "Call write_draft with these sentences in the same order as the results."
+    ),
+)</code></pre>
+  <p>
+    The tools list now holds
+    <strong><code>search_internet</code></strong>,
+    <strong><code>generate_draft</code></strong> and
+    <strong><code>write_draft</code></strong>, and the prompt tells the model to do
+    the work.
+  </p>
+  <p>
+    Two of the new sentences deserve attention. "Copy it exactly" blocks
+    paraphrasing: a rewritten sentence looks better and is harder to trace back
+    to the page. And the definition of a complete sentence matters because web
+    pages are full of things that are not sentences &mdash; headings, menu items,
+    table rows, fragments that end in the middle.
+  </p>
+
+  <h2>What comes out</h2>
+  <p>
+    The screen prints three tool blocks:
+    <strong><code>search_internet</code></strong>,
+    <strong><code>generate_draft</code></strong> and
+    <strong><code>write_draft</code></strong>, in that order.
+  </p>
+  <pre class="code-block no-copy"><code>Tool: write_draft
+
+The current population of the Hong Kong Special Administrative Region of the People's Republic of China is 7,371,564 as of Sunday, October 18, 2026, based on Worldometer's elaboration of the latest United Nations data 1.[1] As of 2026, Hong Kong has a total population of 7,378,602, ranking as the 107th most populous nation inthe world.[2] The population of Hong Kong is 7.5 million.[3] Total current population for Hong Kong in 2026 is 7,500,962, a 0.02% increase from 2025.[4] In 2023, the estimated population of Hong Kong was 7.443 million.[5] Hong Kong's population was approximately 7.50 million in mid-2025.[6] The 2021 Population Census found (by way of self-identification) that there were about 619,568 non-Chinese people in Hong Kong, or about 8.4% of the population.[7] 
+
+Endnotes:
+[1] https://www.worldometers.info/world-population/china-hong-kong-sar-population
+[2] https://worldpopulationreview.com/countries/hong-kong
+[3] https://study.com/academy/lesson/hong-kong-facts-population.html
+[4] https://www.macrotrends.net/global-metrics/countries/hkg/hong-kong/population
+[5] https://ourworldindata.org/profile/population-demography/hong-kong
+[6] https://www.gov.hk/en/about/abouthk/facts.htm
+[7] https://www.had.gov.hk/rru/en/info/demographics.htm</code></pre>
+  <p>
+    Seven sentences, seven endnotes, and every sentence can be traced back to a
+    page. The numbers in them do not agree: 7,371,564, 7,378,602, 7.5 million,
+    7,500,962, 7.443 million and 7.50 million. That is not a bug. It is what the
+    seven pages actually say, and the draft refuses to hide the disagreement by
+    averaging them. The seventh sentence is the exception: it is about the
+    non-Chinese share of the population, so it carries no total of its own.
+  </p>
+  <p>
+    One sentence is worth a second look. Endnote [5] is dated 2023, yet the
+    printed preview of that result in the previous block showed nothing about
+    2023. The reason is that the program prints only the first 200 characters of
+    each result, while the model read the whole page text. What you see on screen
+    is a preview; what the model chose from is longer.
+  </p>
+
+  <h2>The whole program</h2>
+  <pre class="code-block"><code>import os
+import json
+from dotenv import load_dotenv
+from tavily import TavilyClient
+from langchain_core.tools import tool
+from langchain_openai import ChatOpenAI
+from langchain.agents import create_agent
+
+load_dotenv()
+
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
+
+tavily_client = TavilyClient(api_key=TAVILY_API_KEY)
+
+# Keeps the latest search response so generate_draft can use it
+last_search = {}
+# Keeps the results selected by generate_draft so write_draft can use them
+selected_results = []
+
+@tool
+def search_internet(query: str):
+    """
+    Search the internet for up-to-date information about the query
+    and return the full Tavily search response.
+    """
+    global last_search
+    response = tavily_client.search(query, max_results=10)
+    last_search = response
+    return response
+
+
+@tool
+def generate_draft():
+    """
+    Go through the results from the latest search_internet call.
+    Keep results with a score of 0.5 or higher, but never keep Wikipedia.
+    Return the selected results.
+    """
+    global selected_results
+    selected = []
+    for r in last_search.get("results", []):
+        if r["score"] >= 0.5 and "wikipedia.org" not in r["url"]:
+            selected.append(r)
+
+    selected_results = selected
+    return {"query": last_search.get("query"), "results": selected}
+
+
+@tool(return_direct=True)
+def write_draft(sentences: list[str]):
+    """
+    Write a draft with endnotes from the results of generate_draft.
+    sentences: one sentence per result from generate_draft, in the same order.
+    Each sentence must be copied exactly from that result's content, and be
+    the sentence closest in meaning to the user's query.
+    Use an empty string "" for a result that has no complete sentence.
+    """
+    s = ""
+    endnotes = ""
+    endnote_num = 1
+    for sentence, r in zip(sentences, selected_results):
+        if sentence.strip() == "":
+            continue  # skip results with no complete sentence
+        s = s + sentence + "[" + str(endnote_num) + "] "
+        endnotes = endnotes + f"[{endnote_num}] {r['url']}\n"
+        endnote_num = endnote_num + 1
+
+    s = s + "\n\nEndnotes:\n" + endnotes
+
+    return s
+
+
+my_model = ChatOpenAI(
+    model="deepseek-flash",
+    api_key=DEEPSEEK_API_KEY,
+    base_url="https://api.deepseek.com",
+    temperature=0,
+)
+
+agent = create_agent(
+    model=my_model,
+    tools=[search_internet, generate_draft, write_draft],
+    system_prompt=(
+        "You are a helpful assistant. "
+        "Always call search_internet, using the user's message exactly as the query. "
+        "Do not rephrase, shorten, translate, or add anything to it. "
+        "Then call generate_draft to select the useful results. "
+        "Then go through each sentence in each selected result, pick the one sentence "
+        "closest in meaning to the user's query, and copy it exactly. "
+        "A complete sentence has a subject and a verb and ends with a full stop; "
+        "table rows, headings, menus and fragments are not complete sentences. "
+        "If a result has no complete sentence, use an empty string \"\" for it. "
+        "Call write_draft with these sentences in the same order as the results."
+    ),
+)
+
+prompt = "What is the population of Hong Kong?"
+result = agent.invoke({
+    "messages": [{"role": "user", "content": prompt}]
+})
+
+for message in result["messages"]:
+    if message.type == "tool" and message.name == "write_draft":
+        print(f"Tool: {message.name}\n")
+        print(message.content)
+    elif message.type == "tool":
+        response = json.loads(message.content)
+        print(f"Tool: {message.name}")
+        print(f"Query: {response['query']}\n")
+        for i, r in enumerate(response["results"], start=1):
+            print(f"{i}. {r['title']}  (score: {r['score']:.2f})")
+            print(f"   {r['url']}")
+            print(f"   {r['content'][:200].replace(chr(10), ' ')}...\n")</code></pre>
+
+  <h2>Running it on your own computer</h2>
+  <p>
+    <a href="downloads/Folder-AI-Research04.zip">Download the demo program
+    (Folder-AI-Research04.zip)</a>. The zip holds three files:
+    <strong><code>research04.py</code></strong> (the full script), <strong><code>pyproject.toml</code></strong> and
+    <strong><code>README.md</code></strong>. This version calls a language model once, so it
+    needs both a Tavily key and a DeepSeek key.
+  </p>
+  <ol>
+    <li>Open the folder in Visual Studio Code.</li>
+    <li>
+      Create a file named <strong><code>.env</code></strong> in the folder with two lines:
+      <pre class="code-block"><code>TAVILY_API_KEY=your-tavily-key
+DEEPSEEK_API_KEY=your-deepseek-key</code></pre>
+      A Tavily key is available from the
+      <a href="https://app.tavily.com/home" target="_blank" rel="noopener">Tavily
+      dashboard</a>, and a DeepSeek key from the
+      <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek
+      console</a>. Usage is billed by each provider, so check the current pricing
+      terms there before you run it.
+    </li>
+    <li>In the Terminal, run these three lines, one at a time:
+      <pre class="code-block"><code>uv python pin 3.12.10</code></pre>
+      <pre class="code-block"><code>uv sync</code></pre>
+      <pre class="code-block"><code>uv run research04.py</code></pre>
+    </li>
+    <li>You should see three tools printed in turn: ten results from the search,
+      seven from <strong><code>generate_draft</code></strong>, then the draft from
+      <strong><code>write_draft</code></strong>. The run takes a few seconds.</li>
+  </ol>
+  <p>
+    If you have not set up uv yet, start with
+    <a href="ai-note05.html">How to install Visual Studio Code?</a> and then
+    the uv note for <a href="ai-note03.html">Windows</a> or
+    <a href="ai-note04.html">Mac</a>.
+  </p>
+
+  <h2>Limitations</h2>
+  <ul>
+    <li>
+      <strong>A draft, not a report.</strong> The result is a row of quoted
+      sentences in the order of the results. Nothing connects one sentence to
+      the next, and nothing says which number to trust.
+    </li>
+    <li>
+      <strong>The numbers still disagree.</strong> Six of the seven sentences give
+      a population figure, and they range from 7.371 million to 7.5 million. The
+      draft is honest about that, but it cannot resolve it.
+    </li>
+    <li>
+      <strong>Copying is not checking.</strong> A sentence copied exactly can
+      still be out of date, and the model may choose a sentence that scores well
+      for the question but says something misleading.
+    </li>
+    <li>
+      <strong>Position decides the pairing.</strong> Sentences are matched to
+      results by order. If the model skips one result and sends six sentences for
+      seven results, every endnote after that point is attached to the wrong page.
+    </li>
+    <li>
+      <strong>An empty string can hide a result.</strong> A page with useful
+      figures but no complete sentence contributes nothing, and the draft does not
+      say that it was dropped.
+    </li>
+  </ul>
+
+  <h2>Further reading</h2>
+  <ul>
+    <li><a href="ai-note49.html">How to use an AI agent to select useful search results (Research, version 3)?</a> &mdash; where the seven results come from.</li>
+    <li><a href="ai-note48.html">How to use an AI agent to search the web (Research, version 2)?</a> &mdash; the tools that this version builds on.</li>
+    <li><a href="https://docs.langchain.com/" target="_blank" rel="noopener">LangChain documentation</a> &mdash; tools, <strong><code>return_direct</code></strong> and <strong><code>create_agent</code></strong>.</li>
+    <li><a href="https://docs.tavily.com/" target="_blank" rel="noopener">Tavily documentation</a> &mdash; the <strong><code>search</code></strong> call and its response fields.</li>
+  </ul>
+
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', 'Copy code to clipboard');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', 'Copied to clipboard');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', 'Copy code to clipboard');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>

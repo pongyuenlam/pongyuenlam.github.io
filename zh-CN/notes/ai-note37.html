@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 代理如何思考、行动与观察（ReAct，版本 1）？ | 林邦源博士</title>
+<meta name="description" content="问模型今天气温多少，它只会靠猜。ReAct 循环（思考、行动、观察）让模型自行决定要做什么，由 Python 运行真正的工具，并把最终答案建立在实际结果上。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note37.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note37.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note37.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note37.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note37.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="AI 代理如何思考、行动与观察（ReAct，版本 1）？">
+<meta property="og:description" content="问模型今天气温多少，它只会靠猜。ReAct 循环（思考、行动、观察）让模型自行决定要做什么，由 Python 运行真正的工具，并把最终答案建立在实际结果上。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-CN/notes/ai-note37.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="../../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "AI 代理如何思考、行动与观察（ReAct，版本 1）？",
+  "description": "问模型今天气温多少，它只会靠猜。ReAct 循环（思考、行动、观察）让模型自行决定要做什么，由 Python 运行真正的工具，并把最终答案建立在实际结果上。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-09",
+  "dateModified": "2026-11-09",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-CN/notes/ai-note37.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../../index.html">首页</a></li>
+        <li><a href="../../biography.html">个人简介</a></li>
+        <li><a href="../../research.html">研究</a></li>
+        <li><a href="../../cases.html">案例</a></li>
+        <li><a href="../../books.html">著作</a></li>
+        <li><a href="../../ai-programs.html">AI 笔记</a></li>
+        <li><a href="../../links/">链接</a></li>
+        <li><a href="../../glossary/">词汇表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <a href="/notes/ai-note37.html">English</a>
+  <a href="/zh-HK/notes/ai-note37.html">繁體中文</a>
+  <span class="current">简体中文</span>
+</div>
+
+<main>
+  <h1>AI 代理如何思考、行动与观察（ReAct，版本 1）？</h1>
+  <p class="paper-meta">林邦源博士 &middot; AI 笔记 &middot; 2026 年 11 月 9 日 &middot; 约 5 分钟阅读</p>
+
+  <p>
+    向语言模型询问今天的气温，它只能靠猜 &mdash; 它的知识在训练时就终止了。
+    <strong>ReAct</strong>（<em>Reasoning and Acting</em> 的简称）正是解决这个
+    问题的模式。代理按三个步骤的循环工作：先在文字中<strong>思考</strong>任务，
+    再以指名要调用的工具来<strong>行动</strong>，然后<strong>观察</strong>真实
+    世界的结果，最后才给出答案。本篇建立最小的 ReAct 代理：一个任务、一个工具、
+    三个打印出来的步骤，模型采用 DeepSeek。
+  </p>
+
+  <h2>这个想法的来源</h2>
+  <p>
+    这个模式来自 2022 年的一篇研究论文，作者是 Google Brain 和普林斯顿大学的
+    研究人员：
+    <a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener"><em>ReAct:
+    Synergizing Reasoning and Acting in Language Models</em></a>。用直白的话说，论文的重点是这样：
+    在 ReAct 之前，语言模型只能<em>推理</em>（把问题在文字中想一遍）或
+    <em>行动</em>（在世界上做事），但不能同时做到两者。作者让模型轮流做这两件事
+    &mdash; 先写下思考，再采取行动，然后读取结果再想一次。思考让行动保持在正轨，
+    行动带回真实的事实，模型于是就不再凭空编造。
+  </p>
+
+  <h2>代码</h2>
+  <p>这是 <code>ReAct01.py</code> 目前的内容：</p>
+  <pre class="code-block"><code># Step 1: THINK  -&gt; ask the model to reason step by step (reasoning trace)
+# Step 2: ACT    -&gt; append that trace to the prompt and ask "What action should be taken?"
+# Step 3: OBSERVE-&gt; run the action (a real tool), feed the result back, get the final answer
+import os
+import requests
+from openai import OpenAI
+from dotenv import load_dotenv
+load_dotenv()
+
+client = OpenAI(
+    api_key=os.environ.get('DEEPSEEK_API_KEY'),
+    base_url="https://api.deepseek.com")
+
+def ask(prompt):
+    """Send one prompt to the model and return its text reply."""
+    response = client.chat.completions.create(
+        model="deepseek-flash",
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return response.choices[0].message.content
+
+# The only tool (action) our agent can use
+def get_hk_temperature():
+    """Return the current temperature in Hong Kong from open-meteo.com."""
+    params = {"latitude": 22.32, "longitude": 114.17,
+              "current": "temperature_2m", "timezone": "auto"}
+    data = requests.get("https://api.open-meteo.com/v1/forecast",
+                        params=params, timeout=10).json()
+    return f"{data['current']['temperature_2m']}°C"
+
+task = "What is the temperature in Hong Kong today?"
+
+# ---- Step 1: THINK (Reasoning) ----
+prompt = f"""Task: {task}
+Think step-by-step about how to solve this task. Do not answer yet."""
+thought = ask(prompt)
+print("=== Step 1: Thought (reasoning trace) ===")
+print(thought)
+
+# ---- Step 2: ACT — append the reasoning trace to the prompt, then ask for an action ----
+prompt = prompt + f"""
+
+Thought: {thought}
+
+You have ONE tool: get_hk_temperature. What action should be taken based on that? Reply with ONLY: get_hk_temperature or none"""
+action = ask(prompt).strip()
+print("=== Step 2: Action chosen by the model ===")
+print(action)
+
+# ---- Step 3: OBSERVE — our Python code (not the model) runs the tool ----
+if "get_hk_temperature" in action:
+    observation = get_hk_temperature()
+else:
+    observation = "No action taken."
+print("=== Step 3: Observation from the real world ===")
+print(observation)
+
+# ---- Final answer: the model reasons again, now grounded in the observation ----
+prompt = prompt + f"""
+
+Action: {action}
+Observation: {observation}
+
+Now give the final answer to the task in one sentence."""
+print("=== Final Answer ===")
+print(ask(prompt))</code></pre>
+
+  <h2>每一部分的作用</h2>
+  <ul>
+    <li>
+      <strong>DeepSeek 客户端。</strong><code>openai</code> 包也可以连接
+      DeepSeek，因为 DeepSeek 采用相同的接口。密钥来自 <code>.env</code> 文件，
+      由 <code>load_dotenv()</code> 加载，所以机密永远不会出现在代码里。
+    </li>
+    <li>
+      <strong><code>ask()</code>。</strong>一个辅助函数发出一个提示词，返回一个
+      字符串。这个程序里与模型的每次对话都经过它。
+    </li>
+    <li>
+      <strong>唯一的工具。</strong><code>get_hk_temperature()</code> 向
+      <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>
+      查询香港坐标的当前气温，并以简短字符串返回，例如 <code>26.8°C</code>。
+      无需密钥。
+    </li>
+    <li>
+      <strong>第 1 步 &mdash; 思考。</strong>提示词包含任务和一句指示：
+      <em>逐步思考，暂时不要回答</em>。回复是一段<em>推理轨迹</em>
+      &mdash; 模型写下来的思考过程。
+    </li>
+    <li>
+      <strong>第 2 步 &mdash; 行动。</strong>推理轨迹会附加到提示词，并告诉模型
+      它只有一个工具，回复时只可写工具名称或 <code>none</code>。模型只
+      <em>选择</em>行动；它不会执行行动。
+    </li>
+    <li>
+      <strong>第 3 步 &mdash; 观察。</strong>Python &mdash; 而不是模型 &mdash;
+      检查所选的动作并运行工具。结果例如 <code>26.8°C</code>，就是观察。
+    </li>
+    <li>
+      <strong>最终答案。</strong>提示词现在包含任务、推理轨迹、行动和观察。模型
+      写出一句建立在真实数字上的句子，而不是猜测。
+    </li>
+  </ul>
+
+  <h2>在自己的电脑上运行</h2>
+  <p>
+    <a href="/notes/downloads/Folder-AI-ReAct01.zip">下载演示程序
+    （Folder-AI-ReAct01.zip）</a>。zip 里包含三个文件：
+    <code>ReAct01.py</code>（上面的程序）、<code>pyproject.toml</code>
+    （包清单）和 <code>README.md</code>。
+  </p>
+  <ol>
+    <li>在 Visual Studio Code 中打开这个文件夹。</li>
+    <li>
+      在文件夹里新建一个名为 <code>.env</code> 的文件，写入一行：
+      <pre class="code-block"><code>DEEPSEEK_API_KEY=your-key-here</code></pre>
+      到
+      <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek
+      控制台</a>获取密钥；新账户附带试用额度。
+    </li>
+    <li>在终端运行：
+      <pre class="code-block"><code>uv sync
+uv run ReAct01.py</code></pre>
+      <code>uv sync</code> 只需第一次运行；它会读取
+      <code>pyproject.toml</code>，把 <code>openai</code>、<code>requests</code>
+      和 <code>python-dotenv</code> 安装到项目中。
+    </li>
+  </ol>
+  <p>
+    你应该会看到四段依次打印出来：推理轨迹、所选的行动
+    （<code>get_hk_temperature</code>）、观察到的气温，以及使用真实数字写成的
+    最终单句答案。下面是一次真实运行：
+  </p>
+  <pre class="code-block"><code>=== Step 1: Thought (reasoning trace) ===
+Let&rsquo;s break this down step-by-step:
+
+1. **Identify the goal** &ndash; The user wants the current temperature in Hong Kong today.
+2. **Determine location specifics** &ndash; Hong Kong is a major city; its weather can vary slightly by district but generally a single official temperature reading is used for &ldquo;Hong Kong&rdquo; in weather reports.
+3. **Check date/time awareness** &ndash; &ldquo;Today&rdquo; means the current date. My knowledge isn&rsquo;t real-time, so I can&rsquo;t know the live temperature without up-to-date data.
+4. **Possible sources** &ndash; Could use:
+   - Real-time weather websites (e.g., Hong Kong Observatory).
+   - Weather apps or APIs.
+   - Search engine results for &ldquo;Hong Kong temperature&rdquo;.
+5. **Consider limitations** &ndash; Without live access or browsing ability, I can&rsquo;t retrieve the exact current temperature.
+6. **Formulate approach for answer** &ndash; If I had browsing or API tools, I&rsquo;d check the Hong Kong Observatory or a trusted weather source right now and report the temperature in &deg;C (and possibly &deg;F).
+7. **Alternate if no access** &ndash; I&rsquo;d explain I can&rsquo;t provide real-time data and suggest how the user can check (e.g., HKO website, weather apps).
+
+This reasoning sets up how to get the answer, but the actual temperature value would need current data.
+=== Step 2: Action chosen by the model ===
+get_hk_temperature
+=== Step 3: Observation from the real world ===
+27.1&deg;C
+=== Final Answer ===
+The temperature in Hong Kong today is 27.1&deg;C.</code></pre>
+  <p>
+    轨迹里有两点值得注意。第一，模型说得很明白：
+    <em>“我的知识不是实时的”</em> &mdash; 只给了任务，它就已经知道自己无法凭记忆
+    回答。第二，它的计划（“查一个可信的天气来源”）正是工具接下来所做的事。
+    循环把模型自己的承认，变成一个真实的答案。
+  </p>
+
+  <h2>为什么这个模式重要</h2>
+  <ul>
+    <li>
+      <strong>模型决定，程序执行。</strong>模型从不接触互联网；实际运行什么，
+      仍由你的 Python 掌控。这正是这个模式可以安全扩展的原因。
+    </li>
+    <li>
+      <strong>每一步都看得见。</strong>推理轨迹、所选的行动和观察都会打印出来，
+      所以当代理出错时，你可以看到它<em>在哪里</em>出错 &mdash; 是思考错了、
+      选择错了，还是工具出了问题。
+    </li>
+    <li>
+      <strong>更多工具，同一个循环。</strong>要给代理第二种能力（时间、搜索、
+      文件），只需加入函数，并在第 2 步的提示词中提及它。三步的节奏不会改变。
+    </li>
+  </ul>
+
+  <h2>延伸阅读</h2>
+  <ul>
+    <li><a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">ReAct: Synergizing Reasoning and Acting in Language Models</a> &mdash; 为这个模式命名的论文。</li>
+    <li><a href="https://api-docs.deepseek.com/" target="_blank" rel="noopener">DeepSeek API 文档</a> &mdash; 模型、密钥与价格。</li>
+    <li><a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener">Open-Meteo API 文档</a> &mdash; 天气调用可以返回的每一个字段。</li>
+  </ul>
+
+</main>
+
+<footer class="site-footer">
+  <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+  <p><a href="../../index.html">首页</a> &middot; <a href="../../ai-programs.html">AI 笔记</a> &middot; <a href="../../links/">链接</a> &middot; <a href="../../glossary/">词汇表</a></p>
+</footer>
+
+</body>
+</html>

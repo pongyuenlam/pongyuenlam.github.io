@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-HK">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>如何使用 AI 代理挑選有用的搜尋結果（Research，版本 3）？ | 林邦源博士</title>
+<meta name="description" content="版本 3 給代理第二個工具：先搜尋，然後只留下有用的結果 &mdash; 分數 0.5 或以上，並剔除維基百科。十個結果縮減為七個。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note49.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note49.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note49.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note49.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note49.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何使用 AI 代理挑選有用的搜尋結果（Research，版本 3）？">
+<meta property="og:description" content="版本 3 給代理第二個工具：先搜尋，然後只留下有用的結果 &mdash; 分數 0.5 或以上，並剔除維基百科。十個結果縮減為七個。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-HK/notes/ai-note49.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="../../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "如何使用 AI 代理挑選有用的搜尋結果（Research，版本 3）？",
+  "description": "版本 3 給代理第二個工具：先搜尋，然後只留下有用的結果 &mdash; 分數 0.5 或以上，並剔除維基百科。十個結果縮減為七個。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-09",
+  "dateModified": "2026-11-09",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-HK/notes/ai-note49.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../../index.html">首頁</a></li>
+        <li><a href="../../biography.html">個人簡介</a></li>
+        <li><a href="../../research.html">研究</a></li>
+        <li><a href="../../cases.html">案例</a></li>
+        <li><a href="../../books.html">著作</a></li>
+        <li><a href="../../ai-programs.html">AI 筆記</a></li>
+        <li><a href="../../links/">連結</a></li>
+        <li><a href="../../glossary/">詞彙表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <a href="/notes/ai-note49.html">English</a>
+  <span class="current">繁體中文</span>
+  <a href="/zh-CN/notes/ai-note49.html">简体中文</a>
+</div>
+
+<main>
+  <h1>如何使用 AI 代理挑選有用的搜尋結果（Research，版本 3）？</h1>
+  <p class="paper-meta">林邦源博士 &middot; AI 筆記 &middot; 2026 年 11 月 9 日 &middot; 約 4 分鐘閱讀</p>
+
+  <p>
+    一次搜尋會回傳十個結果，其中有些並不值得留下。有一頁幾乎完全沒有提到人口，
+    另一頁則是十年前的。這個版本加入第二個工具，它的全部工作就是作出這個判斷。
+  </p>
+  <p>
+    代理現在有兩個工具，而系統提示詞固定了次序：先
+    <strong><code>search_internet</code></strong>，然後把結果交給
+    <strong><code>generate_draft</code></strong>。搜尋工具的做法和之前完全一樣。
+    <strong><code>generate_draft</code></strong> 讀取已儲存的結果，只留下符合它
+    規則的那些。
+  </p>
+
+  <h2>一個存放搜尋結果的地方</h2>
+  <pre class="code-block"><code># Keeps the latest search response so generate_draft can use it
+last_search = {}</code></pre>
+  <p>
+    工具是各自獨立的函數。一個工具完成之後，它的區域變數就會消失。如果篩選
+    工具在搜尋之後才被呼叫，它怎能看見搜尋找到的東西？
+  </p>
+  <p>
+    答案是一個存在於兩個工具之外的變數：
+    <strong><code>last_search</code></strong>。搜尋工具把它的回應寫進去，而
+    篩選工具就從那裡讀取。
+  </p>
+
+  <h2>工具一：搜尋，以及一行新程式碼</h2>
+  <pre class="code-block"><code>@tool
+def search_internet(query: str):
+    """
+    Search the internet for up-to-date information about the query
+    and return the full Tavily search response.
+    """
+    global last_search
+    response = tavily_client.search(query, max_results=10)
+    last_search = response
+    return response</code></pre>
+  <p>
+    這裡有三行值得留意。最需要解釋的是
+    <strong><code>global last_search</code></strong>。在函數裡面，賦值通常會
+    建立一個全新的區域變數：<strong><code>last_search = response</code></strong>
+    只會填滿那份區域副本，函數結束時就把它丟掉。把
+    <strong><code>last_search</code></strong> 宣告為 global，就是告訴 Python：
+    這就是整個程式執行期間共用的同一個變數，而不是在函數裡面新造的一個。
+  </p>
+  <p>
+    接著 <strong><code>last_search = response</code></strong> 把十個結果存進那個
+    共用變數，而 <strong><code>return response</code></strong> 也同時把它們送回
+    代理，因為模型仍然需要看到回傳了甚麼。
+  </p>
+
+  <h2>工具二：<strong><code>generate_draft</code></strong> 只保留有用的結果</h2>
+  <pre class="code-block"><code>@tool(return_direct=True)
+def generate_draft():
+    """
+    Go through the results from the latest search_internet call.
+    Keep results with a score of 0.5 or higher, but never keep Wikipedia.
+    Return the selected results.
+    """
+    selected = []
+    for r in last_search.get("results", []):
+        if r["score"] >= 0.5 and "wikipedia.org" not in r["url"]:
+            selected.append(r)
+
+    return {"query": last_search.get("query"), "results": selected}</code></pre>
+  <p>
+    這段 docstring 用平白的英文把一切都說清楚，這是刻意的：模型在決定這個工具
+    是否合用、以及它做甚麼的時候，讀的就是 docstring。
+  </p>
+  <p>
+    這個篩選工具不接受任何輸入。它需要的一切都在
+    <strong><code>last_search</code></strong> 裡面。它建立一個空清單，逐個走過
+    十個結果，只有當兩個條件同時成立時，才保留一個結果。
+  </p>
+  <p>
+    規則寫成一個 <strong><code>if</code></strong>，兩部分由
+    <strong><code>and</code></strong> 連接。第一部分
+    <strong><code>r["score"] &gt;= 0.5</code></strong>，保留搜尋引擎評為相關的
+    網頁。第二部分
+    <strong><code>"wikipedia.org" not in r["url"]</code></strong>，則無論維基百科
+    得分多高都把它剔除。兩個條件同時成立，結果才算過關，然後
+    <strong><code>selected.append(r)</code></strong> 把它加進清單。
+  </p>
+  <p>
+    剔除維基百科是刻意的選擇。哈佛的
+    <a href="https://usingsources.fas.harvard.edu/what%E2%80%99s-wrong-wikipedia" target="_blank" rel="noopener">《維基百科有甚麼問題？》</a>
+    這樣說：
+  </p>
+  <blockquote>
+    <p>
+      當你做學術研究時，使用維基百科應該極之謹慎。正如它自己的免責聲明所言，
+      維基百科上的資訊由任何想貼文的人提供，而貼文者的專業知識並不在考慮之
+      列。讀者可能正在閱讀過時的資訊，又或者是由某個並非該領域專家的人所貼的
+      內容 &mdash; 甚至是希望提供錯誤資訊的人。雖然維基百科的編輯確實會糾正
+      錯誤資訊，但觀察者發現他們並非全部都捉得到 &mdash; 至少不是即時。有時
+      不準確的資訊是故意貼上維基百科的，作為惡作劇。在一些有詳細記錄的個案
+      中，這些不準確的資訊會繼續流傳，因為人們把它從維基百科拿來，用在書籍和
+      文章裡。
+    </p>
+    <cite>哈佛學院寫作課程，<a href="https://usingsources.fas.harvard.edu/what%E2%80%99s-wrong-wikipedia" target="_blank" rel="noopener">《維基百科有甚麼問題？》</a></cite>
+  </blockquote>
+
+  <h2>AI 代理</h2>
+  <pre class="code-block"><code>agent = create_agent(
+    model=my_model,
+    tools=[search_internet, generate_draft],
+    system_prompt=(
+        "You are a helpful assistant. "
+        "Always call search_internet, using the user's message exactly as the query. "
+        "Do not rephrase, shorten, translate, or add anything to it. "
+        "Then call generate_draft to select the useful results."
+    ),
+)</code></pre>
+  <p>
+    系統提示詞現在多了一句：「然後呼叫
+    <strong><code>generate_draft</code></strong> 挑選有用的結果。」模型讀取問題、
+    呼叫搜尋、收到十個結果，然後對它們呼叫
+    <strong><code>generate_draft</code></strong>。
+  </p>
+
+  <h2>輸出結果</h2>
+  <p>
+    螢幕會先後印出兩個工具。首先是搜尋，帶著全部十個結果：
+  </p>
+  <pre class="code-block no-copy"><code>Tool: search_internet
+Query: What is the population of Hong Kong?
+
+1. Hong Kong Population (2026) - Worldometer  (score: 0.92)
+   https://www.worldometers.info/world-population/china-hong-kong-sar-population
+   The current population of the Hong Kong Special Administrative Region of the People's Republic of China is 7,371,564 as of Sunday, October 18, 2026, based on Worldometer's elaboration of the latest Un...
+
+2. Hong Kong Population 2026  (score: 0.94)
+   https://worldpopulationreview.com/countries/hong-kong
+   ### Request Data  Please enter your email address to receive this data in your inbox.  ## Hong Kong By the Numbers  As of 2026, Hong Kong has a total populationof 7,378,602, ranking as the 107th most...
+...</code></pre>
+  <p>
+    然後是 <strong><code>generate_draft</code></strong>，只有它選中的結果。為了讓
+    這一頁保持簡短，這裡略去每個結果下面的內容行；程式本身會印出來。
+  </p>
+  <pre class="code-block no-copy"><code>Tool: generate_draft
+Query: What is the population of Hong Kong?
+
+1. Hong Kong Population (2026) - Worldometer  (score: 0.92)
+   https://www.worldometers.info/world-population/china-hong-kong-sar-population
+
+2. Hong Kong Population 2026  (score: 0.94)
+   https://worldpopulationreview.com/countries/hong-kong
+
+3. Hong Kong Map, History &amp; Population | Study.com  (score: 0.93)
+   https://study.com/academy/lesson/hong-kong-facts-population.html
+
+4. Hong Kong Population (1950-2026)  (score: 0.92)
+   https://www.macrotrends.net/global-metrics/countries/hkg/hong-kong/population
+
+5. Hong Kong - Population and Demography Country Profile | Our World in Data  (score: 0.91)
+   https://ourworldindata.org/profile/population-demography/hong-kong
+
+6. GovHK: Hong Kong &ndash; the Facts  (score: 0.85)
+   https://www.gov.hk/en/about/abouthk/facts.htm
+
+7. Race Relations Unit - Information Centre - Demographics  (score: 0.78)
+   https://www.had.gov.hk/rru/en/info/demographics.htm</code></pre>
+  <p>
+    七個，不是十個。消失的三個是：
+  </p>
+  <ul>
+    <li><strong>維基百科</strong>（分數 0.92）&mdash; 被網址規則擋在外面，即使它的分數很高。</li>
+    <li><strong>世界銀行</strong>（分數 0.39）&mdash; 低於 0.5 這條線。</li>
+    <li><strong>人口推算</strong>（分數 0.11）&mdash; 同樣低於這條線。</li>
+  </ul>
+  <p>
+    <strong><code>generate_draft</code></strong> 移除了一些結果，其餘的完全沒有
+    改動，所以數字和連結都和搜尋服務回傳時一模一樣。
+  </p>
+
+  <h2>完整程式</h2>
+  <pre class="code-block"><code># RESEARCH, version 3: two tools, one after the other.
+# Tool 1 searches. Tool 2 filters: score 0.5 or higher, never Wikipedia.
+# last_search lets the second tool see what the first one found.
+import os
+import json
+from dotenv import load_dotenv
+from tavily import TavilyClient
+from langchain_core.tools import tool
+from langchain_openai import ChatOpenAI
+from langchain.agents import create_agent
+
+load_dotenv()
+
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
+
+tavily_client = TavilyClient(api_key=TAVILY_API_KEY)
+
+# Keeps the latest search response so generate_draft can use it
+last_search = {}
+
+@tool
+def search_internet(query: str):
+    """
+    Search the internet for up-to-date information about the query
+    and return the full Tavily search response.
+    """
+    global last_search
+    response = tavily_client.search(query, max_results=10)
+    last_search = response
+    return response
+
+
+@tool(return_direct=True)
+def generate_draft():
+    """
+    Go through the results from the latest search_internet call.
+    Keep results with a score of 0.5 or higher, but never keep Wikipedia.
+    Return the selected results.
+    """
+    selected = []
+    for r in last_search.get("results", []):
+        if r["score"] >= 0.5 and "wikipedia.org" not in r["url"]:
+            selected.append(r)
+
+    return {"query": last_search.get("query"), "results": selected}
+
+
+my_model = ChatOpenAI(
+    model="deepseek-flash",
+    api_key=DEEPSEEK_API_KEY,
+    base_url="https://api.deepseek.com",
+    temperature=0,
+)
+
+agent = create_agent(
+    model=my_model,
+    tools=[search_internet, generate_draft],
+    system_prompt=(
+        "You are a helpful assistant. "
+        "Always call search_internet, using the user's message exactly as the query. "
+        "Do not rephrase, shorten, translate, or add anything to it. "
+        "Then call generate_draft to select the useful results."
+    ),
+)
+
+prompt = "What is the population of Hong Kong?"
+result = agent.invoke({
+    "messages": [{"role": "user", "content": prompt}]
+})
+
+for message in result["messages"]:
+    if message.type == "tool":
+        response = json.loads(message.content)
+        print(f"Tool: {message.name}")
+        print(f"Query: {response['query']}\n")
+        for i, r in enumerate(response["results"], start=1):
+            print(f"{i}. {r['title']}  (score: {r['score']:.2f})")
+            print(f"   {r['url']}")
+            print(f"   {r['content'][:200].replace(chr(10), ' ')}...\n")</code></pre>
+
+  <h2>在自己的電腦上執行</h2>
+  <p>
+    <a href="/notes/downloads/Folder-AI-Research03.zip" download>下載示範程式
+    （Folder-AI-Research03.zip）</a>。zip 內有三個檔案：
+    <strong><code>research03.py</code></strong>（完整腳本）、<strong><code>pyproject.toml</code></strong> 和
+    <strong><code>README.md</code></strong>。這個版本會呼叫語言模型一次，所以
+    需要 Tavily 金鑰和 DeepSeek 金鑰。
+  </p>
+  <ol>
+    <li>在 Visual Studio Code 中開啟這個資料夾。</li>
+    <li>
+      在資料夾裡建立一個名為 <strong><code>.env</code></strong> 的檔案，內容有兩行：
+      <pre class="code-block"><code>TAVILY_API_KEY=your-tavily-key
+DEEPSEEK_API_KEY=your-deepseek-key</code></pre>
+      Tavily 金鑰可從
+      <a href="https://app.tavily.com/home" target="_blank" rel="noopener">Tavily
+      控制台</a>取得，DeepSeek 金鑰則從
+      <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek
+      控制台</a>取得。使用量由各供應商收費，所以執行之前，請先在該處查看
+      目前的收費條款。
+    </li>
+    <li>在終端機逐行執行以下三行：
+      <pre class="code-block"><code>uv python pin 3.12.10</code></pre>
+      <pre class="code-block"><code>uv sync</code></pre>
+      <pre class="code-block"><code>uv run research03.py</code></pre>
+    </li>
+    <li>你應該會看到兩個工具先後印出：搜尋的十個結果，然後是
+      <strong><code>generate_draft</code></strong> 的七個。一次模型呼叫需要幾秒鐘。</li>
+  </ol>
+  <p>
+    如果你還未設定好 uv，請先看
+    <a href="ai-note05.html">如何安裝 Visual Studio Code？</a>，然後看 uv 筆記的
+    <a href="ai-note03.html">Windows</a> 或
+    <a href="ai-note04.html">Mac</a> 版本。
+  </p>
+
+  <h2>限制</h2>
+  <ul>
+    <li>
+      <strong>這條規則只是為了示範而寫得簡單。</strong>0.5 這個分數只是例子。
+      把它調高就會留下更少結果；調低就會留下更多。一個有用但只得 0.49 分的
+      網頁，仍然會被丟掉；而通過測試的網頁，也仍然可能是錯的或過時的。
+    </li>
+    <li>
+      <strong>模型仍然必須遵守次序。</strong>提示詞要求先
+      <strong><code>search_internet</code></strong>，後
+      <strong><code>generate_draft</code></strong>。模型可以偏離指示，所以你要
+      檢查的是印出來的輸出。
+    </li>
+    <li>
+      <strong>兩個工具透過一個共用變數溝通。</strong>
+      <strong><code>last_search</code></strong> 只保存最近一次搜尋。如果之後再
+      執行一次搜尋，篩選工具就會悄悄地用上新的結果。
+    </li>
+    <li>
+      <strong>保留來源仍然是人的工作。</strong>七個結果比十個少，但還未讀過
+      任何一個。在它們之間作選擇，是下一個版本的工作。
+    </li>
+  </ul>
+
+  <h2>延伸閱讀</h2>
+  <ul>
+    <li><a href="ai-note48.html">如何使用 AI 代理在網上搜尋（Research，版本 2）？</a> &mdash; 這個版本由它發展而來的單一工具代理。</li>
+    <li><a href="ai-note47.html">如何用 Python 搜尋網頁（Research，版本 1）？</a> &mdash; 搜尋本身，沒有代理。</li>
+    <li><a href="https://docs.langchain.com/" target="_blank" rel="noopener">LangChain &mdash; 文件</a> &mdash; 工具與 <strong><code>create_agent</code></strong>。</li>
+    <li><a href="https://docs.tavily.com/" target="_blank" rel="noopener">Tavily &mdash; 文件</a> &mdash; <strong><code>search</code></strong> 呼叫及其回應欄位。</li>
+  </ul>
+
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&amp;hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', 'Copy code to clipboard');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', 'Copied to clipboard');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', 'Copy code to clipboard');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>

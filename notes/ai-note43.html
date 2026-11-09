@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to use LangChain in an AI agent (ReAct, version 7)? | Howard Lam, PhD</title>
+<meta name="description" content="Same agent as version 6 — Tavily search plus memory.json — but rebuilt with LangChain. create_agent() runs the Think → Act → Observe loop for us: no search[...] text to parse, no stop words, no prompt string to accumulate by hand.">
+<link rel="canonical" href="https://pongyuenlam.github.io/notes/ai-note43.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note43.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note43.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note43.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note43.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to use LangChain in an AI agent (ReAct, version 7)?">
+<meta property="og:description" content="Same agent as version 6 — Tavily search plus memory.json — but rebuilt with LangChain. create_agent() runs the Think → Act → Observe loop for us: no search[...] text to parse, no stop words, no prompt string to accumulate by hand.">
+<meta property="og:url" content="https://pongyuenlam.github.io/notes/ai-note43.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="Howard Lam, PhD">
+
+<link rel="stylesheet" href="../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "How to use LangChain in an AI agent (ReAct, version 7)?",
+  "description": "Same agent as version 6 — Tavily search plus memory.json — but rebuilt with LangChain. create_agent() runs the Think → Act → Observe loop for us: no search[...] text to parse, no stop words, no prompt string to accumulate by hand.",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-09",
+  "dateModified": "2026-11-09",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/notes/ai-note43.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../biography.html">Biography</a></li>
+        <li><a href="../research.html">Research</a></li>
+        <li><a href="../cases.html">Cases</a></li>
+        <li><a href="../books.html">Books</a></li>
+        <li><a href="../ai-programs.html">AI Notes</a></li>
+        <li><a href="../links/">Links</a></li>
+        <li><a href="../glossary/">Glossary</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <span class="current">English</span>
+  <a href="/zh-HK/notes/ai-note43.html">繁體中文</a>
+  <a href="/zh-CN/notes/ai-note43.html">简体中文</a>
+</div>
+
+<main>
+  <h1>How to use LangChain in an AI agent (ReAct, version 7)?</h1>
+  <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 9, 2026 &middot; 4 min read</p>
+
+  <p>
+    Since <a href="ai-note37.html" target="_blank" rel="noopener">version 1</a>
+    we have written the Think &rarr; Act &rarr; Observe loop in plain Python.
+    Version 7 keeps the same agent as <a href="ai-note42.html" target="_blank" rel="noopener">version 6</a>,
+    but makes one change. We now use <strong>LangChain</strong>, a framework,
+    to do the same job with less code.
+  </p>
+
+  <h2>The script</h2>
+  <p>
+    This is <code>ReAct07.py</code>. Three pieces replace the code we wrote in
+    the previous version without LangChain. First, the <code>@tool</code>
+    decorator turns an ordinary function into a tool the model can call:
+  </p>
+  <pre class="code-block"><code>from langchain_core.tools import tool
+from langchain_openai import ChatOpenAI
+from langchain.agents import create_agent
+
+model = ChatOpenAI(
+    model="deepseek-flash",
+    api_key=os.environ.get('DEEPSEEK_API_KEY'),
+    base_url="https://api.deepseek.com")
+
+# The only tool (action) our agent can use — @tool makes it usable by LangChain
+@tool
+def search_tavily(query: str) -&gt; str:
+    """Search the web (Tavily) and return the top results (title, url, short content)."""
+    results = tavily.search(query=query, max_results=3)["results"]
+    if not results:
+        return f"No web results found for '{query}'."
+    return "\n".join(f"[{r['title']}] ({r['url']}) {r['content'][:400]}"
+                     for r in results)</code></pre>
+  <p>
+    Second, <code>create_agent()</code> builds the whole loop:
+  </p>
+  <pre class="code-block"><code>agent = create_agent(
+    model=model,
+    tools=[search_tavily],
+    system_prompt=f"""You are a helpful research assistant. Today is {today}.
+Use the search_tavily tool when you need up-to-date facts.
+If your memory already answers the task, you may answer without searching.""",
+)</code></pre>
+  <p>
+    Third, <code>perform_task</code> shrinks to one call. There is no
+    <code>for</code> loop, no <code>stop=["Action"]</code>, no
+    <code>re.search</code>, because LangChain thinks, calls the tool, observes
+    and repeats until the model answers:
+  </p>
+  <pre class="code-block"><code>def perform_task(task):
+    """Let the LangChain agent do one task, print each step, and return the answer."""
+    print(f"\n########## TASK: {task} ##########")
+    print("=== Memory loaded into the prompt ===")
+    print(memory_text())
+
+    prompt = f"""Task: {task}
+Memory (what you learned before, with the date you learned it):
+{memory_text()}"""
+    result = agent.invoke({"messages": [{"role": "user", "content": prompt}]})
+
+    answer = result["messages"][-1].content
+    print("=== Final Answer ===")
+    print(answer)
+    save_memory(task, answer)   # long-term memory: keep it for next time
+    return answer
+
+perform_task("When did Mark launch Muse")
+perform_task("Is it available in Hong Kong yet?")</code></pre>
+  <p>
+    The memory functions (<code>load_memory</code>, <code>save_memory</code>,
+    <code>memory_text</code>) and the memory reset at the bottom are identical
+    to <a href="ai-note42.html" target="_blank" rel="noopener">version 6</a>,
+    so they are omitted here. The full script also prints each step LangChain
+    ran, using the message types (<code>AIMessage</code> for Thought/Action,
+    <code>ToolMessage</code> for Observation).
+  </p>
+
+  <h2>One real run</h2>
+  <pre class="code-block"><code>--- Task 1: "When did Mark launch Muse" ---
+=== Memory loaded into the prompt ===
+(empty)
+=== AIMessage - Thought ===
+I don't have any prior memory about "Mark" or "Muse" to work from, and the question is ambiguous. Let me search for likely possibilities.
+=== AIMessage - Action ===
+search_tavily({'query': 'Mark launched Muse'})
+=== AIMessage - Action ===
+search_tavily({'query': 'Mark Zuckerberg launches Muse app'})
+=== ToolMessage - Observation from Tavily web search ===
+[Meta Debuts Muse, Its Long-Planned Personal AI Agent - Slashdot] ... launched ...
+[The New York Times] ... Mark Zuckerberg ... September 8, 2026 ...
+=== Final Answer ===
+Muse launched on September 8, 2026. (Meta's personal AI agent, announced by Mark Zuckerberg; a related Muse Charm keychain device targets December 2026.)
+
+--- Task 2: "Is it available in Hong Kong yet?" ---
+=== Memory loaded into the prompt ===
+- [2026-10-09] Q: When did Mark launch Muse A: ...the full September 8 answer...
+=== AIMessage - Action ===
+search_tavily({'query': 'Meta Muse personal AI agent Hong Kong availability launch'})
+=== AIMessage - Action ===
+search_tavily({'query': 'Muse Spark app supported countries Hong Kong rollout 2026'})
+=== ToolMessage - Observation from Tavily web search ===
+...US-only launch; "Singapore, Malaysia, Hong Kong, Taiwan — No official launch announced"; App Store listing appears only in the US storefront...
+=== Final Answer ===
+No — Meta's Muse is not available in Hong Kong yet. ... As of now, Muse is a US-exclusive launch. No timeline has been announced for Hong Kong or any other Asia-Pacific market.</code></pre>
+  <p class="paper-meta">Extracts shortened (&hellip;); the full run prints both tasks in full.</p>
+  <p>
+    Two things are worth noticing. First, the agent fired
+    <strong>two searches in one turn</strong> &mdash; our hand-written loop
+    forced one action per round, but function calling lets the model ask for
+    several tools at once &mdash; here it searched for
+    <strong>"Mark launched Muse"</strong> and
+    <strong>"Mark Zuckerberg launches Muse app"</strong> in the same reply. Second, task 2 behaved exactly as in version 6: it
+    read the memory, knew what "it" was, and answered with sources. Changing
+    the engine did not change the behaviour &mdash; which is the point.
+  </p>
+
+  <h2>Running it on your own computer</h2>
+  <p>
+    <a href="downloads/Folder-AI-ReAct07.zip">Download the demo program
+    (Folder-AI-ReAct07.zip)</a>. The zip holds three files:
+    <code>ReAct07.py</code> (the full script), <code>pyproject.toml</code> and
+    <code>README.md</code>.
+  </p>
+  <ol>
+    <li>Open the folder in Visual Studio Code.</li>
+    <li>
+      Create a file named <code>.env</code> in the folder with two lines:
+      <pre class="code-block"><code>DEEPSEEK_API_KEY=your-deepseek-key
+TAVILY_API_KEY=your-tavily-key</code></pre>
+      Keys: <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek
+      console</a> and <a href="https://app.tavily.com/" target="_blank" rel="noopener">Tavily</a>
+      (both have free starting credit).
+    </li>
+    <li>In the Terminal, run:
+      <pre class="code-block"><code>uv sync
+uv run ReAct07.py</code></pre>
+      <code>uv sync</code> installs LangChain for you; the
+      <code>.env</code> file and the two tasks are the same as version 6, so
+      you can compare the two printouts side by side.
+    </li>
+  </ol>
+
+  <h2>Why this experiment matters</h2>
+  <ul>
+    <li>
+      <strong>A framework does the chores, not the thinking.</strong> The agent
+      still thinks, acts and observes exactly as before &mdash; LangChain simply
+      does the housekeeping we wrote by hand in previous versions.
+    </li>
+    <li>
+      <strong>We tell LangChain exactly which tools the agent may use.</strong>
+      In the previous versions, the model wrote the tool's name as text, and
+      our code had to find it and run it. Now the model picks from the list of
+      tools we gave LangChain &mdash; nothing to find, nothing to get wrong.
+    </li>
+    <li>
+      <strong>Build it in Python first, without any framework, as in the
+      previous versions; then use LangChain, as in this version.</strong>
+      Having written the loop yourself, you can read exactly what LangChain is
+      doing for you &mdash; and debug it when it does something unexpected.
+    </li>
+  </ul>
+
+  <h2>Further reading</h2>
+  <ul>
+    <li><a href="https://docs.langchain.com/" target="_blank" rel="noopener">LangChain documentation</a> &mdash; <code>create_agent</code>, tools and messages.</li>
+    <li><a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">ReAct: Synergizing Reasoning and Acting in Language Models</a> &mdash; the paper that named the pattern this series builds.</li>
+    <li><a href="https://docs.tavily.com/" target="_blank" rel="noopener">Tavily documentation</a> &mdash; search options, free tier and pricing.</li>
+    <li><a href="https://api-docs.deepseek.com/" target="_blank" rel="noopener">DeepSeek API documentation</a> &mdash; models, keys and pricing.</li>
+  </ul>
+
+</main>
+
+<footer class="site-footer">
+  <p>&copy; 2026 Howard Pong Yuen Lam. All rights reserved.</p>
+  <p><a href="../index.html">Home</a> &middot; <a href="../ai-programs.html">AI Notes</a> &middot; <a href="../links/">Links</a> &middot; <a href="../glossary/">Glossary</a></p>
+</footer>
+
+</body>
+</html>

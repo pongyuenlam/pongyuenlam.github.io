@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>如何在 AI 代理中使用 LangChain（ReAct，版本 7）？ | 林邦源博士</title>
+<meta name="description" content="与版本 6 相同的代理 —— Tavily 搜索加 memory.json —— 但改用 LangChain 重新构建。create_agent() 替我们运行“思考 → 行动 → 观察”循环：不用再解析 search[...] 文字，不用停用词，也不用自己逐句累积提示词。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note43.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note43.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note43.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note43.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note43.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何在 AI 代理中使用 LangChain（ReAct，版本 7）？">
+<meta property="og:description" content="与版本 6 相同的代理 —— Tavily 搜索加 memory.json —— 但改用 LangChain 重新构建。create_agent() 替我们运行“思考 → 行动 → 观察”循环：不用再解析 search[...] 文字，不用停用词，也不用自己逐句累积提示词。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-CN/notes/ai-note43.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="../../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "如何在 AI 代理中使用 LangChain（ReAct，版本 7）？",
+  "description": "与版本 6 相同的代理 —— Tavily 搜索加 memory.json —— 但改用 LangChain 重新构建。create_agent() 替我们运行“思考 → 行动 → 观察”循环：不用再解析 search[...] 文字，不用停用词，也不用自己逐句累积提示词。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-09",
+  "dateModified": "2026-11-09",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-CN/notes/ai-note43.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../../index.html">首页</a></li>
+        <li><a href="../../biography.html">个人简介</a></li>
+        <li><a href="../../research.html">研究</a></li>
+        <li><a href="../../cases.html">案例</a></li>
+        <li><a href="../../books.html">著作</a></li>
+        <li><a href="../../ai-programs.html">AI 笔记</a></li>
+        <li><a href="../../links/">链接</a></li>
+        <li><a href="../../glossary/">词汇表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <a href="/notes/ai-note43.html">English</a>
+  <a href="/zh-HK/notes/ai-note43.html">繁體中文</a>
+  <span class="current">简体中文</span>
+</div>
+
+<main>
+  <h1>如何在 AI 代理中使用 LangChain（ReAct，版本 7）？</h1>
+  <p class="paper-meta">林邦源博士 &middot; AI 笔记 &middot; 2026 年 11 月 9 日 &middot; 约 4 分钟阅读</p>
+
+  <p>
+    自从<a href="ai-note37.html" target="_blank" rel="noopener">版本 1</a>以来，
+    我们一直用纯 Python 写“思考 &rarr; 行动 &rarr; 观察”循环。
+    版本 7 保留<a href="ai-note42.html" target="_blank" rel="noopener">版本 6</a>
+    的代理，只改了一件事：我们现在改用 <strong>LangChain</strong> 这个框架，
+    用更少的代码做同一件事。
+  </p>
+
+  <h2>程序</h2>
+  <p>
+    这是 <code>ReAct07.py</code>。三段代码取代了上一版没用 LangChain 时
+    我们自己写的那部分。第一，<code>@tool</code> 装饰器把一个普通函数变成
+    模型可以调用的工具：
+  </p>
+  <pre class="code-block"><code>from langchain_core.tools import tool
+from langchain_openai import ChatOpenAI
+from langchain.agents import create_agent
+
+model = ChatOpenAI(
+    model="deepseek-flash",
+    api_key=os.environ.get('DEEPSEEK_API_KEY'),
+    base_url="https://api.deepseek.com")
+
+# The only tool (action) our agent can use — @tool makes it usable by LangChain
+@tool
+def search_tavily(query: str) -&gt; str:
+    """Search the web (Tavily) and return the top results (title, url, short content)."""
+    results = tavily.search(query=query, max_results=3)["results"]
+    if not results:
+        return f"No web results found for '{query}'."
+    return "\n".join(f"[{r['title']}] ({r['url']}) {r['content'][:400]}"
+                     for r in results)</code></pre>
+  <p>
+    第二，<code>create_agent()</code> 建立整个循环：
+  </p>
+  <pre class="code-block"><code>agent = create_agent(
+    model=model,
+    tools=[search_tavily],
+    system_prompt=f"""You are a helpful research assistant. Today is {today}.
+Use the search_tavily tool when you need up-to-date facts.
+If your memory already answers the task, you may answer without searching.""",
+)</code></pre>
+  <p>
+    第三，<code>perform_task</code> 缩短成一次调用。没有 <code>for</code>
+    循环，没有 <code>stop=["Action"]</code>，也没有 <code>re.search</code>，
+    因为 LangChain 会自己思考、调用工具、观察，然后重复，直到模型给出答案：
+  </p>
+  <pre class="code-block"><code>def perform_task(task):
+    """Let the LangChain agent do one task, print each step, and return the answer."""
+    print(f"\n########## TASK: {task} ##########")
+    print("=== Memory loaded into the prompt ===")
+    print(memory_text())
+
+    prompt = f"""Task: {task}
+Memory (what you learned before, with the date you learned it):
+{memory_text()}"""
+    result = agent.invoke({"messages": [{"role": "user", "content": prompt}]})
+
+    answer = result["messages"][-1].content
+    print("=== Final Answer ===")
+    print(answer)
+    save_memory(task, answer)   # long-term memory: keep it for next time
+    return answer
+
+perform_task("When did Mark launch Muse")
+perform_task("Is it available in Hong Kong yet?")</code></pre>
+  <p>
+    记忆相关的函数（<code>load_memory</code>、<code>save_memory</code>、
+    <code>memory_text</code>）以及程序末尾的记忆重置，都与
+    <a href="ai-note42.html" target="_blank" rel="noopener">版本 6</a> 完全相同，
+    所以这里略去。完整程序也会打印 LangChain 运行的每一步，并用消息类型标示
+    （<code>AIMessage</code> 代表思考／行动，<code>ToolMessage</code> 代表观察）。
+  </p>
+
+  <h2>一次真实运行</h2>
+  <pre class="code-block"><code>--- Task 1: "When did Mark launch Muse" ---
+=== Memory loaded into the prompt ===
+(empty)
+=== AIMessage - Thought ===
+I don't have any prior memory about "Mark" or "Muse" to work from, and the question is ambiguous. Let me search for likely possibilities.
+=== AIMessage - Action ===
+search_tavily({'query': 'Mark launched Muse'})
+=== AIMessage - Action ===
+search_tavily({'query': 'Mark Zuckerberg launches Muse app'})
+=== ToolMessage - Observation from Tavily web search ===
+[Meta Debuts Muse, Its Long-Planned Personal AI Agent - Slashdot] ... launched ...
+[The New York Times] ... Mark Zuckerberg ... September 8, 2026 ...
+=== Final Answer ===
+Muse launched on September 8, 2026. (Meta's personal AI agent, announced by Mark Zuckerberg; a related Muse Charm keychain device targets December 2026.)
+
+--- Task 2: "Is it available in Hong Kong yet?" ---
+=== Memory loaded into the prompt ===
+- [2026-10-09] Q: When did Mark launch Muse A: ...the full September 8 answer...
+=== AIMessage - Action ===
+search_tavily({'query': 'Meta Muse personal AI agent Hong Kong availability launch'})
+=== AIMessage - Action ===
+search_tavily({'query': 'Muse Spark app supported countries Hong Kong rollout 2026'})
+=== ToolMessage - Observation from Tavily web search ===
+...US-only launch; "Singapore, Malaysia, Hong Kong, Taiwan — No official launch announced"; App Store listing appears only in the US storefront...
+=== Final Answer ===
+No — Meta's Muse is not available in Hong Kong yet. ... As of now, Muse is a US-exclusive launch. No timeline has been announced for Hong Kong or any other Asia-Pacific market.</code></pre>
+  <p class="paper-meta">摘录已缩短（&hellip;）；完整运行会把两个任务全部打印出来。</p>
+  <p>
+    有两点值得注意。第一，代理在<strong>同一轮发出两次搜索</strong> ——
+    我们手写的循环每回合只允许一个行动，但函数调用让模型可以一次请求多个工具
+    —— 这里它在同一个回复中搜索了
+    <strong>“Mark launched Muse”</strong>和
+    <strong>“Mark Zuckerberg launches Muse app”</strong>。第二，任务 2 的表现
+    与版本 6 完全一样：它读取记忆，知道“它”指什么，并附上来源作答。换了引擎
+    并没有改变行为 —— 这正是重点所在。
+  </p>
+
+  <h2>在自己的电脑上运行</h2>
+  <p>
+    <a href="/notes/downloads/Folder-AI-ReAct07.zip">下载示范程序
+    （Folder-AI-ReAct07.zip）</a>。zip 内有三个文件：
+    <code>ReAct07.py</code>（完整程序）、<code>pyproject.toml</code> 和
+    <code>README.md</code>。
+  </p>
+  <ol>
+    <li>在 Visual Studio Code 打开这个文件夹。</li>
+    <li>
+      在文件夹里创建一个名为 <code>.env</code> 的文件，内容有两行：
+      <pre class="code-block"><code>DEEPSEEK_API_KEY=your-deepseek-key
+TAVILY_API_KEY=your-tavily-key</code></pre>
+      密钥：<a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek
+      控制台</a>和 <a href="https://app.tavily.com/" target="_blank" rel="noopener">Tavily</a>
+      （两者都有免费起始额度）。
+    </li>
+    <li>在终端运行：
+      <pre class="code-block"><code>uv sync
+uv run ReAct07.py</code></pre>
+      <code>uv sync</code> 会替你安装 LangChain；<code>.env</code> 文件的内容
+      和两个任务都与版本 6 相同，所以你可以并排比较两份输出。
+    </li>
+  </ol>
+
+  <h2>为什么这个实验值得做</h2>
+  <ul>
+    <li>
+      <strong>框架负责杂务，不负责思考。</strong>代理依然像以前一样思考、行动
+      和观察 —— LangChain 只是接手我们在前几版手写的日常杂务。
+    </li>
+    <li>
+      <strong>我们明确告诉 LangChain 代理可以使用哪些工具。</strong>在之前的版本，
+      模型把工具名称写成文字，我们的程序要把它找出来再运行。现在模型只需从我们
+      交给 LangChain 的工具清单中挑选 —— 不用找，也不会弄错。
+    </li>
+    <li>
+      <strong>先像前几版那样，不用任何框架，用 Python 自己建一次；然后才像
+      这一版一样改用 LangChain。</strong>自己写过那个循环，你就能看懂 LangChain
+      究竟替你做了什么 —— 当它做出意想不到的事情时，也懂得调试。
+    </li>
+  </ul>
+
+  <h2>延伸阅读</h2>
+  <ul>
+    <li><a href="https://docs.langchain.com/" target="_blank" rel="noopener">LangChain 文档</a> —— <code>create_agent</code>、工具与消息。</li>
+    <li><a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">ReAct: Synergizing Reasoning and Acting in Language Models</a> —— 为本系列所构建的这种模式命名的论文。</li>
+    <li><a href="https://docs.tavily.com/" target="_blank" rel="noopener">Tavily 文档</a> —— 搜索选项、免费方案与收费。</li>
+    <li><a href="https://api-docs.deepseek.com/" target="_blank" rel="noopener">DeepSeek API 文档</a> —— 模型、密钥与收费。</li>
+  </ul>
+
+</main>
+
+<footer class="site-footer">
+  <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+  <p><a href="../../index.html">首页</a> &middot; <a href="../../ai-programs.html">AI 笔记</a> &middot; <a href="../../links/">链接</a> &middot; <a href="../../glossary/">词汇表</a></p>
+</footer>
+
+</body>
+</html>

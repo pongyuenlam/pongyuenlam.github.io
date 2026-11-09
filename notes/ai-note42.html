@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How do you give an AI agent memory (ReAct, version 6, memory.json)? | Howard Lam, PhD</title>
+<meta name="description" content="Version 5 failed the follow-up question because the agent forgot task 1. Version 6 adds a tiny memory.json file: every finished answer is saved and loaded into the next prompt, so “Is it available in Hong Kong yet?” finally knows what “it” is.">
+<link rel="canonical" href="https://pongyuenlam.github.io/notes/ai-note42.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note42.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note42.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note42.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note42.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="How do you give an AI agent memory (ReAct, version 6, memory.json)?">
+<meta property="og:description" content="Version 5 failed the follow-up question because the agent forgot task 1. Version 6 adds a tiny memory.json file: every finished answer is saved and loaded into the next prompt, so “Is it available in Hong Kong yet?” finally knows what “it” is.">
+<meta property="og:url" content="https://pongyuenlam.github.io/notes/ai-note42.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="Howard Lam, PhD">
+
+<link rel="stylesheet" href="../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "How do you give an AI agent memory (ReAct, version 6, memory.json)?",
+  "description": "Version 5 failed the follow-up question because the agent forgot task 1. Version 6 adds a tiny memory.json file: every finished answer is saved and loaded into the next prompt, so “Is it available in Hong Kong yet?” finally knows what “it” is.",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-09",
+  "dateModified": "2026-11-09",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/notes/ai-note42.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../biography.html">Biography</a></li>
+        <li><a href="../research.html">Research</a></li>
+        <li><a href="../cases.html">Cases</a></li>
+        <li><a href="../books.html">Books</a></li>
+        <li><a href="../ai-programs.html">AI Notes</a></li>
+        <li><a href="../links/">Links</a></li>
+        <li><a href="../glossary/">Glossary</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <span class="current">English</span>
+  <a href="/zh-HK/notes/ai-note42.html">繁體中文</a>
+  <a href="/zh-CN/notes/ai-note42.html">简体中文</a>
+</div>
+
+<main>
+  <h1>How do you give an AI agent memory (ReAct, version 6, memory.json)?</h1>
+  <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 9, 2026 &middot; 4 min read</p>
+
+  <p>
+    <a href="ai-note41.html" target="_blank" rel="noopener">Version 5</a> ended
+    with a promise. The follow-up question <em>"Is it available in Hong Kong
+    yet?"</em> failed because the agent had no memory of the first task, and
+    the proper fix was to give it a memory of its own. Version 6 does exactly
+    that, with one small file: <code>memory.json</code>. (JSON is plain text
+    that stores data as labelled values, such as
+    <code>{"question": "...", "answer": "..."}</code>, so a program can read
+    one field at a time.)
+  </p>
+
+  <h2>The script</h2>
+  <p>
+    This is <code>ReAct06.py</code>. The ReAct loop from
+    <a href="ai-note40.html" target="_blank" rel="noopener">version 4</a> is
+    unchanged; everything new is about memory. Three small functions read and
+    write a JSON file:
+  </p>
+  <pre class="code-block"><code>MEMORY_FILE = "memory.json"    # long-term memory lives in this file
+
+def load_memory():
+    """Return the list of saved facts (empty if there is no file yet)."""
+    if not os.path.exists(MEMORY_FILE):
+        return []
+    with open(MEMORY_FILE, encoding="utf-8") as f:
+        return json.load(f)
+
+def save_memory(question, answer):
+    """Add one question + answer (with today's date) to memory.json."""
+    memory = load_memory()
+    memory.append({"date": today, "question": question, "answer": answer})
+    with open(MEMORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(memory, f, indent=2, ensure_ascii=False)
+
+def memory_text():
+    """Turn the saved facts into text we can put in the prompt."""
+    memory = load_memory()
+    if not memory:
+        return "(empty)"
+    return "\n".join(f"- [{m['date']}] Q: {m['question']} A: {m['answer']}"
+                     for m in memory)</code></pre>
+  <p>The prompt inside <code>perform_task</code> gains one new section:</p>
+  <pre class="code-block"><code>prompt = f"""Task: {task}
+Today is {today}.
+Memory (what you learned before, with the date you learned it):
+{memory_text()}
+
+You can use ONE tool: search[query] searches the web (Tavily) and returns the top results.
+If your memory already answers the task, you may finish without searching.
+Work in steps. Each step has a Thought, an Action, and an Observation."""</code></pre>
+  <p>
+    And when the agent finishes a task, the answer is saved before the
+    function returns. The script also wipes <code>memory.json</code> at the
+    start of each run, so every run begins with a clean slate:
+  </p>
+  <pre class="code-block"><code>        if action.startswith("finish"):
+            found = re.search(r"finish\[(.*)\]", action, re.S)
+            answer = found.group(1) if found else action
+            print("=== Final Answer ===")
+            print(answer)
+            save_memory(task, answer)   # long-term memory: keep it for next time
+            return answer</code></pre>
+  <pre class="code-block"><code># Start each run with an EMPTY long-term memory (overwrites any old memory.json)
+with open(MEMORY_FILE, "w", encoding="utf-8") as f:
+    json.dump([], f)
+
+perform_task("When did Mark launch Muse")
+perform_task("Is it available in Hong Kong yet?")</code></pre>
+  <p class="paper-meta">
+    The imports, the two API clients, <code>ask()</code> and
+    <code>search_tavily()</code> are unchanged from
+    <a href="ai-note39.html" target="_blank" rel="noopener">version 3</a>, so
+    they are omitted here.
+  </p>
+
+  <h2>The one thing to see in the code</h2>
+  <p>
+    This script has <strong>two kinds of memory</strong>, and it is worth
+    telling them apart:
+  </p>
+  <ul>
+    <li>
+      <strong>Short-term memory</strong> is the growing <code>prompt</code>
+      string inside one task. It holds the Thoughts, Actions and Observations
+      of the current question, and it disappears when the function returns.
+    </li>
+    <li>
+      <strong>Long-term memory</strong> is <code>memory.json</code>. It keeps
+      finished answers <em>after</em> a task ends, so the next task &mdash; or a
+      future run &mdash; can read them back.
+    </li>
+  </ul>
+  <p>
+    Nothing here is magic. "Memory" is still just text: answers are appended
+    to a file, and that file is pasted into the next prompt. The model itself
+    still remembers nothing between calls.
+  </p>
+
+  <h2>One real run</h2>
+  <pre class="code-block"><code>--- Task 1: "When did Mark launch Muse" ---
+=== Memory loaded into the prompt ===
+(empty)
+...three rounds of searching...
+=== Final Answer ===
+Muse (Meta's personal AI agent) launched in early September 2026; Mark Zuckerberg's Sept 20, 2026 post said it had "been out for a little over a week," pointing to a launch around early September 2026.
+
+--- Task 2: "Is it available in Hong Kong yet?" ---
+=== Memory loaded into the prompt ===
+- [2026-10-09] Q: When did Mark launch Muse A: Muse (Meta's personal AI agent) launched in early September 2026; Mark Zuckerberg's Sept 20, 2026 post said it had "been out for a little over a week," pointing to a launch around early September 2026.
+=== Round 1 - Thought ===
+Thought 1: The task asks whether something is available in Hong Kong yet, but the memory only tells me about Muse's launch timing... I need to search for current information about Muse availability in Hong Kong.
+=== Round 1 - Action chosen by the model ===
+search[Muse Meta personal AI agent available in Hong Kong]
+...launched September 8; 2.5 million downloads in two weeks...
+=== Round 2 - Action chosen by the model ===
+search[Muse Meta AI agent Hong Kong availability rollout regions]
+...available in the United States and Canada only; no launch announced for Hong Kong, Taiwan, Singapore or any Asia-Pacific market...
+=== Final Answer ===
+No, Muse is not available in Hong Kong yet. As of October 2026, Meta Muse is only available in the United States (and possibly Canada), and no launch has been announced for Hong Kong or any other Asia-Pacific market.</code></pre>
+  <p class="paper-meta">Extracts shortened (&hellip;); the full run prints both tasks in full.</p>
+  <p>
+    Compare this with version 5. The same two calls, the same loop, the same
+    model &mdash; but this time task 2 opens by reading the memory of task 1.
+    The word "it" is no longer a mystery: the first line of the prompt says
+    exactly what was asked and answered before. The agent resolves the
+    reference for free, then spends its two searches on the real question and
+    answers it correctly: not yet, and no date announced.
+  </p>
+  <p>
+    And here is <code>memory.json</code> after a real run &mdash; the whole of
+    the agent's long-term memory, readable in one glance:
+  </p>
+  <pre class="code-block"><code>[
+  {
+    "date": "2026-11-09",
+    "question": "When did Mark launch Muse",
+    "answer": "September 8, 2026"
+  },
+  {
+    "date": "2026-11-09",
+    "question": "Is it available in Hong Kong yet?",
+    "answer": "No — as of 2026-11-09, Muse does not appear to be available in Hong Kong yet. It launched on September 8, 2026 and was reported as US-only; Meta AI becoming available in Hong Kong on October 29, 2026 is separate from Muse."
+  }
+]</code></pre>
+  <p>
+    Two entries, each stamped with the date it was learned. Notice the second
+    answer: the agent even kept the two Hong Kong facts apart &mdash; Meta AI
+    (the chatbot) arriving in Hong Kong is not the same thing as Muse (the
+    agent) being available there.
+  </p>
+
+  <h2>Running it on your own computer</h2>
+  <p>
+    <a href="downloads/Folder-AI-ReAct06.zip">Download the demo program
+    (Folder-AI-ReAct06.zip)</a>. The zip holds three files:
+    <code>ReAct06.py</code> (the full script), <code>pyproject.toml</code> and
+    <code>README.md</code>.
+  </p>
+  <ol>
+    <li>Open the folder in Visual Studio Code.</li>
+    <li>
+      Create a file named <code>.env</code> in the folder with two lines:
+      <pre class="code-block"><code>DEEPSEEK_API_KEY=your-deepseek-key
+TAVILY_API_KEY=your-tavily-key</code></pre>
+      Keys: <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek
+      console</a> and <a href="https://app.tavily.com/" target="_blank" rel="noopener">Tavily</a>
+      (both have free starting credit).
+    </li>
+    <li>In the Terminal, run:
+      <pre class="code-block"><code>uv sync
+uv run ReAct06.py</code></pre>
+      After the run, open <code>memory.json</code> in the folder &mdash; you will
+      see both answers saved there, dated.
+    </li>
+  </ol>
+
+  <h2>Why this experiment matters</h2>
+  <ul>
+    <li>
+      <strong>Memory is a design choice, not a feature of the model.</strong>
+      The model forgot everything between calls in version 5 and remembers in
+      version 6 &mdash; same model. The difference is fifteen lines of Python
+      for memory and one JSON file, <code>memory.json</code>.
+    </li>
+    <li>
+      <strong>Saved answers make follow-up questions work.</strong> "It",
+      "that one" and "the second option" are safe now, because the context
+      travels in the prompt instead of being lost.
+    </li>
+    <li>
+      <strong>Memory you can inspect is better than memory you cannot.</strong>
+      <code>memory.json</code> is a plain text file: open it, read it, edit it,
+      delete it. Knowing exactly what your agent remembers is the first step
+      to trusting it.
+    </li>
+  </ul>
+
+  <h2>Further reading</h2>
+  <ul>
+    <li><a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">ReAct: Synergizing Reasoning and Acting in Language Models</a> &mdash; the paper that named the pattern this series builds.</li>
+    <li><a href="https://docs.tavily.com/" target="_blank" rel="noopener">Tavily documentation</a> &mdash; search options, free tier and pricing.</li>
+    <li><a href="https://api-docs.deepseek.com/" target="_blank" rel="noopener">DeepSeek API documentation</a> &mdash; models, keys and pricing.</li>
+  </ul>
+
+</main>
+
+<footer class="site-footer">
+  <p>&copy; 2026 Howard Pong Yuen Lam. All rights reserved.</p>
+  <p><a href="../index.html">Home</a> &middot; <a href="../ai-programs.html">AI Notes</a> &middot; <a href="../links/">Links</a> &middot; <a href="../glossary/">Glossary</a></p>
+</footer>
+
+</body>
+</html>

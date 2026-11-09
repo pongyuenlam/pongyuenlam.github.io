@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to use an AI agent to select useful search results (Research, version 3)? | Howard Lam, PhD</title>
+<meta name="description" content="Version 3 gives the agent a second tool: search first, then keep only the useful results — a score of 0.5 or higher, with Wikipedia left out. The ten results shrink to seven.">
+<link rel="canonical" href="https://pongyuenlam.github.io/notes/ai-note49.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note49.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note49.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note49.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note49.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to use an AI agent to select useful search results (Research, version 3)?">
+<meta property="og:description" content="Version 3 gives the agent a second tool: search first, then keep only the useful results — a score of 0.5 or higher, with Wikipedia left out. The ten results shrink to seven.">
+<meta property="og:url" content="https://pongyuenlam.github.io/notes/ai-note49.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="Howard Lam, PhD">
+
+<link rel="stylesheet" href="../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "How to use an AI agent to select useful search results (Research, version 3)?",
+  "description": "Version 3 gives the agent a second tool: search first, then keep only the useful results — a score of 0.5 or higher, with Wikipedia left out. The ten results shrink to seven.",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-09",
+  "dateModified": "2026-11-09",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/notes/ai-note49.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../biography.html">Biography</a></li>
+        <li><a href="../research.html">Research</a></li>
+        <li><a href="../cases.html">Cases</a></li>
+        <li><a href="../books.html">Books</a></li>
+        <li><a href="../ai-programs.html">AI Notes</a></li>
+        <li><a href="../links/">Links</a></li>
+        <li><a href="../glossary/">Glossary</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <span class="current">English</span>
+  <a href="/zh-HK/notes/ai-note49.html">繁體中文</a>
+  <a href="/zh-CN/notes/ai-note49.html">简体中文</a>
+</div>
+
+<main>
+  <h1>How to use an AI agent to select useful search results (Research, version 3)?</h1>
+  <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 9, 2026 &middot; 4 min read</p>
+
+  <p>
+    A search returns ten results, and some of them are not worth keeping. One
+    page barely mentions the population at all, and another is ten years old.
+    This version adds a second tool whose whole job is to make that judgement
+    call.
+  </p>
+  <p>
+    The agent now has two tools, and the system prompt fixes the order:
+    <strong><code>search_internet</code></strong> first, then hand the results to
+    <strong><code>generate_draft</code></strong>. The search tool works exactly as
+    before. <strong><code>generate_draft</code></strong> reads the saved results
+    and keeps only the ones that pass its rule.
+  </p>
+
+  <h2>A place to keep the search results</h2>
+  <pre class="code-block"><code># Keeps the latest search response so generate_draft can use it
+last_search = {}</code></pre>
+  <p>
+    Tools are separate functions. When one finishes, its local variables
+    disappear. If the filter is called after the search, how does it see what
+    the search found?
+  </p>
+  <p>
+    The answer is a variable that lives outside both tools:
+    <strong><code>last_search</code></strong>. The search tool writes its response into it, and
+    the filter tool reads from it.
+  </p>
+
+  <h2>Tool one: the search, and one new line</h2>
+  <pre class="code-block"><code>@tool
+def search_internet(query: str):
+    """
+    Search the internet for up-to-date information about the query
+    and return the full Tavily search response.
+    """
+    global last_search
+    response = tavily_client.search(query, max_results=10)
+    last_search = response
+    return response</code></pre>
+  <p>
+    Three lines matter here. <strong><code>global last_search</code></strong> is the one that
+    needs an explanation. Inside a function, an assignment normally makes a
+    brand-new local variable: <strong><code>last_search = response</code></strong> would fill that
+    local copy and throw it away when the function ends. Declaring
+    <strong><code>last_search</code></strong> as global tells Python that this is the same
+    variable we use for the whole run of the program, not a fresh one made
+    inside the function.
+  </p>
+  <p>
+    <strong><code>last_search = response</code></strong> then saves the ten results into that
+    shared variable, and <strong><code>return response</code></strong> sends them to the agent as
+    well, because the model still needs to see what came back.
+  </p>
+
+  <h2>Tool two: <strong><code>generate_draft</code></strong> keeps only the useful results</h2>
+  <pre class="code-block"><code>@tool(return_direct=True)
+def generate_draft():
+    """
+    Go through the results from the latest search_internet call.
+    Keep results with a score of 0.5 or higher, but never keep Wikipedia.
+    Return the selected results.
+    """
+    selected = []
+    for r in last_search.get("results", []):
+        if r["score"] >= 0.5 and "wikipedia.org" not in r["url"]:
+            selected.append(r)
+
+    return {"query": last_search.get("query"), "results": selected}</code></pre>
+  <p>
+    The docstring says all of this in plain English, and that is deliberate: the
+    docstring is what the model reads when deciding whether the tool fits and
+    what it does.
+  </p>
+  <p>
+    The filter takes no input. Everything it needs is in
+    <strong><code>last_search</code></strong>. It makes an empty list, walks through the ten
+    results one by one, and keeps a result only when both conditions are true.
+  </p>
+  <p>
+    The rule is written as one <strong><code>if</code></strong> with two parts joined by
+    <strong><code>and</code></strong>. The first part, <strong><code>r["score"] >= 0.5</code></strong>, keeps
+    pages the search engine rated as matching. The second part,
+    <strong><code>"wikipedia.org" not in r["url"]</code></strong>, drops Wikipedia no matter how
+    well it scores. A result passes only if both are true, and then
+    <strong><code>selected.append(r)</code></strong> adds it to the list.
+  </p>
+  <p>
+    Dropping Wikipedia is a deliberate choice. Harvard&rsquo;s
+    <a href="https://usingsources.fas.harvard.edu/what%E2%80%99s-wrong-wikipedia" target="_blank" rel="noopener">What&rsquo;s Wrong with Wikipedia?</a>
+    puts it this way:
+  </p>
+  <blockquote>
+    <p>
+      When you&rsquo;re doing academic research, you should be extremely cautious
+      about using Wikipedia. As its own disclaimer states, information on
+      Wikipedia is contributed by anyone who wants to post material, and the
+      expertise of the posters is not taken into consideration. Users may be
+      reading information that is outdated or that has been posted by someone who
+      is not an expert in the field &mdash;or by someone who wishes to provide
+      misinformation. While Wikipedia editors do correct misinformation,
+      observers have found that they don&rsquo;t catch everything&mdash;at least
+      not right away. Sometimes inaccurate information is posted to Wikipedia on
+      purpose, as a hoax. In some well-documented cases, this inaccurate
+      information continues to spread when people take it from Wikipedia and use
+      it in books and articles.
+    </p>
+    <cite>Harvard College Writing Program, <a href="https://usingsources.fas.harvard.edu/what%E2%80%99s-wrong-wikipedia" target="_blank" rel="noopener">What&rsquo;s Wrong with Wikipedia?</a></cite>
+  </blockquote>
+
+  <h2>The AI Agent</h2>
+  <pre class="code-block"><code>agent = create_agent(
+    model=my_model,
+    tools=[search_internet, generate_draft],
+    system_prompt=(
+        "You are a helpful assistant. "
+        "Always call search_internet, using the user's message exactly as the query. "
+        "Do not rephrase, shorten, translate, or add anything to it. "
+        "Then call generate_draft to select the useful results."
+    ),
+)</code></pre>
+  <p>
+    The system prompt now ends with one extra sentence: "Then call
+    <strong><code>generate_draft</code></strong> to select the useful results." The model reads
+    the question, calls the search, receives ten results, and then calls
+    <strong><code>generate_draft</code></strong> on them.
+  </p>
+
+  <h2>What comes out</h2>
+  <p>
+    The screen prints both tools, one after the other. First the search, with
+    all ten results:
+  </p>
+  <pre class="code-block no-copy"><code>Tool: search_internet
+Query: What is the population of Hong Kong?
+
+1. Hong Kong Population (2026) - Worldometer  (score: 0.92)
+   https://www.worldometers.info/world-population/china-hong-kong-sar-population
+   The current population of the Hong Kong Special Administrative Region of the People's Republic of China is 7,371,564 as of Sunday, October 18, 2026, based on Worldometer's elaboration of the latest Un...
+
+2. Hong Kong Population 2026  (score: 0.94)
+   https://worldpopulationreview.com/countries/hong-kong
+   ### Request Data  Please enter your email address to receive this data in your inbox.  ## Hong Kong By the Numbers  As of 2026, Hong Kong has a total populationof 7,378,602, ranking as the 107th most...
+...</code></pre>
+  <p>
+    Then <strong><code>generate_draft</code></strong>, with only the results it
+    selected. To keep this page short, the content line under each result is left
+    out here; the program prints it.
+  </p>
+  <pre class="code-block no-copy"><code>Tool: generate_draft
+Query: What is the population of Hong Kong?
+
+1. Hong Kong Population (2026) - Worldometer  (score: 0.92)
+   https://www.worldometers.info/world-population/china-hong-kong-sar-population
+
+2. Hong Kong Population 2026  (score: 0.94)
+   https://worldpopulationreview.com/countries/hong-kong
+
+3. Hong Kong Map, History &amp; Population | Study.com  (score: 0.93)
+   https://study.com/academy/lesson/hong-kong-facts-population.html
+
+4. Hong Kong Population (1950-2026)  (score: 0.92)
+   https://www.macrotrends.net/global-metrics/countries/hkg/hong-kong/population
+
+5. Hong Kong - Population and Demography Country Profile | Our World in Data  (score: 0.91)
+   https://ourworldindata.org/profile/population-demography/hong-kong
+
+6. GovHK: Hong Kong &ndash; the Facts  (score: 0.85)
+   https://www.gov.hk/en/about/abouthk/facts.htm
+
+7. Race Relations Unit - Information Centre - Demographics  (score: 0.78)
+   https://www.had.gov.hk/rru/en/info/demographics.htm</code></pre>
+  <p>
+    Seven, not ten. The three that disappeared:
+  </p>
+  <ul>
+    <li><strong>Wikipedia</strong> (score 0.92) &mdash; kept out by the URL rule, even though its score is high.</li>
+    <li><strong>World Bank</strong> (score 0.39) &mdash; below the 0.5 line.</li>
+    <li><strong>Population Estimates</strong> (score 0.11) &mdash; also below the line.</li>
+  </ul>
+  <p>
+    <strong><code>generate_draft</code></strong> removed results
+    and left the rest untouched, so the numbers and links survive exactly as the
+    search service returned them.
+  </p>
+
+  <h2>The whole program</h2>
+  <pre class="code-block"><code># RESEARCH, version 3: two tools, one after the other.
+# Tool 1 searches. Tool 2 filters: score 0.5 or higher, never Wikipedia.
+# last_search lets the second tool see what the first one found.
+import os
+import json
+from dotenv import load_dotenv
+from tavily import TavilyClient
+from langchain_core.tools import tool
+from langchain_openai import ChatOpenAI
+from langchain.agents import create_agent
+
+load_dotenv()
+
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
+
+tavily_client = TavilyClient(api_key=TAVILY_API_KEY)
+
+# Keeps the latest search response so generate_draft can use it
+last_search = {}
+
+@tool
+def search_internet(query: str):
+    """
+    Search the internet for up-to-date information about the query
+    and return the full Tavily search response.
+    """
+    global last_search
+    response = tavily_client.search(query, max_results=10)
+    last_search = response
+    return response
+
+
+@tool(return_direct=True)
+def generate_draft():
+    """
+    Go through the results from the latest search_internet call.
+    Keep results with a score of 0.5 or higher, but never keep Wikipedia.
+    Return the selected results.
+    """
+    selected = []
+    for r in last_search.get("results", []):
+        if r["score"] >= 0.5 and "wikipedia.org" not in r["url"]:
+            selected.append(r)
+
+    return {"query": last_search.get("query"), "results": selected}
+
+
+my_model = ChatOpenAI(
+    model="deepseek-flash",
+    api_key=DEEPSEEK_API_KEY,
+    base_url="https://api.deepseek.com",
+    temperature=0,
+)
+
+agent = create_agent(
+    model=my_model,
+    tools=[search_internet, generate_draft],
+    system_prompt=(
+        "You are a helpful assistant. "
+        "Always call search_internet, using the user's message exactly as the query. "
+        "Do not rephrase, shorten, translate, or add anything to it. "
+        "Then call generate_draft to select the useful results."
+    ),
+)
+
+prompt = "What is the population of Hong Kong?"
+result = agent.invoke({
+    "messages": [{"role": "user", "content": prompt}]
+})
+
+for message in result["messages"]:
+    if message.type == "tool":
+        response = json.loads(message.content)
+        print(f"Tool: {message.name}")
+        print(f"Query: {response['query']}\n")
+        for i, r in enumerate(response["results"], start=1):
+            print(f"{i}. {r['title']}  (score: {r['score']:.2f})")
+            print(f"   {r['url']}")
+            print(f"   {r['content'][:200].replace(chr(10), ' ')}...\n")</code></pre>
+
+  <h2>Running it on your own computer</h2>
+  <p>
+    <a href="downloads/Folder-AI-Research03.zip">Download the demo program
+    (Folder-AI-Research03.zip)</a>. The zip holds three files:
+    <strong><code>research03.py</code></strong> (the full script), <strong><code>pyproject.toml</code></strong> and
+    <strong><code>README.md</code></strong>. This version calls a language model once, so it
+    needs both a Tavily key and a DeepSeek key.
+  </p>
+  <ol>
+    <li>Open the folder in Visual Studio Code.</li>
+    <li>
+      Create a file named <strong><code>.env</code></strong> in the folder with two lines:
+      <pre class="code-block"><code>TAVILY_API_KEY=your-tavily-key
+DEEPSEEK_API_KEY=your-deepseek-key</code></pre>
+      A Tavily key is available from the
+      <a href="https://app.tavily.com/home" target="_blank" rel="noopener">Tavily
+      dashboard</a>, and a DeepSeek key from the
+      <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek
+      console</a>. Usage is billed by each provider, so check the current pricing
+      terms there before you run it.
+    </li>
+    <li>In the Terminal, run these three lines, one at a time:
+      <pre class="code-block"><code>uv python pin 3.12.10</code></pre>
+      <pre class="code-block"><code>uv sync</code></pre>
+      <pre class="code-block"><code>uv run research03.py</code></pre>
+    </li>
+    <li>You should see two tools printed in turn: ten results from the search,
+      then seven from <strong><code>generate_draft</code></strong>. One model call takes a few seconds.</li>
+  </ol>
+  <p>
+    If you have not set up uv yet, start with
+    <a href="ai-note05.html">How to install Visual Studio Code?</a> and then
+    the uv note for <a href="ai-note03.html">Windows</a> or
+    <a href="ai-note04.html">Mac</a>.
+  </p>
+
+  <h2>Limitations</h2>
+  <ul>
+    <li>
+      <strong>The rule is simple for illustration.</strong> The score 0.5 is
+      only an example. Raise it to keep fewer results; lower it to keep more. A
+      useful page that scores 0.49 is still thrown away, and a page that passes
+      the test can still be wrong or out of date.
+    </li>
+    <li>
+      <strong>The model still has to follow the order.</strong> The prompt asks
+      for <strong><code>search_internet</code></strong> first and
+      <strong><code>generate_draft</code></strong> second. A model can depart from an instruction,
+      so the printed output is what you should check.
+    </li>
+    <li>
+      <strong>The tools talk through one shared variable.</strong>
+      <strong><code>last_search</code></strong> holds only the most recent search. If a later
+      search runs, the filter silently uses the new results.
+    </li>
+    <li>
+      <strong>Keeping the sources is still a human job.</strong> Seven results
+      are fewer than ten, but nothing has been read yet. Choosing between them
+      is the next version's job.
+    </li>
+  </ul>
+
+  <h2>Further reading</h2>
+  <ul>
+    <li><a href="ai-note48.html">How to use an AI agent to search the web (Research, version 2)?</a> &mdash; the single-tool agent this version grows from.</li>
+    <li><a href="ai-note47.html">How to search the web from Python (Research, version 1)?</a> &mdash; the search itself, with no agent.</li>
+    <li><a href="https://docs.langchain.com/" target="_blank" rel="noopener">LangChain documentation</a> &mdash; tools and <strong><code>create_agent</code></strong>.</li>
+    <li><a href="https://docs.tavily.com/" target="_blank" rel="noopener">Tavily documentation</a> &mdash; the <strong><code>search</code></strong> call and its response fields.</li>
+  </ul>
+
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', 'Copy code to clipboard');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', 'Copied to clipboard');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', 'Copy code to clipboard');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>

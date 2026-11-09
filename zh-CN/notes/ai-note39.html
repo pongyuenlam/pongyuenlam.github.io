@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 代理如何研究一个问题（ReAct，版本 3，在循环中进行网上搜索）？ | 林邦源博士</title>
+<meta name="description" content="同一个问题，多加一个工具：网上搜索。代理会思考、搜索、阅读，然后再次思考 —— 最多五轮 —— 直到它能交出有出处的答案，而不是“我不知道”。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note39.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note39.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note39.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note39.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note39.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="AI 代理如何研究一个问题（ReAct，版本 3，在循环中进行网上搜索）？">
+<meta property="og:description" content="同一个问题，多加一个工具：网上搜索。代理会思考、搜索、阅读，然后再次思考 —— 最多五轮 —— 直到它能交出有出处的答案，而不是“我不知道”。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-CN/notes/ai-note39.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="../../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "AI 代理如何研究一个问题（ReAct，版本 3，在循环中进行网上搜索）？",
+  "description": "同一个问题，多加一个工具：网上搜索。代理会思考、搜索、阅读，然后再次思考 —— 最多五轮 —— 直到它能交出有出处的答案，而不是“我不知道”。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-09",
+  "dateModified": "2026-11-09",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-CN/notes/ai-note39.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../../index.html">首页</a></li>
+        <li><a href="../../biography.html">个人简介</a></li>
+        <li><a href="../../research.html">研究</a></li>
+        <li><a href="../../cases.html">案例</a></li>
+        <li><a href="../../books.html">著作</a></li>
+        <li><a href="../../ai-programs.html">AI 笔记</a></li>
+        <li><a href="../../links/">链接</a></li>
+        <li><a href="../../glossary/">词汇表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <a href="/notes/ai-note39.html">English</a>
+  <a href="/zh-HK/notes/ai-note39.html">繁體中文</a>
+  <span class="current">简体中文</span>
+</div>
+
+<main>
+  <h1>AI 代理如何研究一个问题（ReAct，版本 3，在循环中进行网上搜索）？</h1>
+  <p class="paper-meta">林邦源博士 &middot; AI 笔记 &middot; 2026 年 11 月 9 日 &middot; 约 5 分钟阅读</p>
+
+  <p>
+    <a href="ai-note38.html" target="_blank" rel="noopener">上一篇笔记</a>
+    问一个没有工具的模型：<em>“Mark 何时推出 Muse？”</em>它仔细思考之后，
+    诚实地回答：<em>“我不知道。”</em>这篇笔记问<strong>同一个问题</strong>，
+    只多加一个工具：由
+    <a href="https://www.tavily.com/" target="_blank" rel="noopener">Tavily</a>
+    提供的网上搜索。代理现在可以重复
+    <a href="ai-note37.html" target="_blank" rel="noopener">思考 &rarr; 行动
+    &rarr; 观察这个循环</a> —— 最多五轮 —— 而且只有在它认为自己
+    知道答案时才停下来。
+  </p>
+
+  <h2>脚本</h2>
+  <p>这是 <code>ReAct03.py</code> 目前的内容：</p>
+  <pre class="code-block"><code># Same ReAct idea as react01.py, but this task needs MORE THAN ONE action,
+# so we repeat Think -&gt; Act -&gt; Observe in a loop until the model says "finish".
+# Step 1: THINK  -&gt; ask the model to reason about what to do next
+# Step 2: ACT    -&gt; ask for ONE action: search[...] or finish[...]
+# Step 3: OBSERVE-&gt; run the Tavily web search (a real tool), add the result to the prompt, loop again
+import os
+import re
+from datetime import datetime
+from tavily import TavilyClient
+from openai import OpenAI
+from dotenv import load_dotenv
+load_dotenv()
+
+client = OpenAI(
+    api_key=os.environ.get('DEEPSEEK_API_KEY'),
+    base_url="https://api.deepseek.com")
+tavily = TavilyClient(api_key=os.environ.get('TAVILY_API_KEY'))
+
+def ask(prompt, stop=None):
+    """Send one prompt to the model and return its text reply."""
+    response = client.chat.completions.create(
+        model="deepseek-flash",
+        messages=[{"role": "user", "content": prompt}],
+        stop=stop,   # stop writing when this text appears
+    )
+    return response.choices[0].message.content
+
+# The only tool (action) our agent can use
+def search_tavily(query):
+    """Return the top web results from Tavily (title, url, short content)."""
+    results = tavily.search(query=query, max_results=3)["results"]
+    if not results:
+        return f"No web results found for '{query}'."
+    return "\n".join(f"[{r['title']}] ({r['url']}) {r['content'][:400]}"
+                     for r in results)
+
+task = ("When did Mark launch Muse")
+
+prompt = f"""Task: {task}
+You can use ONE tool: search[query] searches the web (Tavily) and returns the top results.
+Today is {datetime.now().strftime('%Y-%m-%d')}.
+Work in steps. Each step has a Thought, an Action, and an Observation."""
+
+for step in range(1, 6):          # at most 5 rounds, so it cannot loop forever
+    # ---- Step 1: THINK (Reasoning) ----
+    thought = ask(prompt + f"\n\nThought {step}: (reason briefly about what to do next; do not act yet)",
+                  stop=["Action"])   # stop the model inventing its own Action/Observation
+    print(f"=== Round {step} - Thought ===")
+    print(thought)
+
+    # ---- Step 2: ACT — append the reasoning trace, then ask for an action ----
+    prompt = prompt + f"\n\nThought {step}: {thought}"
+    action = ask(prompt + "\n\nWhat action should be taken based on that? "
+                 "Reply with ONLY: search[query] or finish[answer]").strip()
+    print(f"=== Round {step} - Action chosen by the model ===")
+    print(action)
+
+    if action.startswith("finish"):
+        answer = re.search(r"finish\[(.*)\]", action, re.S)
+        print("=== Final Answer ===")
+        print(answer.group(1) if answer else action)
+        break
+
+    # ---- Step 3: OBSERVE — our Python code (not the model) runs the tool ----
+    query = re.search(r"search\[(.*)\]", action, re.S)
+    observation = search_tavily(query.group(1)) if query else "Invalid action."
+    print(f"=== Round {step} - Observation from Tavily web search ===")
+    print(observation)
+    prompt = prompt + f"\nAction {step}: {action}\nObservation {step}: {observation}"
+else:
+    print("=== Stopped: no answer after 5 rounds ===")</code></pre>
+
+  <h2>每一部分的作用</h2>
+  <ul>
+    <li>
+      <strong>两把密钥，两个服务。</strong>DeepSeek 负责思考，Tavily 负责搜索。
+      Tavily 是专为代理而设的搜索服务：你送出一个查询，它返回干净的标题、
+      链接和简短摘录 —— 你不用自己去抓取网页。它设有免费方案，方便试用。
+    </li>
+    <li>
+      <strong><code>search_tavily(query)</code></strong> 只保留最前面的三个结果，
+      每个结果只取前 400 个字符。一个填满屏幕的观察，会把推理淹没。
+    </li>
+    <li>
+      <strong>提示词写明规则：</strong>只有一个工具，写成
+      <code>search[query]</code>；今天的日期，让“今天”和“今年”有意义；
+      以及每一步的格式 —— 思考、行动、观察。
+    </li>
+    <li>
+      <strong>循环有预算。</strong><code>range(1, 6)</code> 最多只允许五轮。
+      如果模型始终没有说 <code>finish[...]</code>，程序就会停下来，并说明原因。
+      没有预算的代理，就像没有上限的账单。
+    </li>
+    <li>
+      <strong><code>stop=["Action"]</code> 是防护栏。</strong>不加限制的话，
+      聊天模型会乐于顺着这个格式继续写，自行<em>编造</em>出属于它的行动和观察 ——
+      也就是假的搜索结果。停止词会在思考之后截断回复，所以真正的行动和真正的
+      观察，永远来自你的代码，而不是模型的想象。
+    </li>
+    <li>
+      <strong>提示词每一轮都会变长。</strong>每个思考、行动和观察都会附加进去，
+      所以第&nbsp;4 轮可以看到第&nbsp;1&ndash;3 轮所发现的一切。提示词就是代理的记忆。
+    </li>
+  </ul>
+
+  <h2>一次真实运行</h2>
+  <p>
+    四轮。留意第&nbsp;2 轮怎样发现两个来源说法有出入，以及代理如何一直搜索，
+    直到日期对得上：
+  </p>
+  <pre class="code-block"><code>=== Round 1 - Thought ===
+Thought 1: I need to find out when Mark (likely Mark Zuckerberg, given "Muse") launched something called Muse. I should search the web for this, but I need to be careful—"Muse" could refer to different things (e.g., a Meta product, an AI model, or a project by another Mark). I'll start with a targeted search query combining "Mark" and "Muse launch" to get relevant results.
+=== Round 1 - Action chosen by the model ===
+search[Mark Muse launch date]
+=== Round 1 - Observation from Tavily web search ===
+[Meta Muse in the UK, Europe and Australia: Where It Stands in October 2026] (https://medium.com/@mateohq/meta-muse-in-the-uk-europe-and-australia-where-it-stands-in-october-2026-3342eb499e81) ...Status: not available, no date announced...
+[Meta launches Muse for Small Business as Zuckerberg pushes beyond consumer AI market] (https://www.cnbc.com/2026/09/29/meta-launches-muse-for-small-business-zuckerberg-pushes-enterprise-ai.html) ...Published Tue, Sep 29 2026...
+[Everything new coming to Meta's AI agent Muse | TechCrunch] (https://techcrunch.com/2026/09/23/everything-new-coming-to-metas-ai-agent-muse) Muse, which launched in early September, interacts across a user's devices and digital accounts...
+=== Round 2 - Thought ===
+Thought 2: The search results give conflicting or unclear timing: one CNBC article says Meta launched Muse for Small Business on September 29, 2026, while a TechCrunch article says Muse "launched in early September." I need to pin down the original launch date of Muse itself, not just the small-business version. I should search more specifically...
+=== Round 2 - Action chosen by the model ===
+search[Meta launches Muse AI agent date early September 2026]
+=== Round 2 - Observation from Tavily web search ===
+[Meta Muse Launches: AI Agent That Shops, Books and Negotiates] (https://www.how2shout.com/ai/meta-muse-personal-ai-agent-launch.html) Meta launched Muse on Tuesday (September 8, 2026), a personal AI agent that books travel, sends email, shops, and negotiates on your behalf...
+[Instagram] (https://www.instagram.com/p/Dd_SU5yEbfg) Meta announced Muse on September 8, 2026, describing it as a personal AI agent that can take action—not just answer questions...
+[Meta Muse is a secure, personal AI... - Tipp City RoadDog] (https://www.facebook.com/TippCityRoadDog/posts/...) ...Launched in September 2026, it shifts the paradigm from a traditional chatbot...
+=== Round 3 - Thought ===
+Thought 3: I now have converging evidence that Meta's Muse AI agent launched on September 8, 2026, with a small-business version following on September 29, 2026. The question asks "When did Mark launch Muse" — this almost certainly refers to Mark Zuckerberg and Meta's Muse. The best answer is the original launch date: September 8, 2026. I should do one more search to confirm...
+=== Round 3 - Action chosen by the model ===
+search[Meta Muse official launch September 8 2026 Zuckerberg announcement]
+=== Round 3 - Observation from Tavily web search ===
+[Zuckerberg Is Back (And It's Not the Model) - Meta Muse Launch] (https://www.youtube.com/watch?v=-_ovL8w1TMM) On 8 September, Meta launched Muse: a personal AI agent with its own computer and its own wallet...
+[Meta Enterprise Platform: What Zuckerberg Announced | CellCog] (https://cellcog.ai/blog/meta-enterprise-platform) On September 28, 2026 ... Mark Zuckerberg announced Meta Enterprise Platform...
+[Meta launches Muse for Small Business ... CNBC] (https://www.cnbc.com/2026/09/29/meta-launches-muse-for-small-business-zuckerberg-pushes-enterprise-ai.html) ...
+=== Round 4 - Thought ===
+Thought 4: The evidence is now consistent and converging. Meta (Mark Zuckerberg's company) launched the Muse personal AI agent on September 8, 2026, with the US-only rollout on iOS, Android, and muse.ai. A small-business/enterprise version followed later in September (announced September 28–29, 2026). The question "When did Mark launch Muse" is best answered with the original consumer launch date. I have enough to finalize.
+=== Round 4 - Action chosen by the model ===
+finish[Mark Zuckerberg's Meta launched Muse on September 8, 2026. It was a US-only personal AI agent rollout across iOS, Android, and muse.ai. A small-business/enterprise version followed around September 28–29, 2026.]
+=== Final Answer ===
+Mark Zuckerberg's Meta launched Muse on September 8, 2026. It was a US-only personal AI agent rollout across iOS, Android, and muse.ai. A small-business/enterprise version followed around September 28–29, 2026.</code></pre>
+  <p class="paper-meta">摘录为求易读而经过缩短（&hellip;）；完整运行会打印每个结果的前 400 个字符。</p>
+  <p>
+    把这个答案与上一篇笔记中没有工具的答案比较一下。问题完全相同；改变的是，
+    推理现在有东西可以<em>配合</em>。最精彩的推理发生在第&nbsp;2 轮：模型读完
+    三个结果，发现 CNBC 和 TechCrunch 对日期的说法有出入，于是写出一条更精准的
+    查询来厘清。这个判断，是任何工具都无法替它做的部分。
+  </p>
+
+  <h2>在自己的电脑上运行</h2>
+  <p>
+    <a href="/notes/downloads/Folder-AI-ReAct03.zip">下载演示程序
+    （Folder-AI-ReAct03.zip）</a>。zip 内包含三个文件：
+    <code>ReAct03.py</code>（就是上面的脚本）、<code>pyproject.toml</code>
+    （包清单）和 <code>README.md</code>。
+  </p>
+  <ol>
+    <li>在 Visual Studio Code 打开这个文件夹。</li>
+    <li>
+      在文件夹内创建一个名为 <code>.env</code> 的文件，内容有两行：
+      <pre class="code-block"><code>DEEPSEEK_API_KEY=your-deepseek-key
+TAVILY_API_KEY=your-tavily-key</code></pre>
+      第一个密钥从
+      <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek
+      控制台</a>获取，第二个从
+      <a href="https://app.tavily.com/" target="_blank" rel="noopener">Tavily</a>获取；
+      两者都有免费的起始额度。
+    </li>
+    <li>在终端运行：
+      <pre class="code-block"><code>uv sync
+uv run ReAct03.py</code></pre>
+      <code>uv sync</code> 只需要第一次运行；它会读取
+      <code>pyproject.toml</code>，并把 <code>openai</code>、
+      <code>tavily-python</code> 和 <code>python-dotenv</code> 装进这个项目。
+    </li>
+  </ol>
+
+  <h2>为什么这次运行重要</h2>
+  <ul>
+    <li>
+      <strong>这个循环做了真正的研究。</strong>不是一次搜索，而是三次：
+      每一轮都读上一轮找到的东西，再选一条更好的查询。互相冲突的日期被
+      发现并解决，而不是取平均值。
+    </li>
+    <li>
+      <strong>答案带着证据。</strong>最后那句话里的每一项说法，都可以追溯到
+      某个观察中具名的来源 —— 这正是单靠记忆的答案无法提供的。
+    </li>
+    <li>
+      <strong>预算让它保持诚实。</strong>本来有五轮可用，实际只需四轮。模型
+      自己决定何时停手，而就算它不停，程序也会把它停下来。
+    </li>
+    <li>
+      <strong>同一个问题，三个答案。</strong>没有工具时：“我不知道。”
+      只用一次工具时：对日期的一次猜测。有了循环：一个经过核实、附有出处的
+      答案。这就是这个系列一路走来的轨迹。
+    </li>
+  </ul>
+
+  <h2>延伸阅读</h2>
+  <ul>
+    <li><a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">ReAct: Synergizing Reasoning and Acting in Language Models</a> —— 为这个模式命名的论文，也是本系列所建立的基础。</li>
+    <li><a href="https://docs.tavily.com/" target="_blank" rel="noopener">Tavily 文档</a> —— 搜索选项、免费方案与定价。</li>
+    <li><a href="https://api-docs.deepseek.com/" target="_blank" rel="noopener">DeepSeek API 文档</a> —— 模型、密钥与定价。</li>
+  </ul>
+
+</main>
+
+<footer class="site-footer">
+  <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+  <p><a href="../../index.html">首页</a> &middot; <a href="../../ai-programs.html">AI 笔记</a> &middot; <a href="../../links/">链接</a> &middot; <a href="../../glossary/">词汇表</a></p>
+</footer>
+
+</body>
+</html>

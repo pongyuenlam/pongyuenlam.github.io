@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 代理如何在没有任何工具的情况下回答（ReAct，版本 2，只推理）？ | 林邦源博士</title>
+<meta name="description" content="给模型一个问题、不给任何工具，它只能凭记忆推理。这个最小的实验 —— 只推理、不行动、不观察 —— 同时展示没有工具的代理的诚实与风险。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note38.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note38.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note38.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note38.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note38.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="AI 代理如何在没有任何工具的情况下回答（ReAct，版本 2，只推理）？">
+<meta property="og:description" content="给模型一个问题、不给任何工具，它只能凭记忆推理。这个最小的实验 —— 只推理、不行动、不观察 —— 同时展示没有工具的代理的诚实与风险。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-CN/notes/ai-note38.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="../../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "AI 代理如何在没有任何工具的情况下回答（ReAct，版本 2，只推理）？",
+  "description": "给模型一个问题、不给任何工具，它只能凭记忆推理。这个最小的实验 —— 只推理、不行动、不观察 —— 同时展示没有工具的代理的诚实与风险。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-09",
+  "dateModified": "2026-11-09",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-CN/notes/ai-note38.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../../index.html">首页</a></li>
+        <li><a href="../../biography.html">个人简介</a></li>
+        <li><a href="../../research.html">研究</a></li>
+        <li><a href="../../cases.html">案例</a></li>
+        <li><a href="../../books.html">著作</a></li>
+        <li><a href="../../ai-programs.html">AI 笔记</a></li>
+        <li><a href="../../links/">链接</a></li>
+        <li><a href="../../glossary/">词汇表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <a href="/notes/ai-note38.html">English</a>
+  <a href="/zh-HK/notes/ai-note38.html">繁體中文</a>
+  <span class="current">简体中文</span>
+</div>
+
+<main>
+  <h1>AI 代理如何在没有任何工具的情况下回答（ReAct，版本 2，只推理）？</h1>
+  <p class="paper-meta">林邦源博士 &middot; AI 笔记 &middot; 2026 年 11 月 9 日 &middot; 约 3 分钟阅读</p>
+
+  <p>
+    <a href="ai-note37.html" target="_blank" rel="noopener">上一篇笔记</a>建立了一个
+    会思考、行动和观察的代理。本篇删去三步之中的两步。没有行动、没有观察
+    &mdash; 模型只能<strong>思考</strong>，也就是所谓的<em>思维链</em>，然后凭
+    自己的记忆回答。它说的每一句，都没有对照真实世界核实。它面对的问题故意
+    含糊：<em>“Mark 何时推出 Muse？”</em>
+  </p>
+
+  <h2>代码</h2>
+  <p>这是 <code>ReAct02.py</code> 目前的内容：</p>
+  <pre class="code-block"><code># "Reason only" (Chain-of-Thought): NO tool and NO loop.
+# The model can only THINK step by step and answer from its own memory.
+# Nothing is checked against the real world, so the answer may be wrong (hallucination).
+# Compare the result with react03.py (Reason + Act), which searches the web with Tavily.
+import os
+from openai import OpenAI
+from dotenv import load_dotenv
+load_dotenv()
+
+client = OpenAI(
+    api_key=os.environ.get('DEEPSEEK_API_KEY'),
+    base_url="https://api.deepseek.com")
+
+def ask(prompt):
+    """Send one prompt to the model and return its text reply."""
+    response = client.chat.completions.create(
+        model="deepseek-flash",
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return response.choices[0].message.content
+
+task = ("When did Mark launch Muse")
+
+# ---- THINK only (Reasoning) — no Action, no Observation ----
+prompt = f"""Task: {task}
+You have NO tools. Think step-by-step using only what you already know,
+then end with one line: Answer: &lt;your answer&gt;"""
+reply = ask(prompt)
+print("=== Thought (reasoning trace, no tools) ===")
+print(reply)</code></pre>
+
+  <h2>每一部分的作用</h2>
+  <ul>
+    <li>
+      <strong>DeepSeek 客户端和 <code>ask()</code></strong> 与上一篇笔记完全
+      相同：一个来自 <code>.env</code> 文件的密钥，一个发出提示词并返回回复的
+      辅助函数。
+    </li>
+    <li>
+      <strong>任务</strong>没有指明姓氏，也没有指明产品类别。“Mark”可能是
+      Mark Zuckerberg；“Muse”可能是那支乐队、一个应用，或者根本不存在。
+      要答得好，需要一些模型几乎肯定没有的事实。
+    </li>
+    <li>
+      <strong>提示词禁止使用工具。</strong>它让模型只凭已知的东西逐步思考，
+      最后以 <code>Answer:</code> 开头的一行作结。整个程序就是这样：一次调用、
+      一次打印。
+    </li>
+  </ul>
+
+  <h2>一次真实运行</h2>
+  <pre class="code-block"><code>=== Thought (reasoning trace, no tools) ===
+Mark Zuckerberg launched Muse? I don't have knowledge of Mark launching something called Muse. There is a band Muse, but not launched by Mark. Perhaps you mean Meta's AI model? I'm not aware.
+
+Answer: I don't know.</code></pre>
+  <p>
+    有两点值得注意。第一，推理确实有用：模型看出了其中的含糊（“有一支叫 Muse
+    的乐队，但不是 Mark 推出的”），而不是假装问题很清楚。第二，最终答案是
+    诚实的 &mdash; 至少这一次。程序里没有任何东西<em>强制</em>它诚实。问一个
+    听起来更普通的问题，同样只靠记忆的推理，就可能产生一个自信、流畅但错误
+    的答案：幻觉。这里没有观察步骤可以抓住它。
+  </p>
+
+  <h2>在自己的电脑上运行</h2>
+  <p>
+    <a href="/notes/downloads/Folder-AI-ReAct02.zip">下载演示程序
+    （Folder-AI-ReAct02.zip）</a>。zip 里包含三个文件：
+    <code>ReAct02.py</code>（上面的程序）、<code>pyproject.toml</code>
+    （包清单）和 <code>README.md</code>。
+  </p>
+  <ol>
+    <li>在 Visual Studio Code 中打开这个文件夹。</li>
+    <li>
+      在文件夹里新建一个名为 <code>.env</code> 的文件，写入一行：
+      <pre class="code-block"><code>DEEPSEEK_API_KEY=your-key-here</code></pre>
+      到
+      <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek
+      控制台</a>获取密钥；新账户附带试用额度。
+    </li>
+    <li>在终端运行：
+      <pre class="code-block"><code>uv sync
+uv run ReAct02.py</code></pre>
+      <code>uv sync</code> 只需第一次运行；它会读取
+      <code>pyproject.toml</code>，把 <code>openai</code> 和
+      <code>python-dotenv</code> 安装到项目中。
+    </li>
+  </ol>
+  <p>
+    试着把任务改成一个有众所周知答案的问题，然后改成关于一家小型本地公司的
+    问题。两次运行的对比，就是这一课。
+  </p>
+
+  <h2>为什么这个实验重要</h2>
+  <ul>
+    <li>
+      <strong>推理不是知识。</strong>逐步思考改善模型运用已知知识的方式；但它
+      无法提供它从不知道的东西。
+    </li>
+    <li>
+      <strong>诚实是靠运气，不是设计。</strong>“我不知道”在这里是模型的选择，
+      不是保证。只有观察步骤才能让答案可靠。
+    </li>
+    <li>
+      <strong>它为比较铺路。</strong>这个系列的下一篇笔记会加入一个工具
+      &mdash; 网上搜索 &mdash; 再问同一类问题，让你看清楚行动带来了什么改变。
+    </li>
+  </ul>
+
+  <h2>延伸阅读</h2>
+  <ul>
+    <li><a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">ReAct: Synergizing Reasoning and Acting in Language Models</a> &mdash; 为这个系列所建立的模式命名的论文。</li>
+    <li><a href="https://api-docs.deepseek.com/" target="_blank" rel="noopener">DeepSeek API 文档</a> &mdash; 模型、密钥与价格。</li>
+  </ul>
+
+</main>
+
+<footer class="site-footer">
+  <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+  <p><a href="../../index.html">首页</a> &middot; <a href="../../ai-programs.html">AI 笔记</a> &middot; <a href="../../links/">链接</a> &middot; <a href="../../glossary/">词汇表</a></p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-HK">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>如何使用 AI 代理搜尋網頁（Research，版本 2）？ | 林邦源博士</title>
+<meta name="description" content="版本 2 把搜尋交給一個代理。版本 1 的 Tavily 呼叫變成一個工具，由模型決定何時呼叫它，而代理到此為止，讓十個原始結果原封不動地交回 &mdash; 中間沒有任何摘要。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note48.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note48.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note48.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note48.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note48.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何使用 AI 代理搜尋網頁（Research，版本 2）？">
+<meta property="og:description" content="版本 2 把搜尋交給一個代理。版本 1 的 Tavily 呼叫變成一個工具，由模型決定何時呼叫它，而代理到此為止，讓十個原始結果原封不動地交回 &mdash; 中間沒有任何摘要。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-HK/notes/ai-note48.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="../../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "如何使用 AI 代理搜尋網頁（Research，版本 2）？",
+  "description": "版本 2 把搜尋交給一個代理。版本 1 的 Tavily 呼叫變成一個工具，由模型決定何時呼叫它，而代理到此為止，讓十個原始結果原封不動地交回 &mdash; 中間沒有任何摘要。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-09",
+  "dateModified": "2026-11-09",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-HK/notes/ai-note48.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../../index.html">首頁</a></li>
+        <li><a href="../../biography.html">個人簡介</a></li>
+        <li><a href="../../research.html">研究</a></li>
+        <li><a href="../../cases.html">案例</a></li>
+        <li><a href="../../books.html">著作</a></li>
+        <li><a href="../../ai-programs.html">AI 筆記</a></li>
+        <li><a href="../../links/">連結</a></li>
+        <li><a href="../../glossary/">詞彙表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <a href="/notes/ai-note48.html">English</a>
+  <span class="current">繁體中文</span>
+  <a href="/zh-CN/notes/ai-note48.html">简体中文</a>
+</div>
+
+<main>
+  <h1>如何使用 AI 代理搜尋網頁（Research，版本 2）？</h1>
+  <p class="paper-meta">林邦源博士 &middot; AI 筆記 &middot; 2026 年 11 月 9 日 &middot; 約 4 分鐘閱讀</p>
+
+  <p>
+    網頁搜尋是一項服務。你把問題送給 Tavily，它交回十個結果。每個結果都帶著
+    標題、連結、網頁的一小段文字，以及一個分數，說明這個網頁與問題有多吻合。
+  </p>
+  <p>
+    在這個版本，搜尋本身是一個<strong>工具</strong>，由代理決定是否使用。我們的
+    程式碼不再自己呼叫 Tavily。它把工具交給模型，模型讀過問題之後選擇這個工具，
+    然後由 Python 執行。十個結果會原封不動地交回，跟搜尋服務產生的完全一樣。
+  </p>
+
+  <h2>搜尋變成一個工具</h2>
+  <pre class="code-block"><code>@tool(return_direct=True)
+def search_internet(query: str):
+    """
+    Search the internet for up-to-date information about the query
+    and return the full Tavily search response.
+    """
+    response = tavily_client.search(query, max_results=10)
+    return response</code></pre>
+  <p>
+    <code>@tool</code> 把一個普通函數變成模型可以呼叫的東西。三引號裡的那句話
+    &mdash; 也就是 <strong>docstring</strong> &mdash; 不是裝飾：模型在決定這個
+    工具是否適合這個請求時，讀的就是它，而它同時也告訴模型可以期望拿回甚麼。
+  </p>
+  <p>
+    主體就是一次搜尋：一次呼叫，十個結果，每個都有 <code>title</code>、
+    <code>url</code>、<code>content</code> 和 <code>score</code>。
+  </p>
+
+  <h2>為甚麼工具會結束這次執行</h2>
+  <pre class="code-block"><code>@tool(return_direct=True)</code></pre>
+  <p>
+    <code>return_direct=True</code> 的意思是：當這個工具作答，那個答案就是代理
+    的最終答案。模型不會在之後再寫一段回覆。
+  </p>
+
+  <h2>指示：不要改寫問題</h2>
+  <pre class="code-block"><code>agent = create_agent(
+    model=model,
+    tools=[search_internet],
+    system_prompt=(
+        "You are a helpful assistant. "
+        "Always call search_internet, using the user's message exactly as the query. "
+        "Do not rephrase, shorten, translate, or add anything to it."
+    ),
+)</code></pre>
+  <p>
+    <strong>系統提示詞</strong>會在任務開始之前被讀取。這裡它做兩件事：叫模型
+    呼叫唯一的那個工具，並叫模型在過程中不要動那條問題。
+  </p>
+  <p>
+    第二條規則比表面看來更重要。搜尋引擎做的是字詞配對，所以「What is the
+    population of Hong Kong?」和「Hong Kong population」會交回不同的清單，而一個
+    樂於助人的模型會很自然地改寫問題，變成它認為更清楚的樣子。既然我們想逐個
+    版本比較這個系列，問題就必須原樣送出。
+  </p>
+
+  <h2>執行代理</h2>
+  <pre class="code-block"><code>prompt = "What is the population of Hong Kong?"
+result = agent.invoke({
+    "messages": [{"role": "user", "content": prompt}]
+})</code></pre>
+  <p>
+    代理接受的不是一句句子，而是一串訊息，每個訊息帶有一個角色，這裡只有一個：
+    <code>"user"</code>。<code>.invoke()</code> 會執行整個迴圈 &mdash; 模型讀
+    問題、決定呼叫 <code>search_internet</code>、Python 執行那個函數，然後結果
+    回到對話之中。<code>result</code> 保留這次執行的每一則訊息，不只是答案。
+  </p>
+
+  <h2>把答案讀回來</h2>
+  <pre class="code-block"><code>for message in result["messages"]:
+    if message.type == "tool":
+        response = json.loads(message.content)</code></pre>
+  <p>
+    這次執行裝著三類訊息：我們的問題、模型要求呼叫工具的訊息，以及工具的結果。
+    畫面只應該顯示第三類，所以迴圈用
+    <code>message.type == "tool"</code> 跳過另外兩類。
+  </p>
+  <p>
+    我們需要 <code>json.loads(message.content)</code>，原因只有一個。Tavily 的
+    字典以 JSON 形式寫在 <code>message.content</code> 裡面，而對 Python 來說，
+    那只是一條長長的字串。<code>json.loads(message.content)</code> 讀取這段文字，
+    重建出程式其餘部分可以使用的字典。
+  </p>
+  <p>
+    負責印出的四行與版本 1 相同，所以解釋請看版本 1。
+  </p>
+
+  <h2>輸出結果</h2>
+  <pre class="code-block no-copy"><code>Search result:
+Query: What is the population of Hong Kong?
+
+1. Hong Kong Population (2026) - Worldometer  (score: 0.92)
+   https://www.worldometers.info/world-population/china-hong-kong-sar-population
+   The current population of the Hong Kong Special Administrative Region of the People's Republic of China is 7,371,564 as of Sunday, October 18, 2026, based on Worldometer's elaboration of the latest Un...
+
+2. Hong Kong Population 2026  (score: 0.94)
+   https://worldpopulationreview.com/countries/hong-kong
+   ### Request Data  Please enter your email address to receive this data in your inbox.  ## Hong Kong By the Numbers  As of 2026, Hong Kong has a total populationof 7,378,602, ranking as the 107th most...
+
+3. Hong Kong Map, History &amp; Population | Study.com  (score: 0.93)
+   https://study.com/academy/lesson/hong-kong-facts-population.html
+   The population of Hong Kong is 7.5 million. Two million people live in Kowloon, the southern part of the peninsula, and 1 million people live in the northern part of Hong Kong Island, called Victoria ...
+...</code></pre>
+  <p>
+    沒有摘要，沒有「根據搜尋結果，人口大約是 740 萬」。十個結果，跟 Tavily 交回
+    的完全一樣。代理改變的是由誰提出請求，而不是回來的東西。
+  </p>
+
+  <h2>完整程式</h2>
+  <pre class="code-block"><code># RESEARCH, version 2: an AI agent does the search from version 1.
+# The same Tavily call becomes a TOOL, and the agent decides to call it.
+# return_direct=True means the tool's answer IS the final answer: the model
+# does not summarise the results afterwards.
+import os
+import json
+from dotenv import load_dotenv
+from tavily import TavilyClient
+from langchain_core.tools import tool
+from langchain_openai import ChatOpenAI
+from langchain.agents import create_agent
+
+load_dotenv()
+
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
+
+tavily_client = TavilyClient(api_key=TAVILY_API_KEY)
+
+@tool(return_direct=True)
+def search_internet(query: str):
+    """
+    Search the internet for up-to-date information about the query
+    and return the full Tavily search response.
+    """
+    response = tavily_client.search(query, max_results=10)
+    return response
+
+
+model = ChatOpenAI(
+    model="deepseek-flash",
+    api_key=DEEPSEEK_API_KEY,
+    base_url="https://api.deepseek.com",
+    temperature=0,
+)
+
+agent = create_agent(
+    model=model,
+    tools=[search_internet],
+    system_prompt=(
+        "You are a helpful assistant. "
+        "Always call search_internet, using the user's message exactly as the query. "
+        "Do not rephrase, shorten, translate, or add anything to it."
+    ),
+)
+
+prompt = "What is the population of Hong Kong?"
+result = agent.invoke({
+    "messages": [{"role": "user", "content": prompt}]
+})
+
+for message in result["messages"]:
+    if message.type == "tool":
+        response = json.loads(message.content)
+        print("Search result:")
+        print(f"Query: {response['query']}\n")
+        for i, r in enumerate(response["results"], start=1):
+            print(f"{i}. {r['title']}  (score: {r['score']:.2f})")
+            print(f"   {r['url']}")
+            print(f"   {r['content'][:200].replace(chr(10), ' ')}...\n")</code></pre>
+
+  <h2>在自己的電腦上執行</h2>
+  <p>
+    <a href="/notes/downloads/Folder-AI-Research02.zip">下載示範程式
+    （Folder-AI-Research02.zip）</a>。zip 內有三個檔案：
+    <code>research02.py</code>（完整腳本）、<code>pyproject.toml</code> 和
+    <code>README.md</code>。這個版本會呼叫語言模型一次，所以需要 Tavily 金鑰和
+    DeepSeek 金鑰各一條。
+  </p>
+  <ol>
+    <li>在 Visual Studio Code 中開啟這個資料夾。</li>
+    <li>
+      在資料夾裡建立一個名為 <code>.env</code> 的檔案，內容有兩行：
+      <pre class="code-block"><code>TAVILY_API_KEY=your-tavily-key
+DEEPSEEK_API_KEY=your-deepseek-key</code></pre>
+      Tavily 金鑰可從
+      <a href="https://app.tavily.com/home" target="_blank" rel="noopener">Tavily
+      控制台</a>取得，DeepSeek 金鑰則可從
+      <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek
+      控制台</a>取得。使用量由各自的供應商收費，所以執行之前，請先在該處查看
+      目前的收費條款。
+    </li>
+    <li>在終端機逐行執行以下三行：
+      <pre class="code-block"><code>uv python pin 3.12.10</code></pre>
+      <pre class="code-block"><code>uv sync</code></pre>
+      <pre class="code-block"><code>uv run research02.py</code></pre>
+    </li>
+    <li>你應該會看到與版本 1 相同的十個結果。一次模型呼叫需要幾秒鐘。</li>
+  </ol>
+  <p>
+    如果你還未設定好 uv，請先看
+    <a href="ai-note05.html">如何安裝 Visual Studio Code？</a>，然後看 uv 筆記的
+    <a href="ai-note03.html">Windows</a> 或
+    <a href="ai-note04.html">Mac</a> 版本。
+  </p>
+
+  <h2>限制</h2>
+  <ul>
+    <li>
+      <strong>代理加了一步，不是加了答案。</strong>十個結果還是那十個結果。新的
+      只是：這次由模型選擇工具，而下一步我們可以加入更多工具。
+    </li>
+    <li>
+      <strong>模型仍然可能改寫。</strong>指示要求原樣使用問題，
+      <code>temperature=0</code> 也令模型較為穩定，但模型始終可能不依指示。請
+      檢查畫面上印出的查詢，是否就是你輸入的那一條。
+    </li>
+    <li>
+      <strong>分數代表相關程度，不是真確程度。</strong>與版本 1 相同的提醒：高分
+      表示網頁與字詞吻合，不代表網頁正確或最新。
+    </li>
+    <li>
+      <strong>沒有任何過濾。</strong>來十個就印十個，包括那個只得 0.11、幾乎
+      沒有提到人口的結果。
+    </li>
+  </ul>
+
+  <h2>延伸閱讀</h2>
+  <ul>
+    <li><a href="ai-note47.html">如何用 Python 搜尋網頁（Research，版本 1）？</a> &mdash; 搜尋本身，沒有代理。</li>
+    <li><a href="ai-note43.html">如何在 AI 代理中使用 LangChain（ReAct，版本 7）？</a> &mdash; <code>create_agent</code> 首次出現的地方。</li>
+    <li><a href="https://docs.langchain.com/" target="_blank" rel="noopener">LangChain &mdash; 文件</a> &mdash; 工具、<code>create_agent</code> 與 <code>return_direct</code>。</li>
+    <li><a href="https://docs.tavily.com/" target="_blank" rel="noopener">Tavily &mdash; 文件</a> &mdash; <code>search</code> 呼叫及其回應欄位。</li>
+  </ul>
+
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&amp;hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', 'Copy code to clipboard');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', 'Copied to clipboard');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', 'Copy code to clipboard');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>
