@@ -70,7 +70,7 @@
     <button type="button" class="chip" data-filter="web" aria-pressed="false">网站</button>
     <button type="button" class="chip" data-filter="video" aria-pressed="false">视频</button>
   </div>
-  <div class="note-filters note-filters--sub" role="group" aria-label="缩小代理相关笔记" hidden>
+  <div class="note-filters note-filters--sub" role="group" style="display:none" aria-label="缩小代理相关笔记" hidden>
     <button type="button" class="chip is-active" data-sub="all" aria-pressed="true">全部代理</button>
     <button type="button" class="chip" data-sub="voice" aria-pressed="false">语音代理</button>
     <button type="button" class="chip" data-sub="tools" aria-pressed="false">代理工具</button>
@@ -339,6 +339,7 @@
     sub = track === 'agent' ? (sub || 'all') : 'all';
     setActive(topChips, 'filter', track);
     subBar.hidden = track !== 'agent';
+    subBar.style.display = track === 'agent' ? '' : 'none';
     setActive(subChips, 'sub', sub);
     cards.forEach(function (card) {
       var on;

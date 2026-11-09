@@ -69,7 +69,7 @@
     <button type="button" class="chip" data-filter="web" aria-pressed="false">Website</button>
     <button type="button" class="chip" data-filter="video" aria-pressed="false">Video</button>
   </div>
-  <div class="note-filters note-filters--sub" role="group" aria-label="Narrow the agent notes" hidden>
+  <div class="note-filters note-filters--sub" role="group" style="display:none" aria-label="Narrow the agent notes" hidden>
     <button type="button" class="chip is-active" data-sub="all" aria-pressed="true">All agents</button>
     <button type="button" class="chip" data-sub="voice" aria-pressed="false">Voice agents</button>
     <button type="button" class="chip" data-sub="tools" aria-pressed="false">Agent tools</button>
@@ -344,6 +344,7 @@
     sub = track === 'agent' ? (sub || 'all') : 'all';
     setActive(topChips, 'filter', track);
     subBar.hidden = track !== 'agent';
+    subBar.style.display = track === 'agent' ? '' : 'none';
     setActive(subChips, 'sub', sub);
     cards.forEach(function (card) {
       var on;
