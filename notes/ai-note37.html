@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How does an AI agent think, act and observe? | Howard Lam, PhD</title>
+<meta name="description" content="Ask a model for today's temperature and it guesses. The ReAct loop — Thought, Action, Observation — lets the model decide what to do, runs a real tool from Python, and grounds the final answer in the result.">
+<link rel="canonical" href="https://pongyuenlam.github.io/notes/ai-note37.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note37.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note37.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note37.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note37.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="How does an AI agent think, act and observe?">
+<meta property="og:description" content="Ask a model for today's temperature and it guesses. The ReAct loop — Thought, Action, Observation — lets the model decide what to do, runs a real tool from Python, and grounds the final answer in the result.">
+<meta property="og:url" content="https://pongyuenlam.github.io/notes/ai-note37.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="Howard Lam, PhD">
+
+<link rel="stylesheet" href="../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "How does an AI agent think, act and observe?",
+  "description": "Ask a model for today's temperature and it guesses. The ReAct loop — Thought, Action, Observation — lets the model decide what to do, runs a real tool from Python, and grounds the final answer in the result.",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-09",
+  "dateModified": "2026-11-09",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/notes/ai-note37.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../biography.html">Biography</a></li>
+        <li><a href="../research.html">Research</a></li>
+        <li><a href="../cases.html">Cases</a></li>
+        <li><a href="../books.html">Books</a></li>
+        <li><a href="../ai-programs.html">AI Notes</a></li>
+        <li><a href="../links/">Links</a></li>
+        <li><a href="../glossary/">Glossary</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <span class="current">English</span>
+  <a href="/zh-HK/notes/ai-note37.html">繁體中文</a>
+  <a href="/zh-CN/notes/ai-note37.html">简体中文</a>
+</div>
+
+<main>
+  <h1>How does an AI agent think, act and observe?</h1>
+  <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 9, 2026 &middot; 5 min read</p>
+
+  <p>
+    Ask a language model for today's temperature and it can only guess &mdash; its
+    knowledge ends at training time. <strong>ReAct</strong> (short for
+    <em>Reasoning and Acting</em>) is the pattern that fixes this. The agent works
+    in a loop of three steps: it <strong>thinks</strong> about the task in writing,
+    <strong>acts</strong> by naming a tool to call, and <strong>observes</strong>
+    the real-world result before giving the final answer. This note builds the
+    smallest possible ReAct agent: one task, one tool, three printed steps, using
+    DeepSeek as the model.
+  </p>
+
+  <h2>Where the idea comes from</h2>
+  <p>
+    The pattern is from a 2022 research paper,
+    <a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener"><em>ReAct:
+    Synergizing Reasoning and Acting in Language Models</em></a>, by researchers at
+    Google Brain and Princeton University. In plain words, the paper says this:
+    before ReAct, a language model could either <em>reason</em> (think through a
+    problem in writing) or <em>act</em> (do things in the world), but not both at
+    once. The authors let the model do the two in turns &mdash; write down its
+    thinking, then take an action, then read the result and think again. The
+    thinking keeps the actions on track, and the actions bring back real facts, so
+    the model stops making things up.
+  </p>
+
+  <h2>The script</h2>
+  <p>This is <code>ReAct01.py</code> as it stands:</p>
+  <pre class="code-block"><code># Step 1: THINK  -&gt; ask the model to reason step by step (reasoning trace)
+# Step 2: ACT    -&gt; append that trace to the prompt and ask "What action should be taken?"
+# Step 3: OBSERVE-&gt; run the action (a real tool), feed the result back, get the final answer
+import os
+import requests
+from openai import OpenAI
+from dotenv import load_dotenv
+load_dotenv()
+
+client = OpenAI(
+    api_key=os.environ.get('DEEPSEEK_API_KEY'),
+    base_url="https://api.deepseek.com")
+
+def ask(prompt):
+    """Send one prompt to the model and return its text reply."""
+    response = client.chat.completions.create(
+        model="deepseek-flash",
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return response.choices[0].message.content
+
+# The only tool (action) our agent can use
+def get_hk_temperature():
+    """Return the current temperature in Hong Kong from open-meteo.com."""
+    params = {"latitude": 22.32, "longitude": 114.17,
+              "current": "temperature_2m", "timezone": "auto"}
+    data = requests.get("https://api.open-meteo.com/v1/forecast",
+                        params=params, timeout=10).json()
+    return f"{data['current']['temperature_2m']}°C"
+
+task = "What is the temperature in Hong Kong today?"
+
+# ---- Step 1: THINK (Reasoning) ----
+prompt = f"""Task: {task}
+Think step-by-step about how to solve this task. Do not answer yet."""
+thought = ask(prompt)
+print("=== Step 1: Thought (reasoning trace) ===")
+print(thought)
+
+# ---- Step 2: ACT — append the reasoning trace to the prompt, then ask for an action ----
+prompt = prompt + f"""
+
+Thought: {thought}
+
+You have ONE tool: get_hk_temperature. What action should be taken based on that? Reply with ONLY: get_hk_temperature or none"""
+action = ask(prompt).strip()
+print("=== Step 2: Action chosen by the model ===")
+print(action)
+
+# ---- Step 3: OBSERVE — our Python code (not the model) runs the tool ----
+if "get_hk_temperature" in action:
+    observation = get_hk_temperature()
+else:
+    observation = "No action taken."
+print("=== Step 3: Observation from the real world ===")
+print(observation)
+
+# ---- Final answer: the model reasons again, now grounded in the observation ----
+prompt = prompt + f"""
+
+Action: {action}
+Observation: {observation}
+
+Now give the final answer to the task in one sentence."""
+print("=== Final Answer ===")
+print(ask(prompt))</code></pre>
+
+  <h2>What each part does</h2>
+  <ul>
+    <li>
+      <strong>The DeepSeek client.</strong> The <code>openai</code> package also
+      speaks to DeepSeek, because DeepSeek follows the same interface. The key
+      comes from a <code>.env</code> file, loaded by
+      <code>load_dotenv()</code>, so the secret never appears in the code.
+    </li>
+    <li>
+      <strong><code>ask()</code>.</strong> One helper sends one prompt and returns
+      one string. Every conversation with the model in this script goes through it.
+    </li>
+    <li>
+      <strong>The one tool.</strong> <code>get_hk_temperature()</code> asks
+      <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>
+      for the current temperature at Hong Kong's coordinates and returns it as a
+      short string, for example <code>26.8°C</code>. No key is needed.
+    </li>
+    <li>
+      <strong>Step 1 &mdash; THINK.</strong> The prompt holds the task plus one
+      instruction: <em>think step-by-step, do not answer yet</em>. The reply is a
+      <em>reasoning trace</em> &mdash; the model's working, written down.
+    </li>
+    <li>
+      <strong>Step 2 &mdash; ACT.</strong> The trace is appended to the prompt, and
+      the model is told it has exactly one tool. It must reply with only the tool
+      name or <code>none</code>. The model <em>chooses</em> the action; it does not
+      run it.
+    </li>
+    <li>
+      <strong>Step 3 &mdash; OBSERVE.</strong> Python &mdash; not the model &mdash;
+      checks the chosen action and runs the tool. The result, for example
+      <code>26.8°C</code>, is the observation.
+    </li>
+    <li>
+      <strong>The final answer.</strong> The prompt now contains the task, the
+      trace, the action and the observation. The model writes one sentence grounded
+      in a real number instead of a guess.
+    </li>
+  </ul>
+
+  <h2>Running it on your own computer</h2>
+  <p>
+    <a href="downloads/Folder-AI-ReAct01.zip">Download the demo program
+    (Folder-AI-ReAct01.zip)</a>. The zip holds three files:
+    <code>ReAct01.py</code> (the script above), <code>pyproject.toml</code> (the
+    package list) and <code>README.md</code>.
+  </p>
+  <ol>
+    <li>Open the folder in Visual Studio Code.</li>
+    <li>
+      Create a file named <code>.env</code> in the folder with one line:
+      <pre class="code-block"><code>DEEPSEEK_API_KEY=your-key-here</code></pre>
+      Get a key from the
+      <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek
+      console</a>; new accounts come with trial credit.
+    </li>
+    <li>In the Terminal, run:
+      <pre class="code-block"><code>uv sync
+uv run ReAct01.py</code></pre>
+      <code>uv sync</code> is needed only the first time; it reads
+      <code>pyproject.toml</code> and installs <code>openai</code>,
+      <code>requests</code> and <code>python-dotenv</code> into the project.
+    </li>
+  </ol>
+  <p>
+    You should see four blocks printed in order: the reasoning trace, the chosen
+    action (<code>get_hk_temperature</code>), the observed temperature, and the
+    final one-sentence answer that uses the real number. Here is one real run:
+  </p>
+  <pre class="code-block"><code>=== Step 1: Thought (reasoning trace) ===
+Let&rsquo;s break this down step-by-step:
+
+1. **Identify the goal** &ndash; The user wants the current temperature in Hong Kong today.
+2. **Determine location specifics** &ndash; Hong Kong is a major city; its weather can vary slightly by district but generally a single official temperature reading is used for &ldquo;Hong Kong&rdquo; in weather reports.
+3. **Check date/time awareness** &ndash; &ldquo;Today&rdquo; means the current date. My knowledge isn&rsquo;t real-time, so I can&rsquo;t know the live temperature without up-to-date data.
+4. **Possible sources** &ndash; Could use:
+   - Real-time weather websites (e.g., Hong Kong Observatory).
+   - Weather apps or APIs.
+   - Search engine results for &ldquo;Hong Kong temperature&rdquo;.
+5. **Consider limitations** &ndash; Without live access or browsing ability, I can&rsquo;t retrieve the exact current temperature.
+6. **Formulate approach for answer** &ndash; If I had browsing or API tools, I&rsquo;d check the Hong Kong Observatory or a trusted weather source right now and report the temperature in &deg;C (and possibly &deg;F).
+7. **Alternate if no access** &ndash; I&rsquo;d explain I can&rsquo;t provide real-time data and suggest how the user can check (e.g., HKO website, weather apps).
+
+This reasoning sets up how to get the answer, but the actual temperature value would need current data.
+=== Step 2: Action chosen by the model ===
+get_hk_temperature
+=== Step 3: Observation from the real world ===
+27.1&deg;C
+=== Final Answer ===
+The temperature in Hong Kong today is 27.1&deg;C.</code></pre>
+  <p>
+    Two things are worth noticing in the trace. First, the model says it plainly:
+    <em>&ldquo;My knowledge isn&rsquo;t real-time&rdquo;</em> &mdash; given only the
+    task, it already knows it cannot answer from memory. Second, its plan
+    (&ldquo;check a trusted weather source&rdquo;) is exactly what the tool then
+    does. The loop turns the model&rsquo;s own admission into a real answer.
+  </p>
+
+  <h2>Why this pattern matters</h2>
+  <ul>
+    <li>
+      <strong>The model decides, the code executes.</strong> The model never touches
+      the internet; your Python stays in charge of what actually runs. That is what
+      makes the pattern safe to extend.
+    </li>
+    <li>
+      <strong>Each step is visible.</strong> The trace, the chosen action and the
+      observation are printed, so when the agent misbehaves you can see
+      <em>where</em> it went wrong &mdash; a wrong thought, a wrong choice, or a
+      tool problem.
+    </li>
+    <li>
+      <strong>More tools, same loop.</strong> To give the agent a second ability
+      (the time, a search, a file), add the function and mention it in the Step 2
+      prompt. The three-step rhythm does not change.
+    </li>
+  </ul>
+
+  <h2>Further reading</h2>
+  <ul>
+    <li><a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">ReAct: Synergizing Reasoning and Acting in Language Models</a> &mdash; the paper that named the pattern.</li>
+    <li><a href="https://api-docs.deepseek.com/" target="_blank" rel="noopener">DeepSeek API documentation</a> &mdash; models, keys and pricing.</li>
+    <li><a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener">Open-Meteo API documentation</a> &mdash; every field the weather call can return.</li>
+  </ul>
+
+</main>
+
+<footer class="site-footer">
+  <p>&copy; 2026 Howard Pong Yuen Lam. All rights reserved.</p>
+  <p><a href="../index.html">Home</a> &middot; <a href="../ai-programs.html">AI Notes</a> &middot; <a href="../links/">Links</a> &middot; <a href="../glossary/">Glossary</a></p>
+</footer>
+
+</body>
+</html>

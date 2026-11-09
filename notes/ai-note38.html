@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How does an AI agent answer when it has no tools? | Howard Lam, PhD</title>
+<meta name="description" content="Give a model a question and no tools, and it can only reason from memory. This smallest experiment — reason only, no action, no observation — shows both the honesty and the risk of a tool-free agent.">
+<link rel="canonical" href="https://pongyuenlam.github.io/notes/ai-note38.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note38.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note38.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note38.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note38.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="How does an AI agent answer when it has no tools?">
+<meta property="og:description" content="Give a model a question and no tools, and it can only reason from memory. This smallest experiment — reason only, no action, no observation — shows both the honesty and the risk of a tool-free agent.">
+<meta property="og:url" content="https://pongyuenlam.github.io/notes/ai-note38.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="Howard Lam, PhD">
+
+<link rel="stylesheet" href="../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "How does an AI agent answer when it has no tools?",
+  "description": "Give a model a question and no tools, and it can only reason from memory. This smallest experiment — reason only, no action, no observation — shows both the honesty and the risk of a tool-free agent.",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-09",
+  "dateModified": "2026-11-09",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/notes/ai-note38.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../biography.html">Biography</a></li>
+        <li><a href="../research.html">Research</a></li>
+        <li><a href="../cases.html">Cases</a></li>
+        <li><a href="../books.html">Books</a></li>
+        <li><a href="../ai-programs.html">AI Notes</a></li>
+        <li><a href="../links/">Links</a></li>
+        <li><a href="../glossary/">Glossary</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <span class="current">English</span>
+  <a href="/zh-HK/notes/ai-note38.html">繁體中文</a>
+  <a href="/zh-CN/notes/ai-note38.html">简体中文</a>
+</div>
+
+<main>
+  <h1>How does an AI agent answer when it has no tools?</h1>
+  <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 9, 2026 &middot; 3 min read</p>
+
+  <p>
+    <a href="ai-note37.html" target="_blank" rel="noopener">The previous note</a>
+    built an agent that thinks, acts and observes. This note removes two of the
+    three steps. No action, no observation &mdash; the model can only
+    <strong>think</strong>, in the style known as <em>chain-of-thought</em>, and
+    then answer from its own memory. Nothing it says is checked against the real
+    world. The question it faces is deliberately awkward:
+    <em>&ldquo;When did Mark launch Muse?&rdquo;</em>
+  </p>
+
+  <h2>The script</h2>
+  <p>This is <code>ReAct02.py</code> as it stands:</p>
+  <pre class="code-block"><code># "Reason only" (Chain-of-Thought): NO tool and NO loop.
+# The model can only THINK step by step and answer from its own memory.
+# Nothing is checked against the real world, so the answer may be wrong (hallucination).
+# Compare the result with react03.py (Reason + Act), which searches the web with Tavily.
+import os
+from openai import OpenAI
+from dotenv import load_dotenv
+load_dotenv()
+
+client = OpenAI(
+    api_key=os.environ.get('DEEPSEEK_API_KEY'),
+    base_url="https://api.deepseek.com")
+
+def ask(prompt):
+    """Send one prompt to the model and return its text reply."""
+    response = client.chat.completions.create(
+        model="deepseek-flash",
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return response.choices[0].message.content
+
+task = ("When did Mark launch Muse")
+
+# ---- THINK only (Reasoning) — no Action, no Observation ----
+prompt = f"""Task: {task}
+You have NO tools. Think step-by-step using only what you already know,
+then end with one line: Answer: &lt;your answer&gt;"""
+reply = ask(prompt)
+print("=== Thought (reasoning trace, no tools) ===")
+print(reply)</code></pre>
+
+  <h2>What each part does</h2>
+  <ul>
+    <li>
+      <strong>The DeepSeek client and <code>ask()</code></strong> are exactly the
+      same as in the previous note: one key from a <code>.env</code> file, one
+      helper that sends a prompt and returns the reply.
+    </li>
+    <li>
+      <strong>The task</strong> names no surname and no product category.
+      &ldquo;Mark&rdquo; could be Mark Zuckerberg; &ldquo;Muse&rdquo; could be the
+      band, an app, or nothing at all. A good answer requires facts the model
+      almost certainly does not have.
+    </li>
+    <li>
+      <strong>The prompt forbids tools.</strong> It tells the model to think
+      step-by-step using only what it already knows, and to finish with one line
+      beginning <code>Answer:</code>. That is the whole program: one call, one
+      print.
+    </li>
+  </ul>
+
+  <h2>One real run</h2>
+  <pre class="code-block"><code>=== Thought (reasoning trace, no tools) ===
+Mark Zuckerberg launched Muse? I don't have knowledge of Mark launching something called Muse. There is a band Muse, but not launched by Mark. Perhaps you mean Meta's AI model? I'm not aware.
+
+Answer: I don't know.</code></pre>
+  <p>
+    Two things are worth noticing. First, the reasoning is genuinely useful: the
+    model spots the ambiguity (&ldquo;There is a band Muse, but not launched by
+    Mark&rdquo;) instead of pretending the question is clear. Second, the final
+    answer is honest &mdash; this time. Nothing in the program <em>forces</em>
+    honesty. Ask a question that sounds more ordinary, and the same memory-only
+    reasoning can produce a confident, fluent, wrong answer: a hallucination.
+    There is no observation step to catch it.
+  </p>
+
+  <h2>Running it on your own computer</h2>
+  <p>
+    <a href="downloads/Folder-AI-ReAct02.zip">Download the demo program
+    (Folder-AI-ReAct02.zip)</a>. The zip holds three files:
+    <code>ReAct02.py</code> (the script above), <code>pyproject.toml</code> (the
+    package list) and <code>README.md</code>.
+  </p>
+  <ol>
+    <li>Open the folder in Visual Studio Code.</li>
+    <li>
+      Create a file named <code>.env</code> in the folder with one line:
+      <pre class="code-block"><code>DEEPSEEK_API_KEY=your-key-here</code></pre>
+      Get a key from the
+      <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek
+      console</a>; new accounts come with trial credit.
+    </li>
+    <li>In the Terminal, run:
+      <pre class="code-block"><code>uv sync
+uv run ReAct02.py</code></pre>
+      <code>uv sync</code> is needed only the first time; it reads
+      <code>pyproject.toml</code> and installs <code>openai</code> and
+      <code>python-dotenv</code> into the project.
+    </li>
+  </ol>
+  <p>
+    Try changing the task to a question with a well-known answer, and then to one
+    about a small local company. The contrast between the two runs is the lesson.
+  </p>
+
+  <h2>Why this experiment matters</h2>
+  <ul>
+    <li>
+      <strong>Reasoning is not knowledge.</strong> Step-by-step thinking improves
+      how the model uses what it knows; it cannot supply what it never knew.
+    </li>
+    <li>
+      <strong>Honesty is luck, not design.</strong> &ldquo;I don't know&rdquo; was
+      the model's choice here, not a guarantee. Only an observation step can make
+      an answer dependable.
+    </li>
+    <li>
+      <strong>It sets up the comparison.</strong> The next note in this series adds
+      one tool &mdash; a web search &mdash; and asks the same kind of question
+      again, so you can see exactly what acting changes.
+    </li>
+  </ul>
+
+  <h2>Further reading</h2>
+  <ul>
+    <li><a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">ReAct: Synergizing Reasoning and Acting in Language Models</a> &mdash; the paper that named the pattern this series builds.</li>
+    <li><a href="https://api-docs.deepseek.com/" target="_blank" rel="noopener">DeepSeek API documentation</a> &mdash; models, keys and pricing.</li>
+  </ul>
+
+</main>
+
+<footer class="site-footer">
+  <p>&copy; 2026 Howard Pong Yuen Lam. All rights reserved.</p>
+  <p><a href="../index.html">Home</a> &middot; <a href="../ai-programs.html">AI Notes</a> &middot; <a href="../links/">Links</a> &middot; <a href="../glossary/">Glossary</a></p>
+</footer>
+
+</body>
+</html>

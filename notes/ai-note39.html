@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How does an AI agent research a question with web search? | Howard Lam, PhD</title>
+<meta name="description" content="Same question, one more tool: a web search. The agent thinks, searches, reads, and thinks again — up to five rounds — until it can finish with a sourced answer instead of &quot;I don't know&quot;.">
+<link rel="canonical" href="https://pongyuenlam.github.io/notes/ai-note39.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note39.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note39.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note39.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note39.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="How does an AI agent research a question with web search?">
+<meta property="og:description" content="Same question, one more tool: a web search. The agent thinks, searches, reads, and thinks again — up to five rounds — until it can finish with a sourced answer instead of &quot;I don't know&quot;.">
+<meta property="og:url" content="https://pongyuenlam.github.io/notes/ai-note39.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="Howard Lam, PhD">
+
+<link rel="stylesheet" href="../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "How does an AI agent research a question with web search?",
+  "description": "Same question, one more tool: a web search. The agent thinks, searches, reads, and thinks again — up to five rounds — until it can finish with a sourced answer instead of \"I don't know\".",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-09",
+  "dateModified": "2026-11-09",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/notes/ai-note39.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../biography.html">Biography</a></li>
+        <li><a href="../research.html">Research</a></li>
+        <li><a href="../cases.html">Cases</a></li>
+        <li><a href="../books.html">Books</a></li>
+        <li><a href="../ai-programs.html">AI Notes</a></li>
+        <li><a href="../links/">Links</a></li>
+        <li><a href="../glossary/">Glossary</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <span class="current">English</span>
+  <a href="/zh-HK/notes/ai-note39.html">繁體中文</a>
+  <a href="/zh-CN/notes/ai-note39.html">简体中文</a>
+</div>
+
+<main>
+  <h1>How does an AI agent research a question with web search?</h1>
+  <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 9, 2026 &middot; 5 min read</p>
+
+  <p>
+    <a href="ai-note38.html" target="_blank" rel="noopener">The previous note</a>
+    asked a model with no tools: <em>&ldquo;When did Mark launch Muse?&rdquo;</em>
+    It thought carefully and answered, honestly, <em>&ldquo;I don't
+    know.&rdquo;</em> This note asks the <strong>same question</strong> and adds
+    one tool: a web search, provided by
+    <a href="https://www.tavily.com/" target="_blank" rel="noopener">Tavily</a>.
+    The agent can now repeat
+    <a href="ai-note37.html" target="_blank" rel="noopener">the think &rarr; act
+    &rarr; observe loop</a> &mdash; up to five rounds &mdash; and stop only when
+    it decides it knows the answer.
+  </p>
+
+  <h2>The script</h2>
+  <p>This is <code>ReAct03.py</code> as it stands:</p>
+  <pre class="code-block"><code># Same ReAct idea as react01.py, but this task needs MORE THAN ONE action,
+# so we repeat Think -&gt; Act -&gt; Observe in a loop until the model says "finish".
+# Step 1: THINK  -&gt; ask the model to reason about what to do next
+# Step 2: ACT    -&gt; ask for ONE action: search[...] or finish[...]
+# Step 3: OBSERVE-&gt; run the Tavily web search (a real tool), add the result to the prompt, loop again
+import os
+import re
+from datetime import datetime
+from tavily import TavilyClient
+from openai import OpenAI
+from dotenv import load_dotenv
+load_dotenv()
+
+client = OpenAI(
+    api_key=os.environ.get('DEEPSEEK_API_KEY'),
+    base_url="https://api.deepseek.com")
+tavily = TavilyClient(api_key=os.environ.get('TAVILY_API_KEY'))
+
+def ask(prompt, stop=None):
+    """Send one prompt to the model and return its text reply."""
+    response = client.chat.completions.create(
+        model="deepseek-flash",
+        messages=[{"role": "user", "content": prompt}],
+        stop=stop,   # stop writing when this text appears
+    )
+    return response.choices[0].message.content
+
+# The only tool (action) our agent can use
+def search_tavily(query):
+    """Return the top web results from Tavily (title, url, short content)."""
+    results = tavily.search(query=query, max_results=3)["results"]
+    if not results:
+        return f"No web results found for '{query}'."
+    return "\n".join(f"[{r['title']}] ({r['url']}) {r['content'][:400]}"
+                     for r in results)
+
+task = ("When did Mark launch Muse")
+
+prompt = f"""Task: {task}
+You can use ONE tool: search[query] searches the web (Tavily) and returns the top results.
+Today is {datetime.now().strftime('%Y-%m-%d')}.
+Work in steps. Each step has a Thought, an Action, and an Observation."""
+
+for step in range(1, 6):          # at most 5 rounds, so it cannot loop forever
+    # ---- Step 1: THINK (Reasoning) ----
+    thought = ask(prompt + f"\n\nThought {step}: (reason briefly about what to do next; do not act yet)",
+                  stop=["Action"])   # stop the model inventing its own Action/Observation
+    print(f"=== Round {step} - Thought ===")
+    print(thought)
+
+    # ---- Step 2: ACT — append the reasoning trace, then ask for an action ----
+    prompt = prompt + f"\n\nThought {step}: {thought}"
+    action = ask(prompt + "\n\nWhat action should be taken based on that? "
+                 "Reply with ONLY: search[query] or finish[answer]").strip()
+    print(f"=== Round {step} - Action chosen by the model ===")
+    print(action)
+
+    if action.startswith("finish"):
+        answer = re.search(r"finish\[(.*)\]", action, re.S)
+        print("=== Final Answer ===")
+        print(answer.group(1) if answer else action)
+        break
+
+    # ---- Step 3: OBSERVE — our Python code (not the model) runs the tool ----
+    query = re.search(r"search\[(.*)\]", action, re.S)
+    observation = search_tavily(query.group(1)) if query else "Invalid action."
+    print(f"=== Round {step} - Observation from Tavily web search ===")
+    print(observation)
+    prompt = prompt + f"\nAction {step}: {action}\nObservation {step}: {observation}"
+else:
+    print("=== Stopped: no answer after 5 rounds ===")</code></pre>
+
+  <h2>What each part does</h2>
+  <ul>
+    <li>
+      <strong>Two keys, two services.</strong> DeepSeek supplies the thinking;
+      Tavily supplies the searching. Tavily is a search service built for agents:
+      you send a query, it returns clean titles, links and short extracts &mdash;
+      no web pages to scrape. It has a free tier for trying it out.
+    </li>
+    <li>
+      <strong><code>search_tavily(query)</code></strong> keeps only the top three
+      results and the first 400 characters of each. An observation that filled
+      the screen would drown the reasoning.
+    </li>
+    <li>
+      <strong>The prompt states the rules:</strong> one tool, written as
+      <code>search[query]</code>; today's date, so &ldquo;today&rdquo; and
+      &ldquo;this year&rdquo; mean something; and the step shape
+      &mdash; Thought, Action, Observation.
+    </li>
+    <li>
+      <strong>The loop has a budget.</strong> <code>range(1, 6)</code> allows at
+      most five rounds. If the model never says <code>finish[...]</code>, the
+      program stops and says so. An agent without a budget is a bill without a
+      ceiling.
+    </li>
+    <li>
+      <strong><code>stop=["Action"]</code> is the guard rail.</strong> Left alone,
+      a chat model happily continues the pattern and <em>invents</em> its own
+      Action and Observation &mdash; fake search results. The stop word cuts the
+      reply after the Thought, so the real action and the real observation always
+      come from your code, never from the model's imagination.
+    </li>
+    <li>
+      <strong>The prompt grows each round.</strong> Every Thought, Action and
+      Observation is appended, so round&nbsp;4 can see everything rounds&nbsp;1&ndash;3
+      found. The prompt is the agent's memory.
+    </li>
+  </ul>
+
+  <h2>One real run</h2>
+  <p>
+    Four rounds. Watch how round&nbsp;2 notices that two sources disagree, and how
+    the agent keeps searching until the dates line up:
+  </p>
+  <pre class="code-block"><code>=== Round 1 - Thought ===
+Thought 1: I need to find out when Mark (likely Mark Zuckerberg, given "Muse") launched something called Muse. I should search the web for this, but I need to be careful—"Muse" could refer to different things (e.g., a Meta product, an AI model, or a project by another Mark). I'll start with a targeted search query combining "Mark" and "Muse launch" to get relevant results.
+=== Round 1 - Action chosen by the model ===
+search[Mark Muse launch date]
+=== Round 1 - Observation from Tavily web search ===
+[Meta Muse in the UK, Europe and Australia: Where It Stands in October 2026] (https://medium.com/@mateohq/meta-muse-in-the-uk-europe-and-australia-where-it-stands-in-october-2026-3342eb499e81) ...Status: not available, no date announced...
+[Meta launches Muse for Small Business as Zuckerberg pushes beyond consumer AI market] (https://www.cnbc.com/2026/09/29/meta-launches-muse-for-small-business-zuckerberg-pushes-enterprise-ai.html) ...Published Tue, Sep 29 2026...
+[Everything new coming to Meta's AI agent Muse | TechCrunch] (https://techcrunch.com/2026/09/23/everything-new-coming-to-metas-ai-agent-muse) Muse, which launched in early September, interacts across a user's devices and digital accounts...
+=== Round 2 - Thought ===
+Thought 2: The search results give conflicting or unclear timing: one CNBC article says Meta launched Muse for Small Business on September 29, 2026, while a TechCrunch article says Muse "launched in early September." I need to pin down the original launch date of Muse itself, not just the small-business version. I should search more specifically...
+=== Round 2 - Action chosen by the model ===
+search[Meta launches Muse AI agent date early September 2026]
+=== Round 2 - Observation from Tavily web search ===
+[Meta Muse Launches: AI Agent That Shops, Books and Negotiates] (https://www.how2shout.com/ai/meta-muse-personal-ai-agent-launch.html) Meta launched Muse on Tuesday (September 8, 2026), a personal AI agent that books travel, sends email, shops, and negotiates on your behalf...
+[Instagram] (https://www.instagram.com/p/Dd_SU5yEbfg) Meta announced Muse on September 8, 2026, describing it as a personal AI agent that can take action—not just answer questions...
+[Meta Muse is a secure, personal AI... - Tipp City RoadDog] (https://www.facebook.com/TippCityRoadDog/posts/...) ...Launched in September 2026, it shifts the paradigm from a traditional chatbot...
+=== Round 3 - Thought ===
+Thought 3: I now have converging evidence that Meta's Muse AI agent launched on September 8, 2026, with a small-business version following on September 29, 2026. The question asks "When did Mark launch Muse" — this almost certainly refers to Mark Zuckerberg and Meta's Muse. The best answer is the original launch date: September 8, 2026. I should do one more search to confirm...
+=== Round 3 - Action chosen by the model ===
+search[Meta Muse official launch September 8 2026 Zuckerberg announcement]
+=== Round 3 - Observation from Tavily web search ===
+[Zuckerberg Is Back (And It's Not the Model) - Meta Muse Launch] (https://www.youtube.com/watch?v=-_ovL8w1TMM) On 8 September, Meta launched Muse: a personal AI agent with its own computer and its own wallet...
+[Meta Enterprise Platform: What Zuckerberg Announced | CellCog] (https://cellcog.ai/blog/meta-enterprise-platform) On September 28, 2026 ... Mark Zuckerberg announced Meta Enterprise Platform...
+[Meta launches Muse for Small Business ... CNBC] (https://www.cnbc.com/2026/09/29/meta-launches-muse-for-small-business-zuckerberg-pushes-enterprise-ai.html) ...
+=== Round 4 - Thought ===
+Thought 4: The evidence is now consistent and converging. Meta (Mark Zuckerberg's company) launched the Muse personal AI agent on September 8, 2026, with the US-only rollout on iOS, Android, and muse.ai. A small-business/enterprise version followed later in September (announced September 28–29, 2026). The question "When did Mark launch Muse" is best answered with the original consumer launch date. I have enough to finalize.
+=== Round 4 - Action chosen by the model ===
+finish[Mark Zuckerberg's Meta launched Muse on September 8, 2026. It was a US-only personal AI agent rollout across iOS, Android, and muse.ai. A small-business/enterprise version followed around September 28–29, 2026.]
+=== Final Answer ===
+Mark Zuckerberg's Meta launched Muse on September 8, 2026. It was a US-only personal AI agent rollout across iOS, Android, and muse.ai. A small-business/enterprise version followed around September 28–29, 2026.</code></pre>
+  <p class="paper-meta">Extracts shortened (&hellip;) for readability; the full run prints the first 400 characters of each result.</p>
+  <p>
+    Compare this with the no-tools answer from the previous note. The question
+    was identical; what changed is that reasoning now has something to work
+    <em>with</em>. The interesting reasoning happens in round&nbsp;2: the model
+    reads three results, spots that CNBC and TechCrunch disagree about the date,
+    and writes a sharper query to settle it. That judgment call is the part no
+    tool can do for it.
+  </p>
+
+  <h2>Running it on your own computer</h2>
+  <p>
+    <a href="downloads/Folder-AI-ReAct03.zip">Download the demo program
+    (Folder-AI-ReAct03.zip)</a>. The zip holds three files:
+    <code>ReAct03.py</code> (the script above), <code>pyproject.toml</code> (the
+    package list) and <code>README.md</code>.
+  </p>
+  <ol>
+    <li>Open the folder in Visual Studio Code.</li>
+    <li>
+      Create a file named <code>.env</code> in the folder with two lines:
+      <pre class="code-block"><code>DEEPSEEK_API_KEY=your-deepseek-key
+TAVILY_API_KEY=your-tavily-key</code></pre>
+      Get the first from the
+      <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek
+      console</a> and the second from
+      <a href="https://app.tavily.com/" target="_blank" rel="noopener">Tavily</a>;
+      both have free starting credit.
+    </li>
+    <li>In the Terminal, run:
+      <pre class="code-block"><code>uv sync
+uv run ReAct03.py</code></pre>
+      <code>uv sync</code> is needed only the first time; it reads
+      <code>pyproject.toml</code> and installs <code>openai</code>,
+      <code>tavily-python</code> and <code>python-dotenv</code> into the project.
+    </li>
+  </ol>
+
+  <h2>Why this run matters</h2>
+  <ul>
+    <li>
+      <strong>The loop did real research.</strong> Not one search, but three:
+      each round read what the last one found and chose a better query. The
+      conflicting dates were noticed and resolved, not averaged.
+    </li>
+    <li>
+      <strong>The answer carries its evidence.</strong> Every claim in the final
+      sentence can be traced back to a named source in an Observation &mdash;
+      which is exactly what a memory-only answer cannot offer.
+    </li>
+    <li>
+      <strong>The budget kept it honest.</strong> Five rounds were available;
+      four were needed. The model decided when to stop, and the program would
+      have stopped it anyway.
+    </li>
+    <li>
+      <strong>Same question, three answers.</strong> With no tools: &ldquo;I
+      don't know.&rdquo; With one tool used once: a single guess at the date.
+      With a loop: a checked, sourced answer. That is the arc of this series.
+    </li>
+  </ul>
+
+  <h2>Further reading</h2>
+  <ul>
+    <li><a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">ReAct: Synergizing Reasoning and Acting in Language Models</a> &mdash; the paper that named the pattern this series builds.</li>
+    <li><a href="https://docs.tavily.com/" target="_blank" rel="noopener">Tavily documentation</a> &mdash; search options, free tier and pricing.</li>
+    <li><a href="https://api-docs.deepseek.com/" target="_blank" rel="noopener">DeepSeek API documentation</a> &mdash; models, keys and pricing.</li>
+  </ul>
+
+</main>
+
+<footer class="site-footer">
+  <p>&copy; 2026 Howard Pong Yuen Lam. All rights reserved.</p>
+  <p><a href="../index.html">Home</a> &middot; <a href="../ai-programs.html">AI Notes</a> &middot; <a href="../links/">Links</a> &middot; <a href="../glossary/">Glossary</a></p>
+</footer>
+
+</body>
+</html>
