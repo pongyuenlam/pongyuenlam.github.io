@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>如何使用即梦短剧工作室制作一部短剧视频？ | 林邦源博士</title>
+<meta name="description" content="即梦短剧工作室把创作拆成剧本、制作资产库、分镜视频三步，你用自然语言描述故事，AI 自动生成角色、场景和每一集的视频分镜。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note52.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note52.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note52.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note52.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note52.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何使用即梦短剧工作室制作一部短剧视频？">
+<meta property="og:description" content="即梦短剧工作室把创作拆成剧本、制作资产库、分镜视频三步，你用自然语言描述故事，AI 自动生成角色、场景和每一集的视频分镜。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-CN/notes/ai-note52.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="../../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "如何使用即梦短剧工作室制作一部短剧视频？",
+  "description": "即梦短剧工作室把创作拆成剧本、制作资产库、分镜视频三步，你用自然语言描述故事，AI 自动生成角色、场景和每一集的视频分镜。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-11",
+  "dateModified": "2026-11-11",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-CN/notes/ai-note52.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../../index.html">首页</a></li>
+        <li><a href="../../biography.html">个人简介</a></li>
+        <li><a href="../../research.html">研究</a></li>
+        <li><a href="../../cases.html">案例</a></li>
+        <li><a href="../../books.html">著作</a></li>
+        <li><a href="../../ai-programs.html">AI 笔记</a></li>
+        <li><a href="../../links/">链接</a></li>
+        <li><a href="../../glossary/">词汇表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <a href="/notes/ai-note52.html">English</a>
+  <a href="/zh-HK/notes/ai-note52.html">繁體中文</a>
+  <span class="current">简体中文</span>
+</div>
+
+<main>
+  <h1>如何使用即梦短剧工作室制作一部短剧视频？</h1>
+  <p class="paper-meta">林邦源博士 &middot; AI 笔记 &middot; 2026 年 11 月 11 日 &middot; 约 5 分钟阅读</p>
+
+  <p>
+    即梦（jimeng.jianying.com）是字节跳动旗下的 AI 创作平台。其中的
+    <strong>短剧工作室</strong>把创作拆成三步：你用自然语言描述故事，
+    AI 自动生成剧本，然后提取角色和场景资产，最后逐集生成视频分镜。
+  </p>
+  <p>
+    这篇笔记以一部完整的短剧项目 <strong>双城之恋</strong> 为例子，
+    <a href="https://novelquickapp.com/s/U5bEVHQifRs/" target="_blank" rel="noopener">来看看 @林邦源 的精彩个人主页</a>。
+    带你走完从一句话 prompt 到可以发布的视频的全过程。
+    项目目前的进度：剧本锁定、7 个角色、26 个场景、10 集分镜全部生成完毕。
+  </p>
+
+  <h2>三步流程</h2>
+  <p>
+    短剧工作室的左侧导航有三个标签，正是创作的三个阶段。
+    每一步的输出自动成为下一步的输入，也可以随时返回修改。
+  </p>
+  <ol>
+    <li><strong>剧本</strong> — 让 AI 理解你的故事，输出分集大纲和每集详细剧本。</li>
+    <li><strong>制作资产库</strong> — 根据剧本自动提取角色和场景，生成设定图，你确认后锁定。</li>
+    <li><strong>分镜视频</strong> — 逐集生成视频；也可以点"批量"一次生成全部。</li>
+  </ol>
+
+  <h2>第一步：剧本生成</h2>
+  <p>
+    打开 <a href="https://jimeng.jianying.com/ai-tool/novel" target="_blank" rel="noopener">即梦短剧工作室</a>，
+    中间的主区域写着 <strong>"和短剧 Agent 聊聊创作想法"</strong>。
+    你可以用自然语言描述故事，也可以直接上传一个 <strong>.txt</strong> 剧本文件。
+  </p>
+  <p>这是双城之恋的开场——一句话描述：</p>
+
+  <pre class="code-block no-copy"><code>一男一女，内地来香港读 MSc Marketing，第一堂课邻座认识。
+男生汕头人，女生潮州人，家里都说潮州话。后来变成情侣。
+毕业后面临回内地还是留香港的选择。</code></pre>
+
+  <p>
+    当然，你可以一次性给更多信息。下面是一个更完整的 prompt 模板：
+  </p>
+
+  <pre class="code-block"><code>请帮我创作一部短剧，要求：
+
+【故事基础】
+- 核心设定：（你的故事）
+- 主题：浪漫唯美 / 都市情感 / 悬疑推理
+- 结局：圆满 / 遗憾 / 开放
+
+【风格设定】
+- 画面风格：真人写实 / 日系动画 / 港风电影
+- 整体调性：温暖治愈 / 紧张刺激
+
+【技术参数】
+- 集数：10 集
+- 每集时长：约 1 分钟
+- 画幅：9:16（竖屏短剧标准）
+
+请按"故事设定 → 分集大纲 → 每集详细剧本"的顺序生成。</code></pre>
+
+  <h3>第 1 集剧本示例</h3>
+  <p>这是双城之恋第 1 集《邻座的你》的完整剧本，可以看到即梦生成的剧本格式：场景 + 景别 + 镜头指令 + 人物动作 + 对白 + 旁白。</p>
+
+  <pre class="code-block no-copy"><code><strong>第 1 集：邻座的你</strong>
+
+<strong>场景 1 — 教室 · 日 · 中景</strong>
+香港城市大学校园，阳光透过落地窗洒进阶梯教室。
+学生陆续入座，白色板书上写着"MSc Marketing · 第一堂课"。
+【镜头：推镜头，缓缓聚焦最后一排空位旁的男生】
+林哲（25 岁，清瘦，黑色框眼镜，白色 T 恤，汕头人）独自翻着讲义。
+【镜头：平移】苏晓（24 岁，长发微卷，米色针织衫，潮州人）抱着资料走进来，扫了一圈教室，径直坐到林哲旁边那个唯一的空位。
+
+<strong>场景 2 — 课间 · 走廊 · 近景</strong>
+下课铃响，学生们涌出教室。
+林哲和苏晓在走廊上接水，水龙头旁边。
+苏晓不小心把笔记本掉在地上，林哲弯腰帮她捡起。
+
+林哲：（微笑）你也是这个项目组的？
+苏晓：嗯，你也是。对了，你口音听着好熟悉……潮汕人？
+林哲：（眼睛一亮）汕头的！你呢？
+苏晓：（笑出梨涡）潮州！我妈在家还天天说潮州话。
+林哲：（惊喜）我爸也是！在香港能遇到老乡，太难得了。
+
+【特写：两人相视而笑，阳光正好落在他们肩上，慢镜头定格 2 秒】
+
+<strong>旁白（温柔女声）</strong>
+有些缘分，就是在一个不经意的瞬间，悄悄开始的。</code></pre>
+
+  <h3>即梦 Agent 的回复</h3>
+
+  <pre class="code-block no-copy"><code>好的！我来帮你创作这部短剧。
+
+【故事设定】
+• 类型：都市恋爱
+• 风格：国产高颜值现偶风
+• 画幅：9:16
+
+【分集大纲 · 共 10 集】
+1. 邻座的你 — 初遇
+2. 组队的默契 — 靠近
+3. 告白 — 确认关系
+4. 香港的甜 — 甜蜜期蒙太奇
+5. 十字路口 — 现实降临
+6. 两份 Offer — 抉择
+7. 远距离的开始 — 维系
+8. 风雨飘摇 — 崩塌
+9. 转机 — 双向奔赴
+10. 同一片海 — 团聚圆满
+
+接下来要生成每集的详细剧本吗？</code></pre>
+
+  <p>
+    你回复"好的，继续"之后，即梦会一次性生成完整剧本，并在剧本标签顶部显示
+    <strong>"资产已拆解，本集剧本不可修改"</strong>。
+    这意味着剧本被锁定了，角色和场景资产库会自动填充。
+  </p>
+
+  <p>
+    <strong>⚠️ 一个重要的注意点：</strong>
+    剧本被拆解后即梦不让你再修改。如果写完后发现某一集的剧情需要调整，
+    只能新建一个项目，把修改好的剧本作为 <strong>.txt</strong> 文件上传。
+    所以建议在第一次输入时尽量把风格、结局、基调都定清楚。
+  </p>
+
+  <h2>第二步：制作资产库</h2>
+  <p>
+    剧本拆解后，即梦会自动从剧本里提取角色和场景，并生成 AI 设定图。
+    双城之恋的数据是这样：
+  </p>
+
+  <ul>
+    <li><strong>角色</strong> — 7 个，包括林哲、苏晓、教授、同学等</li>
+    <li><strong>场景</strong> — 26 个，包括教室、尖沙咀、深圳公寓、上海出租屋等</li>
+    <li><strong>视频片段</strong> — 90 个</li>
+  </ul>
+
+  <p>
+    这里是整部剧视觉连贯性的关键。如果你给角色的描述太模糊，
+    AI 会在不同分镜里生成不一样的脸。双城之恋的角色描述写法：
+  </p>
+
+  <pre class="code-block no-copy"><code>林哲：25岁，清瘦，黑色方框眼镜，短黑发，斯文学生气，
+      常穿白色纯色 T 恤。
+苏晓：24岁，长发微卷，鹅蛋脸，笑时有梨涡，气质温婉，
+      米色针织衫。</code></pre>
+
+  <p>
+    年龄 + 三个可见特征 + 一件标志服装。这是即梦能稳定复现同一个角色的最低
+    要求。不要只写"年轻帅气男生"——那样 AI 每次会生成不同的脸。
+  </p>
+
+  <h2>第三步：分镜视频</h2>
+  <p>
+    进入 <strong>分镜</strong> 标签页后，每一集都有一个卡片，上面显示标题、
+    已生成视频时长、以及"角色 · 场景"的数量。点击 <strong>生成</strong> 按钮即可，
+    每集约需要 1–2 分钟。也可以点 <strong>批量</strong> 一次性生成全部 10 集。
+  </p>
+
+  <h3>双城之恋的生成状态</h3>
+  <ul>
+    <li><strong>EP 01 · 邻座的你</strong> — 时长 00:37（15s 上限）</li>
+    <li><strong>EP 02 · 组队的默契</strong> — 时长 00:28（15s 上限）</li>
+    <li><strong>EP 03 · 告白</strong> — 时长 00:24（15s 上限）</li>
+    <li><strong>EP 04 · 香港的甜</strong> — 时长 00:35（15s 上限）</li>
+    <li><strong>EP 05 · 十字路口</strong> — 时长 00:32（15s 上限）</li>
+    <li><strong>EP 06 · 两份 Offer</strong> — 时长 00:30（15s 上限）</li>
+    <li><strong>EP 07 · 远距离的开始</strong> — 时长 00:34（15s 上限）</li>
+    <li><strong>EP 08 · 风雨飘摇</strong> — 时长 00:29（15s 上限）</li>
+    <li><strong>EP 09 · 转机</strong> — 时长 00:36（15s 上限）</li>
+    <li><strong>EP 10 · 同一片海</strong> — 时长 00:38（15s 上限）</li>
+  </ul>
+
+  <h3>关于 15 秒上限</h3>
+  <p>
+    这里有一个即梦当前的产品限制：每一集生成的视频只有
+    <strong>约 15 秒上限</strong>（实际生成 24–37 秒）。
+    这意味着：
+  </p>
+  <ul>
+    <li>你写了 1 分钟的剧本，即梦只会生成前 15–40 秒。</li>
+    <li>想凑满 1 分钟，需要在"编辑"面板里追加 2–3 个额外分镜，每个 15 秒。</li>
+    <li>或者把每集剧本拆成 3 段分别生成后再拼接。</li>
+  </ul>
+
+  <h2>项目概览</h2>
+  <p>
+    即梦的顶部横幅会显示项目信息和会员状态。
+    双城之恋的项目数据如下：
+  </p>
+
+  <ul>
+    <li><strong>项目名称</strong> — 双城之恋剧集脚本</li>
+    <li><strong>风格</strong> — 国产高颜值现偶风</li>
+    <li><strong>画幅比例</strong> — 9:16（竖屏短剧）</li>
+    <li><strong>完成进度</strong> — 10 / 10 集分镜全部生成</li>
+    <li><strong>会员等级</strong> — 标准会员（1,903 积分）</li>
+  </ul>
+
+  <p>
+    当前的会员方案为 <strong>标准会员 · 包季</strong>，价格 ¥568 / 季，
+    折算下来每月 ¥190，较单月购买优惠 ¥49。每月赠送 2,210 积分
+    （换算 ¥1 = 12 积分）。
+  </p>
+
+  <h2>局限</h2>
+  <ul>
+    <li>
+      <strong>每个分镜片段约 15 秒。</strong>
+      一集 1 分钟的剧本需要拆成约 4 个分镜片段逐个生成再拼接。
+    </li>
+    <li>
+      <strong>剧本锁定后不可修改，但分镜可以重新生成。</strong>
+      一旦"资产已拆解"，即梦不让你改剧本细节，只能新建项目。
+      不过你可以让 AI 针对单集里的错误或旁白语速重新生成视频，不用从头来。
+    </li>
+    <li>
+      <strong>角色一致性取决于描述质量。</strong>
+      角色描述模糊时，同一角色在不同分镜里会长得不一样。
+    </li>
+  </ul>
+
+  <h2>附录 · 角色设定图</h2>
+  <p>这是即梦为双城之恋的 7 个角色生成的设定图。主角林哲和苏晓各有多张变体，即梦会根据你确认的设定图，在分镜视频里保持角色长相一致。</p>
+
+  <h3>林哲（男主角）— 3 张变体</h3>
+  <figure class="exhibit"><img src="/images/%E6%9E%97%E5%93%B2.png" alt="林哲设定图 1" style="max-width:100%; height:auto;"><figcaption>林哲 · 版本 1</figcaption></figure>
+  <figure class="exhibit"><img src="/images/%E6%9E%97%E5%93%B2(2).png" alt="林哲设定图 2" style="max-width:100%; height:auto;"><figcaption>林哲 · 版本 2</figcaption></figure>
+  <figure class="exhibit"><img src="/images/%E6%9E%97%E5%93%B2(3).png" alt="林哲设定图 3" style="max-width:100%; height:auto;"><figcaption>林哲 · 版本 3</figcaption></figure>
+
+  <h3>苏晓（女主角）— 5 张变体</h3>
+  <figure class="exhibit"><img src="/images/%E8%8B%8F%E6%99%93.png" alt="苏晓设定图 1" style="max-width:100%; height:auto;"><figcaption>苏晓 · 版本 1</figcaption></figure>
+  <figure class="exhibit"><img src="/images/%E8%8B%8F%E6%99%93(2).png" alt="苏晓设定图 2" style="max-width:100%; height:auto;"><figcaption>苏晓 · 版本 2</figcaption></figure>
+  <figure class="exhibit"><img src="/images/%E8%8B%8F%E6%99%93(3).png" alt="苏晓设定图 3" style="max-width:100%; height:auto;"><figcaption>苏晓 · 版本 3</figcaption></figure>
+  <figure class="exhibit"><img src="/images/%E8%8B%8F%E6%99%93(4).png" alt="苏晓设定图 4" style="max-width:100%; height:auto;"><figcaption>苏晓 · 版本 4</figcaption></figure>
+  <figure class="exhibit"><img src="/images/%E8%8B%8F%E6%99%93(5).png" alt="苏晓设定图 5" style="max-width:100%; height:auto;"><figcaption>苏晓 · 版本 5</figcaption></figure>
+
+  <h3>次要角色</h3>
+  <figure class="exhibit"><img src="/images/%E6%95%99%E6%8E%88.png" alt="教授设定图" style="max-width:100%; height:auto;"><figcaption>教授 · 第一堂课的授课老师</figcaption></figure>
+  <figure class="exhibit"><img src="/images/%E8%8B%8F%E6%99%93%E7%9A%84%E5%90%8C%E4%BA%8B.png" alt="苏晓的同事设定图" style="max-width:100%; height:auto;"><figcaption>苏晓的同事</figcaption></figure>
+  <figure class="exhibit"><img src="/images/%E5%85%AC%E5%8F%B8CEO.png" alt="公司CEO设定图" style="max-width:100%; height:auto;"><figcaption>公司 CEO</figcaption></figure>
+  <figure class="exhibit"><img src="/images/%E8%80%81%E4%BC%B4.png" alt="老伴设定图" style="max-width:100%; height:auto;"><figcaption>老伴</figcaption></figure>
+  <figure class="exhibit"><img src="/images/%E6%BD%AE%E5%B7%9E%E9%98%BF%E5%A9%86.png" alt="潮州阿婆设定图" style="max-width:100%; height:auto;"><figcaption>潮州阿婆</figcaption></figure>
+
+  <h2>延伸阅读</h2>
+  <ul>
+    <li><a href="https://jimeng.jianying.com/ai-tool/novel" target="_blank" rel="noopener">即梦 · 短剧工作室</a> — 打开就能开始创作。</li>
+    <li><a href="https://pongyuenlam.github.io/zh-CN/notes/ai-note34.html">如何使用 Google Flow 制作文字转视频？</a> — 另一个 AI 视频生成工具，和即梦风格不同，一次生成 30 秒广告级视频。</li>
+    <li><a href="https://pongyuenlam.github.io/zh-CN/notes/ai-note31.html">如何使用 Seedance 2.5 文字生成视频（版本 1）？</a> — 即梦背后的 Seedance 模型，六部分提示词公式。</li>
+    <li><a href="https://pongyuenlam.github.io/zh-CN/notes/ai-note32.html">如何使用 Seedance 2.5 制作长视频（版本 2）？</a> — Seedance 长视频的阶段拆分法。</li>
+    <li><a href="https://pongyuenlam.github.io/zh-CN/notes/ai-note33.html">如何使用 Seedance 2.5 视频接视频（版本 3）？</a> — 从已有片段出发拼接成连续旅程。</li>
+  </ul>
+
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&amp;hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', 'Copy code to clipboard');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', 'Copied to clipboard');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', 'Copy code to clipboard');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>
