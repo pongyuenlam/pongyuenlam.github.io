@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to try several learning rates and keep the best (Forecast, version 9)? | Howard Lam, PhD</title>
+<meta name="description" content="Version 9 runs the same training three times with different learning rates, stops each run when it stops improving, and keeps the best model. R&sup2; rises from 0.24 to 0.44.">
+<link rel="canonical" href="https://pongyuenlam.github.io/notes/ai-note70.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note70.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note70.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note70.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note70.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to try several learning rates and keep the best (Forecast, version 9)?">
+<meta property="og:description" content="Version 9 runs the same training three times with different learning rates, stops each run when it stops improving, and keeps the best model. R2 rises from 0.24 to 0.44.">
+<meta property="og:url" content="https://pongyuenlam.github.io/notes/ai-note70.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:alt" content="Howard Lam, PhD">
+
+<link rel="stylesheet" href="../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "How to try several learning rates and keep the best (Forecast, version 9)?",
+  "description": "Version 9 runs the same training three times with different learning rates, stops each run when it stops improving, and keeps the best model. R2 rises from 0.24 to 0.44.",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-13",
+  "dateModified": "2026-11-13",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/notes/ai-note70.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../biography.html">Biography</a></li>
+        <li><a href="../research.html">Research</a></li>
+        <li><a href="../cases.html">Cases</a></li>
+        <li><a href="../books.html">Books</a></li>
+        <li><a href="../ai-programs.html">AI Notes</a></li>
+        <li><a href="../links/">Links</a></li>
+        <li><a href="../glossary/">Glossary</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1>How to try several learning rates and keep the best (Forecast, version 9)?</h1>
+  <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 13, 2026 &middot; 6 min read</p>
+  <p class="lang-switcher">
+    <span class="current">English</span>
+    <a href="/zh-HK/notes/ai-note70.html">繁體中文</a>
+    <a href="/zh-CN/notes/ai-note70.html">简体中文</a>
+  </p>
+
+  <p>
+    This is version 9 of the forecasting series. Until now the settings have been guesses: Adam's
+    default learning rate, a hundred epochs, whatever weights happened to exist when the last epoch
+    finished. Version 9 treats the learning rate as something to compare, runs the same training
+    three times, stops each run when it stops improving, and keeps whichever model scored best.
+  </p>
+
+  <h2>What the learning rate does</h2>
+  <p>
+    In version 7 the optimizer nudged every weight a little after each batch. The learning rate is
+    the size of that nudge.
+  </p>
+  <ul>
+    <li><strong>Too small</strong> &mdash; the model crawls downhill and may never get far in the
+    epochs available.</li>
+    <li><strong>Too large</strong> &mdash; the model jumps over the bottom of the valley, bouncing
+    from side to side instead of settling.</li>
+    <li><strong>About right</strong> &mdash; it arrives quickly and then stays.</li>
+  </ul>
+  <p>
+    There is no formula that tells you which value is right for a given dataset, so the practical
+    answer is to try a few and look.
+  </p>
+
+  <h2>What early stopping does</h2>
+  <p>
+    Version 8 always ran the full hundred epochs, and always kept the weights from the last one
+    &mdash; even if the validation loss had started to climb twenty epochs earlier. Version 9
+    watches the validation loss and remembers the best weights it has seen. If the loss fails to
+    improve for ten epochs in a row, training stops and those remembered weights are restored.
+  </p>
+  <p>
+    Two things follow. Runs finish sooner, because a hopeless run gives up quickly. And the model
+    that survives is the best one seen, not merely the last one.
+  </p>
+
+  <h2>How the program works</h2>
+
+  <h3>1. Wrap one run in a function</h3>
+  <pre class="code-block"><code>def train_one_model(lr):
+    model     = TimeSeriesModel(window_size).to(device)
+    criterion = nn.MSELoss()
+    optimizer = optim.Adam(model.parameters(), lr=lr)</code></pre>
+  <p>
+    Everything inside repeats version 7's training, with one change: <code>lr</code> is now a
+    parameter, so the same function can be called with different learning rates. A fresh model is
+    built on each call, so the three runs start from independent random weights and do not
+    contaminate one another.
+  </p>
+
+  <h3>2. Keep the best weights</h3>
+  <pre class="code-block"><code>    best_val_loss = float('inf')
+    best_state    = {k: v.clone() for k, v in model.state_dict().items()}
+    patience_ctr  = 0</code></pre>
+  <p>
+    <code>best_val_loss</code> starts at infinity, so the first epoch always counts as an
+    improvement. <code>best_state</code> holds a copy of the weights at that moment. The
+    <code>.clone()</code> matters: without it the copy would keep changing as the model changed,
+    and there would be nothing to go back to.
+  </p>
+
+  <h3>3. Stop when improvement stops</h3>
+  <pre class="code-block"><code>        if v_loss < best_val_loss:
+            best_val_loss = v_loss
+            best_state    = {k: v.clone() for k, v in model.state_dict().items()}
+            patience_ctr  = 0
+        else:
+            patience_ctr += 1
+            if patience_ctr >= PATIENCE:
+                break</code></pre>
+  <p>
+    A new best resets the counter to zero. A worse epoch adds one. When ten worse epochs have piled
+    up in a row, <code>break</code> leaves the loop early. Afterwards
+    <code>model.load_state_dict(best_state)</code> puts the best weights back, so the returned model
+    is the one that scored best on the validation days, not the one that happened to be last.
+  </p>
+
+  <h3>4. Run the three learning rates</h3>
+  <pre class="code-block"><code>learning_rates = [0.001, 0.01, 0.1]
+
+for lr in learning_rates:
+    model, t_losses, v_losses, epochs = train_one_model(lr)
+    r2, rmse, mae, preds, actuals = evaluate_on_test(model)</code></pre>
+  <p>
+    Each pass of the loop trains a complete model and grades it on the test days with version 8's
+    four measures. The results are collected in a list so they can be compared and sorted
+    afterwards.
+  </p>
+
+  <h3>5. Keep the winner</h3>
+  <pre class="code-block"><code>best = max(results, key=lambda r: r["r2"])
+torch.save(best["model"].state_dict(), "best_model.pt")</code></pre>
+  <p>
+    <code>max</code> with a <code>key</code> means <em>the entry with the largest R&sup2;</em>.
+    <code>torch.save</code> writes that model's weights to a file called
+    <code>best_model.pt</code>, so a later program can reuse it without training again.
+  </p>
+
+  <h2>What you should see</h2>
+  <pre class="code-block no-copy"><code>      lr   epochs        R²        RMSE         MAE
+--------------------------------------------------
+   0.001       68    0.4384      5.3538      4.2973
+    0.01       37    0.4394      5.3491      4.2547
+     0.1       12    0.0881      6.8221      5.3624
+
+Best learning rate: 0.01  (R² = 0.4394)
+Best model saved → best_model.pt</code></pre>
+  <p>
+    Your numbers will differ, but the pattern is the lesson. The two smaller learning rates reach a
+    similar quality, and 0.01 gets there in 37 epochs rather than 68 &mdash; same destination,
+    shorter journey. The large rate of 0.1 collapses: it gives up after 12 epochs with an
+    R&sup2; of 0.09, the picture of a step too big to settle anywhere.
+  </p>
+  <p>
+    Two things improved since version 8. The R&sup2; moved from 0.24 to about 0.44, and a good part
+    of that came from early stopping rather than from the learning rate: keeping the best weights
+    instead of the final ones is worth real points. The run also saves its effort, finishing in
+    37 epochs instead of 100.
+  </p>
+  <figure class="exhibit"><img src="/images/forecast-v9-loss.png" alt="Loss curves for the best run, falling and then flattening, with training and validation lines close together" style="max-width:100%; height:auto;"><figcaption>Loss curves of the winning run, stopped at epoch 37</figcaption></figure>
+  <figure class="exhibit"><img src="/images/forecast-v9-predictions.png" alt="Actual test-day sales in grey and predicted values in red, the red line tracking the grey more closely than before" style="max-width:100%; height:auto;"><figcaption>Actual (grey) and predicted (red) values for the test days, best run</figcaption></figure>
+  <figure class="exhibit"><img src="/images/forecast-v9-r2-bar.png" alt="Bar chart of R squared for the three learning rates, the middle bar green as the best" style="max-width:100%; height:auto;"><figcaption>R&sup2; for the three learning rates, green for the winner</figcaption></figure>
+
+  <h2>The whole program</h2>
+  <p>
+    The pieces above, put back together. This is the complete file:
+  </p>
+  <pre class="code-block"><code>import os
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import TensorDataset, DataLoader, Subset
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+# ── Data preparation (same as time_08) ────────────────────────────────────────
+def create_sliding_windows_with_target(data, window_size, shift=1):
+    windows = data.unfold(0, window_size, shift)
+    features = windows[:, :-1]
+    targets = windows[:, -1:]
+    return features, targets
+
+df = pd.read_csv('time_series.csv')
+series = df['series'].values
+series_tensor = torch.tensor(series, dtype=torch.float32)
+window_size = 30
+features, targets = create_sliding_windows_with_target(series_tensor, window_size=window_size, shift=1)
+full_dataset = TensorDataset(features, targets)
+
+total_windows = len(full_dataset)
+train_size = int(total_windows * 0.7)
+val_size = int(total_windows * 0.15)
+test_size = total_windows - train_size - val_size
+
+train_indices = list(range(train_size))
+val_indices = list(range(train_size, train_size + val_size))
+test_indices = list(range(train_size + val_size, total_windows))
+
+train_loader = DataLoader(Subset(full_dataset, train_indices),
+                         batch_size=32, shuffle=True)
+val_loader   = DataLoader(Subset(full_dataset, val_indices),
+                         batch_size=32, shuffle=False)
+test_loader  = DataLoader(Subset(full_dataset, test_indices),
+                         batch_size=32, shuffle=False)
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+# ── Visualize train/val/test split (same as time_08) ─────────────────────────
+val_start = train_size
+test_start = train_size + val_size
+plt.figure(figsize=(12, 4))
+plt.plot(range(val_start), series[:val_start], 'b-', label='Training Data')
+plt.plot(range(val_start, test_start), series[val_start:test_start], 'r-', label='Validation Data')
+plt.plot(range(test_start, len(series)), series[test_start:], 'g-', label='Test Data')
+plt.axvline(x=val_start, color='k', linestyle='--', label='Train/Val Split')
+plt.axvline(x=test_start, color='purple', linestyle='--', label='Val/Test Split')
+plt.title('Time Series Train/Validation/Test Split')
+plt.xlabel('Time'); plt.ylabel('Value')
+plt.legend(); plt.grid(True); plt.show()
+
+# ── Model (same as time_07/08) ────────────────────────────────────────────────
+class TimeSeriesModel(nn.Module):
+    def __init__(self, window_size):
+        super(TimeSeriesModel, self).__init__()
+        self.network = nn.Sequential(
+            nn.Linear(window_size - 1, 10),
+            nn.ReLU(),
+            nn.Linear(10, 10),
+            nn.ReLU(),
+            nn.Linear(10, 1)
+        )
+
+    def forward(self, x):
+        return self.network(x)
+
+# ── NEW: training with early stopping ────────────────────────────────────────
+# Early stopping: if val loss does not improve for PATIENCE consecutive epochs,
+# stop training early and restore the best weights seen so far.
+PATIENCE   = 10
+MAX_EPOCHS = 100
+
+def train_one_model(lr):
+    model     = TimeSeriesModel(window_size).to(device)
+    criterion = nn.MSELoss()
+    optimizer = optim.Adam(model.parameters(), lr=lr)
+
+    best_val_loss = float('inf')
+    best_state    = {k: v.clone() for k, v in model.state_dict().items()}
+    patience_ctr  = 0
+    train_losses, val_losses = [], []
+
+    for epoch in range(MAX_EPOCHS):
+        # ── train ──
+        model.train()
+        t_loss = 0
+        for batch_features, batch_targets in train_loader:
+            batch_features = batch_features.to(device)
+            batch_targets  = batch_targets.to(device)
+            optimizer.zero_grad()
+            loss = criterion(model(batch_features), batch_targets)
+            loss.backward()
+            optimizer.step()
+            t_loss += loss.item()
+        t_loss /= len(train_loader)
+
+        # ── validate ──
+        model.eval()
+        v_loss = 0
+        with torch.no_grad():
+            for batch_features, batch_targets in val_loader:
+                batch_features = batch_features.to(device)
+                batch_targets  = batch_targets.to(device)
+                v_loss += criterion(model(batch_features), batch_targets).item()
+        v_loss /= len(val_loader)
+
+        train_losses.append(t_loss)
+        val_losses.append(v_loss)
+
+        # ── early stopping check ──
+        if v_loss &lt; best_val_loss:
+            best_val_loss = v_loss
+            best_state    = {k: v.clone() for k, v in model.state_dict().items()}
+            patience_ctr  = 0
+        else:
+            patience_ctr += 1
+            if patience_ctr &gt;= PATIENCE:
+                break
+
+    # restore the best weights
+    model.load_state_dict(best_state)
+    actual_epochs = len(train_losses)
+    return model, train_losses, val_losses, actual_epochs
+
+# ── NEW: evaluate on test set (returns R², RMSE, MAE) ────────────────────────
+def evaluate_on_test(model):
+    model.eval()
+    preds, actuals = [], []
+    with torch.no_grad():
+        for batch_features, batch_targets in test_loader:
+            preds.extend(model(batch_features.to(device)).cpu().numpy())
+            actuals.extend(batch_targets.numpy())
+
+    p = torch.tensor(np.array(preds))
+    a = torch.tensor(np.array(actuals))
+
+    mae  = torch.mean(torch.abs(p - a)).item()
+    rmse = torch.sqrt(torch.mean((p - a) ** 2)).item()
+    ss_res = torch.sum((a - p) ** 2)
+    ss_tot = torch.sum((a - torch.mean(a)) ** 2)
+    r2 = (1 - ss_res / ss_tot).item()
+    return r2, rmse, mae, preds, actuals
+
+# ── NEW: manually try 3 learning rates ────────────────────────────────────────
+# Instead of picking one optimizer and one learning rate, we run the same
+# training procedure three times with different learning rates and compare.
+learning_rates = [0.001, 0.01, 0.1]
+results = []
+
+print(f"{'lr':&gt;8}  {'epochs':&gt;7}  {'R²':&gt;8}  {'RMSE':&gt;10}  {'MAE':&gt;10}")
+print("-" * 50)
+
+for lr in learning_rates:
+    model, t_losses, v_losses, epochs = train_one_model(lr)
+    r2, rmse, mae, preds, actuals = evaluate_on_test(model)
+
+    results.append({
+        "lr": lr, "epochs": epochs,
+        "r2": round(r2, 4), "rmse": round(rmse, 4), "mae": round(mae, 4),
+        "model": model, "t_losses": t_losses, "v_losses": v_losses,
+        "preds": preds, "actuals": actuals,
+    })
+    print(f"{lr:&gt;8}  {epochs:&gt;7}  {r2:&gt;8.4f}  {rmse:&gt;10.4f}  {mae:&gt;10.4f}")
+
+# ── Pick the best trial and save ──────────────────────────────────────────────
+best = max(results, key=lambda r: r["r2"])
+print(f"\nBest learning rate: {best['lr']}  (R² = {best['r2']:.4f})")
+
+torch.save(best["model"].state_dict(), "best_model.pt")
+print("Best model saved → best_model.pt")
+
+# ── Plots ──────────────────────────────────────────────────────────────────────
+# 1. Loss curves for the best trial
+plt.figure(figsize=(10, 5))
+plt.plot(best["t_losses"], label="Train Loss")
+plt.plot(best["v_losses"], label="Val Loss")
+plt.title(f"Best Model — Loss Curves\nlr={best['lr']}  (stopped at epoch {best['epochs']})")
+plt.xlabel("Epoch"); plt.ylabel("MSE Loss")
+plt.legend(); plt.grid(True); plt.tight_layout(); plt.show()
+
+# 2. Predictions vs actual on test set (best trial)
+plt.figure(figsize=(12, 5))
+plt.plot(best["actuals"], label="Actual",    color="lightgrey", linewidth=1.5)
+plt.plot(best["preds"],   label="Predicted", color="red",       linewidth=1.5)
+plt.title(f"Best Model — Predictions vs Actual (Test Set)\nR²={best['r2']:.4f}  RMSE={best['rmse']:.4f}")
+plt.xlabel("Time"); plt.ylabel("Value")
+plt.legend(); plt.grid(True); plt.tight_layout(); plt.show()
+
+# 3. R² bar chart comparing all 3 trials
+plt.figure(figsize=(8, 4))
+lrs = [str(r["lr"]) for r in results]
+r2s = [r["r2"] for r in results]
+colors = ["#4472C4" if r["lr"] != best["lr"] else "#70AD47" for r in results]
+plt.bar(lrs, r2s, color=colors)
+plt.axhline(best["r2"], color="red", linestyle="--", linewidth=1, label=f"Best R²={best['r2']:.4f}")
+plt.title("R² Across 3 Learning Rates (green = best)")
+plt.xlabel("Learning Rate"); plt.ylabel("R²")
+plt.legend(); plt.grid(axis="y", alpha=0.4); plt.tight_layout(); plt.show()</code></pre>
+
+  <h2>Running it on your own computer</h2>
+  <p>
+    <a href="downloads/Folder-AI-Forecast.zip" download>Download the zip file</a> and unzip it
+    to a folder. The zip holds the programs in this series so far, the
+    <code>time_series.csv</code> data file, and <code>pyproject.toml</code>. This note uses
+    <code>time_09.py</code>. Open the folder in Visual Studio Code, then type these three lines
+    in the terminal:
+  </p>
+  <pre class="code-block"><code>uv python pin 3.12.10
+uv sync
+uv run time_09.py</code></pre>
+  <p>
+    The first line records which Python version this folder uses, and the second installs every
+    package that <code>pyproject.toml</code> lists. The third line trains three models in turn and
+    prints the comparison table, then opens the charts; close each window to continue.
+  </p>
+  <p>
+    Those three lines are needed only once. The next time you want to run the program again,
+    type just <code>uv run time_09.py</code>.
+  </p>
+  <p>
+    If you have not set up uv yet, start with
+    <a href="ai-note05.html">How to install Visual Studio Code?</a> and then the uv note for
+    <a href="ai-note03.html">Windows</a> or <a href="ai-note04.html">Mac</a>.
+  </p>
+
+  <h2>What comes next</h2>
+  <p>
+    Three trials by hand already feel repetitive. The learning rate is only one dial among many
+    &mdash; the number of hidden layers, their width, the optimizer and the window length are all
+    choices too. The next version lets the program try many combinations by itself and keep the
+    best.
+  </p>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+</body>
+</html>

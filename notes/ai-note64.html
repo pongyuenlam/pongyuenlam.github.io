@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to make the window size a setting (Forecast, version 3)? | Howard Lam, PhD</title>
+<meta name="description" content="Version 3 wraps the cutting in a function, so the window size becomes a number you choose rather than three values fixed in the code.">
+<link rel="canonical" href="https://pongyuenlam.github.io/notes/ai-note64.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note64.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note64.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note64.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note64.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to make the window size a setting (Forecast, version 3)?">
+<meta property="og:description" content="Version 3 wraps the cutting in a function, so the window size becomes a number you choose rather than three values fixed in the code.">
+<meta property="og:url" content="https://pongyuenlam.github.io/notes/ai-note64.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:alt" content="Howard Lam, PhD">
+
+<link rel="stylesheet" href="../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "How to make the window size a setting (Forecast, version 3)?",
+  "description": "Version 3 wraps the cutting in a function, so the window size becomes a number you choose rather than three values fixed in the code.",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-13",
+  "dateModified": "2026-11-13",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/notes/ai-note64.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../biography.html">Biography</a></li>
+        <li><a href="../research.html">Research</a></li>
+        <li><a href="../cases.html">Cases</a></li>
+        <li><a href="../books.html">Books</a></li>
+        <li><a href="../ai-programs.html">AI Notes</a></li>
+        <li><a href="../links/">Links</a></li>
+        <li><a href="../glossary/">Glossary</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1>How to make the window size a setting (Forecast, version 3)?</h1>
+  <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 13, 2026 &middot; 4 min read</p>
+  <p class="lang-switcher">
+    <span class="current">English</span>
+    <a href="/zh-HK/notes/ai-note64.html">繁體中文</a>
+    <a href="/zh-CN/notes/ai-note64.html">简体中文</a>
+  </p>
+
+  <p>
+    This is version 3 of the forecasting series. Version 2 cut a series into windows with three
+    numbers typed straight into the call: <code>unfold(0, 5, 1)</code>. Version 3 moves the
+    cutting into a <strong>function</strong>, so the window size becomes a setting you can change
+    in one obvious place.
+  </p>
+
+  <h2>Why bother with a function?</h2>
+  <p>
+    A function is a named piece of code you can call again and again. Putting the cutting into
+    one has two payoffs. First, the three arguments of <code>unfold</code> are now given names of
+    your own choosing &mdash; <code>data</code>, <code>window_size</code>,
+    <code>shift</code> &mdash; which say what they mean. Second, a longer series becomes easy to
+    try: change one line, run the program, and the whole output changes with it.
+  </p>
+  <p>
+    Later versions will call this same function from inside a training loop, so the tidying done
+    here pays off more than once.
+  </p>
+
+  <h2>How the program works</h2>
+
+  <h3>1. Define the function</h3>
+  <pre class="code-block"><code>import torch
+def create_sliding_windows(data, window_size, shift):
+    windows = data.unfold(0, window_size, shift)
+    return windows</code></pre>
+  <p>
+    The <code>def</code> line names the function <code>create_sliding_windows</code> and lists
+    what it needs: the series to cut, the length of each piece, and how far to slide each time.
+    Inside, <code>unfold</code> receives those three values instead of the fixed
+    <code>0, 5, 1</code> from version 2. The last line hands the result back, so whoever called
+    the function can use it.
+  </p>
+  <p>
+    Defining a function does not run it. Nothing happens until the function is called lower down
+    the file.
+  </p>
+
+  <h3>2. Make a longer series</h3>
+  <pre class="code-block"><code>data = torch.arange(1, 60)
+window_size = 30</code></pre>
+  <p>
+    <code>torch.arange(1, 60)</code> builds the whole numbers from 1 up to 59. The 60 is where the
+    sequence stops, not a number that appears, so the series holds 59 values &mdash; close enough
+    to two months of daily sales. The second line states the window length once, in a variable
+    whose name says exactly what it is.
+  </p>
+
+  <h3>3. Call the function</h3>
+  <pre class="code-block"><code>windows = create_sliding_windows(data, window_size, 1)</code></pre>
+  <p>
+    This is the line that actually does the work. The series, the window length and the step are
+    passed in, and the pieces come back in <code>windows</code>. If you want a window of 10
+    instead, change <code>window_size</code> above and run the file again; nothing else in the
+    program needs to move.
+  </p>
+
+  <h3>4. Show each window</h3>
+  <pre class="code-block"><code>for window in windows:
+    print(window.numpy())</code></pre>
+  <p>
+    The loop is unchanged from version 2: take the pieces one at a time and print each as a plain
+    array. What has changed is how many lines come out. With 59 numbers and a window of 30, there
+    are 30 possible starting positions, so 30 windows are printed.
+  </p>
+
+  <h2>What you should see</h2>
+  <p>
+    Thirty windows, each holding 30 numbers. The first two and the last one look like this:
+  </p>
+  <pre class="code-block no-copy"><code>[ 1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+ 25 26 27 28 29 30]
+[ 2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25
+ 26 27 28 29 30 31]
+...
+[30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53
+ 54 55 56 57 58 59]</code></pre>
+  <p>
+    Each window starts one number later than the one before it, and the whole series has been
+    swept from left to right. The last window ends on 59, the final value in the series, which
+    confirms that the sweep did reach the end.
+  </p>
+
+  <h2>The whole program</h2>
+  <p>
+    The pieces above, put back together. This is the complete file, 9 lines in all:
+  </p>
+  <pre class="code-block"><code>import torch
+def create_sliding_windows(data, window_size, shift):
+    windows = data.unfold(0, window_size, shift)
+    return windows
+data = torch.arange(1, 60)
+window_size = 30
+windows = create_sliding_windows(data, window_size, 1)
+for window in windows:
+    print(window.numpy())</code></pre>
+
+  <h2>Running it on your own computer</h2>
+  <p>
+    <a href="downloads/Folder-AI-Forecast.zip" download>Download the zip file</a> and unzip it
+    to a folder. The zip holds the programs in this series so far, the
+    <code>time_series.csv</code> data file, and <code>pyproject.toml</code>. This note uses
+    <code>time_03.py</code>. Open the folder in Visual Studio Code, then type these three lines
+    in the terminal:
+  </p>
+  <pre class="code-block"><code>uv python pin 3.12.10
+uv sync
+uv run time_03.py</code></pre>
+  <p>
+    The first line records which Python version this folder uses, and the second installs every
+    package that <code>pyproject.toml</code> lists. The third line prints the 30 windows in the
+    terminal.
+  </p>
+  <p>
+    Those three lines are needed only once. The next time you want to run the program again,
+    type just <code>uv run time_03.py</code>.
+  </p>
+  <p>
+    If you have not set up uv yet, start with
+    <a href="ai-note05.html">How to install Visual Studio Code?</a> and then the uv note for
+    <a href="ai-note03.html">Windows</a> or <a href="ai-note04.html">Mac</a>.
+  </p>
+
+  <h2>What comes next</h2>
+  <p>
+    The windows are still just blocks of numbers. Nothing in the program says which numbers are
+    the <em>given</em> part and which is the answer. Version 4 splits every window into features
+    and targets, and feeds them to PyTorch as a dataset the model can learn from.
+  </p>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+</body>
+</html>

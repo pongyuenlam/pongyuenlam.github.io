@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to measure the model on data it has never seen (Forecast, version 8)? | Howard Lam, PhD</title>
+<meta name="description" content="Version 8 adds a third, untouched part of the data and reports four measures on it. The model beats guessing the average, but R&sup2; of 0.24 shows how much is left to learn.">
+<link rel="canonical" href="https://pongyuenlam.github.io/notes/ai-note69.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note69.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note69.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note69.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note69.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to measure the model on data it has never seen (Forecast, version 8)?">
+<meta property="og:description" content="Version 8 adds a third, untouched part of the data and reports four measures on it. The model beats guessing the average, but R&sup2; of 0.24 shows how much is left to learn.">
+<meta property="og:url" content="https://pongyuenlam.github.io/notes/ai-note69.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:alt" content="Howard Lam, PhD">
+
+<link rel="stylesheet" href="../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "How to measure the model on data it has never seen (Forecast, version 8)?",
+  "description": "Version 8 adds a third, untouched part of the data and reports four measures on it. The model beats guessing the average, but R2 of 0.24 shows how much is left to learn.",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-13",
+  "dateModified": "2026-11-13",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/notes/ai-note69.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../biography.html">Biography</a></li>
+        <li><a href="../research.html">Research</a></li>
+        <li><a href="../cases.html">Cases</a></li>
+        <li><a href="../books.html">Books</a></li>
+        <li><a href="../ai-programs.html">AI Notes</a></li>
+        <li><a href="../links/">Links</a></li>
+        <li><a href="../glossary/">Glossary</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1>How to measure the model on data it has never seen (Forecast, version 8)?</h1>
+  <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 13, 2026 &middot; 6 min read</p>
+  <p class="lang-switcher">
+    <span class="current">English</span>
+    <a href="/zh-HK/notes/ai-note69.html">繁體中文</a>
+    <a href="/zh-CN/notes/ai-note69.html">简体中文</a>
+  </p>
+
+  <p>
+    This is version 8 of the forecasting series. Version 7 judged the model on validation days,
+    but those days were also used, epoch after epoch, to decide when training looked good. That
+    makes them no longer fully fair. Version 8 therefore cuts the data into three parts instead of
+    two &mdash; <strong>training</strong>, <strong>validation</strong> and <strong>test</strong>
+    &mdash; keeps the test part sealed until the very end, and reports four numbers on it.
+  </p>
+
+  <h2>Why three parts, not two</h2>
+  <p>
+    The validation days are used while training is still going on. Every epoch the program measures
+    the loss on them, so you can see whether the model is improving or beginning to memorise. But
+    that same number quietly steers the work as well: it is what you glance at when deciding
+    whether to train for more epochs, and later versions will use it to choose between settings. A
+    measure that has been consulted this many times ends up a little flattering, in the same way
+    that a practice exam you have already seen twice stops being a fair test of what you know.
+  </p>
+  <p>
+    The test part deals with that problem by being kept out of the room. It is sealed before
+    training starts, opened once after training has finished, and used for nothing except the final
+    report. No decision along the way was made with it in view, so whatever it says is an honest
+    answer to the question <em>how good is this model on days it has never seen?</em>
+  </p>
+
+  <h2>Where the three cuts fall</h2>
+  <pre class="code-block"><code>train_size = int(total_windows * 0.7)
+val_size = int(total_windows * 0.15)
+test_size = total_windows - train_size - val_size</code></pre>
+  <p>
+    1,431 examples give <code>train_size</code> of 1,001 (0.7 of 1,431 is 1,001.7, and
+    <code>int()</code> drops the decimal) and <code>val_size</code> of 214. The test part takes
+    whatever is left rather than its own percentage, so the three parts always add back to 1,431:
+    1,001 + 214 + 216.
+  </p>
+  <p>
+    The three lists of positions are again three unbroken stretches of time, earliest first, so
+    the model trains on the oldest days, is watched on the middle ones, and is graded on the
+    newest.
+  </p>
+  <figure class="exhibit"><img src="/images/forecast-split-3way.png" alt="Sales line split into blue training days, red validation days and green test days, with two dashed vertical divider lines" style="max-width:100%; height:auto;"><figcaption>Training, validation and test parts, drawn by time_08.py</figcaption></figure>
+
+  <h2>The four measures</h2>
+  <p>
+    All four compare the model's guesses with the real days in the test part, and each answers a
+    slightly different question.
+  </p>
+  <ul>
+    <li><strong>MAE</strong> &mdash; mean absolute error: the average size of a miss, in dollars.
+    Easy to explain, and it is about 5.03 here.</li>
+    <li><strong>MSE</strong> &mdash; mean squared error: the same misses squared. Big misses count
+    far more than small ones, which is useful when a large error is much worse than a small one,
+    but the units are dollars squared, which nobody can picture.</li>
+    <li><strong>RMSE</strong> &mdash; root mean squared error: the square root of MSE, which puts
+    the number back into dollars. About 6.23 here, and always a little larger than MAE because
+    squaring lets one bad day weigh heavily.</li>
+    <li><strong>R&sup2;</strong> &mdash; the fraction of the day-to-day variation the model
+    explains. 1 is perfect; 0 means the model does no better than replying with the average every
+    day.</li>
+  </ul>
+  <p>
+    R&sup2; of 0.24 here is the number worth staring at. The model is clearly better than guessing
+    the average, but it accounts for only about a quarter of the movement in the test days. This
+    is an honest, modest result, and versions 9 and 10 try to improve it rather than hide it.
+  </p>
+
+  <h2>How the program works</h2>
+
+  <h3>1. Build three loaders</h3>
+  <pre class="code-block"><code>train_indices = list(range(train_size))
+val_indices = list(range(train_size, train_size + val_size))
+test_indices = list(range(train_size + val_size, total_windows))
+
+train_dataset = Subset(full_dataset, train_indices)
+val_dataset = Subset(full_dataset, val_indices)
+test_dataset = Subset(full_dataset, test_indices)
+
+batch_size = 32
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)</code></pre>
+  <p>
+    Version 6's two-way split becomes three, with the same shape: three lists of positions, three
+    <code>Subset</code>s, three loaders. Training shuffles; the other two do not, so their
+    measurements stay comparable from run to run.
+  </p>
+
+  <h3>2. Train exactly as before</h3>
+  <p>
+    The network, the loss, the optimizer and the 100-epoch loop are unchanged from version 7. Only
+    the split above and the measurement below are new. That is worth noticing: once the training
+    loop exists, adding a fair test does not require touching it.
+  </p>
+
+  <h3>3. Measure once, after training</h3>
+  <pre class="code-block"><code>model.eval()
+test_predictions = []
+test_targets = []
+with torch.no_grad():
+    for batch_features, batch_targets in test_loader:
+        batch_features = batch_features.to(device)
+        outputs = model(batch_features)
+        test_predictions.extend(outputs.cpu().numpy())
+        test_targets.extend(batch_targets.numpy())</code></pre>
+  <p>
+    The two lists collect the guesses and the real answers over the whole test part. <code>.extend</code>
+    adds every batch's contents to the list, so that at the end the two lists hold 216 numbers
+    each, in order.
+  </p>
+
+  <h3>4. Turn the lists into the four numbers</h3>
+  <pre class="code-block"><code>mae = torch.mean(torch.abs(test_predictions_tensor - test_targets_tensor))
+mse = torch.mean((test_predictions_tensor - test_targets_tensor) ** 2)
+rmse = torch.sqrt(mse)
+ss_res = torch.sum((test_targets_tensor - test_predictions_tensor) ** 2)
+ss_tot = torch.sum((test_targets_tensor - torch.mean(test_targets_tensor)) ** 2)
+r2 = 1 - ss_res / ss_tot</code></pre>
+  <p>
+    Each line is the definition written out. MAE averages the absolute differences; MSE averages
+    the squared differences; RMSE takes the square root of MSE.
+  </p>
+  <p>
+    R&sup2; needs two totals. <code>ss_res</code> is the squared error left by the model.
+    <code>ss_tot</code> is the squared error of the laziest possible forecast &mdash; always
+    answering with the average of the test days. Dividing one by the other says how much of the
+    lazy error remains, and subtracting from 1 turns that into how much was removed.
+  </p>
+  <p>
+    If the model were as lazy as the average, the two totals would be equal, the ratio would be 1,
+    and R&sup2; would be 0. If the model were perfect, <code>ss_res</code> would be 0 and R&sup2;
+    would be 1.
+  </p>
+
+  <h2>What you should see</h2>
+  <pre class="code-block no-copy"><code>Epoch [10/100], Train Loss: 45.0302, Val Loss: 53.8099
+Epoch [20/100], Train Loss: 45.5068, Val Loss: 51.7960
+Epoch [30/100], Train Loss: 43.4795, Val Loss: 54.2412
+Epoch [40/100], Train Loss: 42.1594, Val Loss: 50.4357
+Epoch [50/100], Train Loss: 40.0044, Val Loss: 47.8687
+Epoch [60/100], Train Loss: 38.7391, Val Loss: 45.2560
+Epoch [70/100], Train Loss: 37.1991, Val Loss: 44.5767
+Epoch [80/100], Train Loss: 36.1731, Val Loss: 41.6744
+Epoch [90/100], Train Loss: 35.9192, Val Loss: 42.3977
+Epoch [100/100], Train Loss: 33.9332, Val Loss: 45.6109
+
+Test Set Metrics:
+  MAE:  5.0289
+  MSE:  38.7685
+  RMSE: 6.2264
+  R²:   0.2404</code></pre>
+  <p>
+    As in version 7, your numbers will differ from these because the weights start at random.
+    The pattern to look for is that the training loss keeps falling while the validation loss
+    flattens and wobbles, and that RMSE sits somewhat above MAE.
+  </p>
+  <figure class="exhibit"><img src="/images/forecast-loss-3way.png" alt="Loss curves over 100 epochs, training loss falling and validation loss flattening around the mid forties" style="max-width:100%; height:auto;"><figcaption>Training and validation loss with the three-way split</figcaption></figure>
+  <figure class="exhibit"><img src="/images/forecast-test-predictions.png" alt="Actual test-day sales in grey and predicted values in red, the red line following the overall shape but missing the peaks" style="max-width:100%; height:auto;"><figcaption>Actual (grey) and predicted (red) values for the test days</figcaption></figure>
+  <p>
+    In the second chart the red line follows the general rise but flattens out the peaks. A model
+    that cannot reach the peaks is exactly what an R&sup2; of 0.24 looks like on a picture.
+  </p>
+
+  <h2>The whole program</h2>
+  <p>
+    The pieces above, put back together. This is the complete file:
+  </p>
+  <pre class="code-block"><code>import torch
+from torch.utils.data import TensorDataset, DataLoader, Subset
+import pandas as pd
+import matplotlib.pyplot as plt
+
+def create_sliding_windows_with_target(data, window_size, shift=1):
+    windows = data.unfold(0, window_size, shift)
+    features = windows[:, :-1]
+    targets = windows[:, -1:]
+    return features, targets
+
+df = pd.read_csv('time_series.csv')
+series = df['series'].values
+series_tensor = torch.tensor(series, dtype=torch.float32)
+window_size = 30
+features, targets = create_sliding_windows_with_target(series_tensor, window_size=window_size, shift=1)
+full_dataset = TensorDataset(features, targets)
+
+total_windows = len(full_dataset)
+train_size = int(total_windows * 0.7)
+val_size = int(total_windows * 0.15)
+test_size = total_windows - train_size - val_size
+
+train_indices = list(range(train_size))
+val_indices = list(range(train_size, train_size + val_size))
+test_indices = list(range(train_size + val_size, total_windows))
+
+train_dataset = Subset(full_dataset, train_indices)
+val_dataset = Subset(full_dataset, val_indices)
+test_dataset = Subset(full_dataset, test_indices)
+
+batch_size = 32
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+
+# Visualize train/val/test split
+val_start = train_size
+test_start = train_size + val_size
+plt.figure(figsize=(12, 4))
+plt.plot(range(val_start), series[:val_start], 'b-', label='Training Data')
+plt.plot(range(val_start, test_start), series[val_start:test_start], 'r-', label='Validation Data')
+plt.plot(range(test_start, len(series)), series[test_start:], 'g-', label='Test Data')
+plt.axvline(x=val_start, color='k', linestyle='--', label='Train/Val Split')
+plt.axvline(x=test_start, color='purple', linestyle='--', label='Val/Test Split')
+plt.title('Time Series Train/Validation/Test Split')
+plt.xlabel('Time')
+plt.ylabel('Value')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+import torch.nn as nn
+import torch.optim as optim
+
+class TimeSeriesModel(nn.Module):
+    def __init__(self, window_size):
+        super(TimeSeriesModel, self).__init__()
+        self.network = nn.Sequential(
+            nn.Linear(window_size - 1, 10),
+            nn.ReLU(),
+            nn.Linear(10, 10),
+            nn.ReLU(),
+            nn.Linear(10, 1)
+        )
+
+    def forward(self, x):
+        return self.network(x)
+
+model = TimeSeriesModel(window_size)
+criterion = nn.MSELoss()
+optimizer = optim.Adam(model.parameters())
+
+num_epochs = 100
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model.to(device)
+
+train_losses = []
+val_losses = []
+
+for epoch in range(num_epochs):
+    model.train()
+    train_loss = 0
+    for batch_features, batch_targets in train_loader:
+        batch_features = batch_features.to(device)
+        batch_targets = batch_targets.to(device)
+        outputs = model(batch_features)
+        loss = criterion(outputs, batch_targets)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        train_loss += loss.item()
+
+    model.eval()
+    val_loss = 0
+    with torch.no_grad():
+        for batch_features, batch_targets in val_loader:
+            batch_features = batch_features.to(device)
+            batch_targets = batch_targets.to(device)
+            outputs = model(batch_features)
+            val_loss += criterion(outputs, batch_targets).item()
+
+    train_loss /= len(train_loader)
+    val_loss /= len(val_loader)
+    train_losses.append(train_loss)
+    val_losses.append(val_loss)
+
+    if (epoch + 1) % 10 == 0:
+        print(f'Epoch [{epoch+1}/{num_epochs}], '
+              f'Train Loss: {train_loss:.4f}, '
+              f'Val Loss: {val_loss:.4f}')
+
+# Plot training progress
+plt.figure(figsize=(10, 6))
+plt.plot(train_losses, label='Training Loss')
+plt.plot(val_losses, label='Validation Loss')
+plt.title('Model Loss Over Time')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# Evaluate on test set
+model.eval()
+test_predictions = []
+test_targets = []
+with torch.no_grad():
+    for batch_features, batch_targets in test_loader:
+        batch_features = batch_features.to(device)
+        outputs = model(batch_features)
+        test_predictions.extend(outputs.cpu().numpy())
+        test_targets.extend(batch_targets.numpy())
+
+# Plot predictions vs actual for test set
+plt.figure(figsize=(10, 6))
+plt.plot(test_targets, label='Actual', color='lightgrey')
+plt.plot(test_predictions, label='Predicted', color='red')
+plt.title('Predictions vs Actual Values (Test Set)')
+plt.xlabel('Time')
+plt.ylabel('Value')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# Metrics on test set
+test_predictions_tensor = torch.tensor(test_predictions)
+test_targets_tensor = torch.tensor(test_targets)
+
+mae = torch.mean(torch.abs(test_predictions_tensor - test_targets_tensor))
+mse = torch.mean((test_predictions_tensor - test_targets_tensor) ** 2)
+rmse = torch.sqrt(mse)
+ss_res = torch.sum((test_targets_tensor - test_predictions_tensor) ** 2)
+ss_tot = torch.sum((test_targets_tensor - torch.mean(test_targets_tensor)) ** 2)
+r2 = 1 - ss_res / ss_tot
+
+print(f"\nTest Set Metrics:")
+print(f"  MAE:  {mae:.4f}")
+print(f"  MSE:  {mse:.4f}")
+print(f"  RMSE: {rmse:.4f}")
+print(f"  R²:   {r2:.4f}")</code></pre>
+
+  <h2>Running it on your own computer</h2>
+  <p>
+    <a href="downloads/Folder-AI-Forecast.zip" download>Download the zip file</a> and unzip it
+    to a folder. The zip holds the programs in this series so far, the
+    <code>time_series.csv</code> data file, and <code>pyproject.toml</code>. This note uses
+    <code>time_08.py</code>. Open the folder in Visual Studio Code, then type these three lines
+    in the terminal:
+  </p>
+  <pre class="code-block"><code>uv python pin 3.12.10
+uv sync
+uv run time_08.py</code></pre>
+  <p>
+    The first line records which Python version this folder uses, and the second installs every
+    package that <code>pyproject.toml</code> lists. The third line prints the epoch lines and the
+    four test measures, and opens three chart windows in turn; close each one to continue.
+  </p>
+  <p>
+    Those three lines are needed only once. The next time you want to run the program again,
+    type just <code>uv run time_08.py</code>.
+  </p>
+  <p>
+    If you have not set up uv yet, start with
+    <a href="ai-note05.html">How to install Visual Studio Code?</a> and then the uv note for
+    <a href="ai-note03.html">Windows</a> or <a href="ai-note04.html">Mac</a>.
+  </p>
+
+  <h2>What comes next</h2>
+  <p>
+    An R&sup2; of 0.24 leaves plenty of room. Version 9 stops guessing at the settings and tries
+    several learning rates by hand, with early stopping, and keeps whichever one scores best.
+  </p>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+</body>
+</html>

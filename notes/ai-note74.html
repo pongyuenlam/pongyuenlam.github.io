@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to reuse the model you already trained (Forecast, version 13)? | Howard Lam, PhD</title>
+<meta name="description" content="Version 13 trains nothing. It rebuilds the same network in code, loads the weights saved by version 12, and reports the same four scores in a few seconds.">
+<link rel="canonical" href="https://pongyuenlam.github.io/notes/ai-note74.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note74.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note74.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note74.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note74.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to reuse the model you already trained (Forecast, version 13)?">
+<meta property="og:description" content="Version 13 trains nothing. It rebuilds the same network in code, loads the weights saved by version 12, and reports the same four scores in a few seconds.">
+<meta property="og:url" content="https://pongyuenlam.github.io/notes/ai-note74.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:alt" content="Howard Lam, PhD">
+
+<link rel="stylesheet" href="../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "How to reuse the model you already trained (Forecast, version 13)?",
+  "description": "Version 13 trains nothing. It rebuilds the same network in code, loads the weights saved by version 12, and reports the same four scores in a few seconds.",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-13",
+  "dateModified": "2026-11-13",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/notes/ai-note74.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../biography.html">Biography</a></li>
+        <li><a href="../research.html">Research</a></li>
+        <li><a href="../cases.html">Cases</a></li>
+        <li><a href="../books.html">Books</a></li>
+        <li><a href="../ai-programs.html">AI Notes</a></li>
+        <li><a href="../links/">Links</a></li>
+        <li><a href="../glossary/">Glossary</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1>How to reuse the model you already trained (Forecast, version 13)?</h1>
+  <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 13, 2026 &middot; 5 min read</p>
+  <p class="lang-switcher">
+    <span class="current">English</span>
+    <a href="/zh-HK/notes/ai-note74.html">繁體中文</a>
+    <a href="/zh-CN/notes/ai-note74.html">简体中文</a>
+  </p>
+
+  <p>
+    This is the last note in the forecasting series. Version 12 trained two hundred models,
+    graded each of them on days it had never seen, and saved the winner's weights to a file
+    called <code>best_model_12.pt</code>. Version 13 is the reward for that work: a program of
+    eighty-six lines that trains nothing at all. It rebuilds the same network, drops the saved
+    weights into it, and reports the same four scores in a few seconds.
+  </p>
+  <p>
+    Nothing new is learned here. The point is that the old answer comes back exactly, from a
+    file of just over half a megabyte. If you have ever trained something once and then lost
+    the habit of using it, this is the step that turns a training run into a tool.
+  </p>
+
+  <h2>What is actually saved</h2>
+  <p>
+    The last line of version 12's model section is
+    <code>torch.save(best_trial["model"].state_dict(), "best_model_12.pt")</code>. The important
+    word is <code>state_dict</code>.
+  </p>
+  <p>
+    A state dict is a dictionary of tensors: one weight matrix and one bias vector for each
+    layer, named after the layer they belong to. It holds no program, no configuration, no
+    data and no optimiser. The file produced by this run is 551,521 bytes, a little over half
+    a megabyte, and every byte of it is numbers. Because early stopping restored the best
+    weights before the model was returned, the file also holds the weights from the best of
+    the eighty epochs that version 12 actually ran, not the three hundred it was allowed.
+  </p>
+  <p>
+    So the file cannot rebuild itself. The recipe &mdash; how many layers, how wide, how long
+    the window &mdash; lives only in the source code, and version 13 has to supply it again.
+    It builds an empty shell of the same shape, then <code>load_state_dict</code> copies each
+    saved tensor into the layer whose name and shape match. If a shape does not match, PyTorch
+    raises an error: missing keys, unexpected keys, size mismatch. A wrong
+    <code>num_layers</code> or <code>hidden_size</code> therefore gives you a failed load
+    rather than a plausible-looking wrong forecast, which is a good way to fail.
+  </p>
+  <p>
+    There is one quiet failure that the load cannot catch. If you rebuild the windows from a
+    different data file, or with a different window size in the input layer, the model can
+    still load and still print four numbers; they are simply not the old numbers. Architecture
+    mistakes are loud. Data mistakes are silent, and only a comparison with a known result
+    reveals them.
+  </p>
+
+  <h2>Where the config comes from</h2>
+  <p>
+    Near the top of version 13 the settings are not typed in. They are read from the table that
+    version 12 wrote:
+  </p>
+  <pre class="code-block"><code>RESULTS_FILE = "search_results_12.xlsx"
+MODEL_FILE   = "best_model_12.pt"
+BATCH_SIZE   = 32
+
+results  = pd.read_excel(RESULTS_FILE)
+best_row = results.sort_values("r2", ascending=False).iloc[0]
+
+BEST_CFG = {
+    "window_size": int(best_row["window_size"]),
+    "hidden_size": int(best_row["hidden_size"]),
+    "num_layers":  int(best_row["num_layers"]),
+}</code></pre>
+  <p>
+    <code>read_excel</code> loads the 200-row table into a table-shaped object. Sorting it by
+    <code>r2</code>, highest first, and taking <code>.iloc[0]</code> picks the winning row. The
+    three settings that matter are then copied out of it by column name.
+  </p>
+  <p>
+    <code>int()</code> is there because a value lifted out of a spreadsheet arrives as a pandas
+    number rather than a plain Python integer, and layer sizes must be plain integers.
+  </p>
+  <p>
+    Only three of the winning row's six settings are used. Epochs, learning rate and optimiser
+    belong to a training run, and this program does not train. What it needs is the shape: the
+    window sets the input size, and the hidden size and layer count decide every layer after the
+    first.
+  </p>
+  <p>
+    Reading the table rather than typing the numbers has one practical consequence. If you rerun
+    version 12 and a different combination wins, this program follows the new winner by itself. No
+    line here needs editing, and the model on disk and the settings used to rebuild it can never
+    drift apart.
+  </p>
+
+  <h2>How the program works</h2>
+
+  <h3>1. Rebuild the data with the same window size</h3>
+  <pre class="code-block"><code>window_size = BEST_CFG["window_size"]
+windows     = series_tensor.unfold(0, window_size, 1)
+features    = windows[:, :-1]
+targets     = windows[:, -1:]
+full_dataset = TensorDataset(features, targets)
+
+total   = len(full_dataset)
+val_end = int(total * 0.85)
+test_loader = DataLoader(Subset(full_dataset, range(val_end, total)),
+                         batch_size=BATCH_SIZE, shuffle=False)</code></pre>
+  <p>
+    The data file has 1,460 rows. Cutting it into windows of 20 gives 1,441 examples, each one
+    19 numbers followed by the twentieth as the answer. The split arithmetic is unchanged from
+    version 12: <code>int(1441 * 0.85)</code> is 1,224, so the test loader holds the last 217
+    examples. Same arithmetic, same days, therefore comparable scores. Notice what is not
+    built: there is no training loader and no validation loader, because nothing is being
+    fitted. Only the test slice exists.
+  </p>
+
+  <h3>2. Rebuild the architecture and load the weights</h3>
+  <pre class="code-block"><code>def build_model(input_size, hidden_size, num_layers):
+    layers, in_dim = [], input_size
+    for _ in range(num_layers):
+        layers += [nn.Linear(in_dim, hidden_size), nn.ReLU()]
+        in_dim = hidden_size
+    layers.append(nn.Linear(in_dim, 1))
+    return nn.Sequential(*layers)
+
+model = build_model(window_size - 1, BEST_CFG["hidden_size"], BEST_CFG["num_layers"])
+model.load_state_dict(torch.load(MODEL_FILE, map_location=device))
+model.to(device)
+model.eval()</code></pre>
+  <p>
+    This is the same factory version 12 used, copied over so that the shape is identical: the
+    first layer reads 19 numbers, three hidden layers of 256 hold the work, and the last layer
+    returns a single number. <code>load_state_dict</code> is strict by default, which is what
+    makes the check meaningful. <code>map_location</code> puts the saved tensors on whichever
+    device is available, the model is moved to the same place, and it is switched to evaluation
+    mode before anything is measured.
+  </p>
+
+  <h3>3. Run the test loader once under no_grad</h3>
+  <pre class="code-block"><code>preds, actuals = [], []
+with torch.no_grad():
+    for xb, yb in test_loader:
+        preds.extend(model(xb.to(device)).cpu().numpy())
+        actuals.extend(yb.numpy())</code></pre>
+  <p>
+    <code>torch.no_grad()</code> tells PyTorch not to record the operations for later
+    differentiation. Nothing here will be improved by a gradient, so the bookkeeping is pure
+    waste; switching it off is both faster and lighter. The predictions and the true values are
+    collected in the same order, because the loader shuffles nothing.
+  </p>
+  <p>
+    <code>model.eval()</code> is a different switch, and it is the one beginners forget. Some
+    layers behave one way while training and another way at test time: dropout throws units
+    away during training and passes all of them afterwards, and batch normalisation uses the
+    current batch's statistics during training and its stored averages afterwards. Evaluation
+    mode selects the second behaviour. This particular network is built from
+    <code>nn.Linear</code> and <code>nn.ReLU</code> only, so today <code>eval()</code> changes
+    no number. It is in the file because the day a dropout layer is added, forgetting it would
+    quietly change the predictions instead of raising an error.
+  </p>
+
+  <h3>4. Compute the four measures</h3>
+  <pre class="code-block"><code>mae  = torch.mean(torch.abs(p - a)).item()
+mse  = torch.mean((p - a) ** 2).item()
+rmse = torch.sqrt(torch.tensor(mse)).item()
+r2   = (1 - torch.sum((a - p) ** 2) / torch.sum((a - torch.mean(a)) ** 2)).item()</code></pre>
+  <p>
+    MAE averages the absolute misses and stays in the units of the data. MSE squares them
+    first, which punishes large misses harder, and RMSE takes the square root so the result is
+    back in those original units. R&sup2; compares the model's squared error with the squared
+    error of the simplest possible answer, always replying with the average of the test days:
+    1.0 is perfect, 0 is no better than that flat average, and a negative value is worse than
+    it.
+  </p>
+
+  <h2>What you should see</h2>
+  <p>
+    The complete output of a real run, unedited:
+  </p>
+  <pre class="code-block no-copy"><code>Loaded: best_model_12.pt
+Config: {'window_size': 20, 'hidden_size': 256, 'num_layers': 3}
+
+Test Set Metrics:
+  MAE:  4.1235
+  MSE:  26.7236
+  RMSE: 5.1695
+  R²:   0.4790
+Saved: best_model_predictions.png</code></pre>
+  <p>
+    The four numbers match what version 12 printed for its winner to the fourth decimal place:
+    R&sup2; 0.4790, MAE 4.1235, RMSE 5.1695, and MSE 26.7236, which is the square of the RMSE
+    up to rounding. Nothing
+    was trained, nothing was shuffled, and no random seed took part in the scoring. This is not
+    a lucky repeat; it is the same arithmetic on the same weights over the same 217 days. A
+    saved model is a promise that the answer can be produced again, and this is the evidence
+    that the promise holds.
+  </p>
+  <figure class="exhibit"><img src="/images/forecast-v13-predictions.png" alt="Actual daily sales in pale grey and the saved model's predictions as a red line that follows the upward trend while smoothing the day-to-day swings" style="max-width:100%; height:auto;"><figcaption>Actual (grey) and predicted (red) values over the 217 test days, produced by loading <code>best_model_12.pt</code> and running no training. The chart is titled with R&sup2; 0.4790 and RMSE 5.1695.</figcaption></figure>
+
+  <h2>The series in one view</h2>
+  <p>
+    Thirteen programs, one question: what will the next day's sales be, given the recent past?
+    Versions 1 to 3 looked at the data and cut it into windows. Versions 4 to 6 turned those
+    windows into features and targets and split them in date order, so that the model is always
+    graded on days that come after the days it learned from. Version 7 trained a network.
+    Version 8 graded it honestly on days it had never seen. Versions 9 to 12 searched settings
+    &mdash; how long to train, how big a step to take, which optimiser, how wide, how deep, how
+    far back &mdash; ending with two hundred trials. Version 13 kept the result and showed how
+    to pick it up again.
+  </p>
+  <p>
+    What the model can do is modest and useful: it follows the level and the slow upward drift
+    of the series, turning 19 past values into one number in a fraction of a second. What it
+    cannot do is follow the daily swings. An R&sup2; of about 0.48 means roughly half of the
+    variation in the test days is still unexplained. The network reads raw lagged values through
+    plain linear layers and ReLU. It has no idea what day of the week it is, no notion of a
+    month or a holiday, and no mechanism built for sequences. It is a feed-forward network
+    doing its best with a short, unadorned history.
+  </p>
+  <p>
+    The competent next step is not a bigger search. It is better inputs or a different shape of
+    model: add calendar context such as day-of-week and month, or use a model designed for
+    sequences, which can carry a memory of longer patterns. One practical obstacle comes first.
+    The time column in <code>time_series.csv</code> is a step number running from 1 to 1,460,
+    not a date, so day-of-week and month cannot be computed until real dates are attached to the
+    rows. None of this is a promise of a better score; the only way to know is to build it and
+    grade it on the same kind of held-out days.
+  </p>
+
+  <h2>The whole program</h2>
+  <p>
+    The pieces above, put back together. This is the complete file:
+  </p>
+  <pre class="code-block"><code>import os
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
+import torch
+import torch.nn as nn
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from torch.utils.data import TensorDataset, DataLoader, Subset
+
+# ── Best config, read from search_results_12.xlsx (Rank 1) ───────────────────
+RESULTS_FILE = "search_results_12.xlsx"
+MODEL_FILE   = "best_model_12.pt"
+BATCH_SIZE   = 32
+
+results  = pd.read_excel(RESULTS_FILE)
+best_row = results.sort_values("r2", ascending=False).iloc[0]
+
+BEST_CFG = {
+    "window_size": int(best_row["window_size"]),
+    "hidden_size": int(best_row["hidden_size"]),
+    "num_layers":  int(best_row["num_layers"]),
+}
+
+# ── Load data ─────────────────────────────────────────────────────────────────
+df = pd.read_csv("time_series.csv")
+series = df["series"].values
+series_tensor = torch.tensor(series, dtype=torch.float32)
+
+window_size = BEST_CFG["window_size"]
+windows     = series_tensor.unfold(0, window_size, 1)
+features    = windows[:, :-1]
+targets     = windows[:, -1:]
+full_dataset = TensorDataset(features, targets)
+
+total   = len(full_dataset)
+val_end = int(total * 0.85)
+test_loader = DataLoader(Subset(full_dataset, range(val_end, total)),
+                         batch_size=BATCH_SIZE, shuffle=False)
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# ── Rebuild model architecture &amp; load weights ─────────────────────────────────
+def build_model(input_size, hidden_size, num_layers):
+    layers, in_dim = [], input_size
+    for _ in range(num_layers):
+        layers += [nn.Linear(in_dim, hidden_size), nn.ReLU()]
+        in_dim = hidden_size
+    layers.append(nn.Linear(in_dim, 1))
+    return nn.Sequential(*layers)
+
+model = build_model(window_size - 1, BEST_CFG["hidden_size"], BEST_CFG["num_layers"])
+model.load_state_dict(torch.load(MODEL_FILE, map_location=device))
+model.to(device)
+model.eval()
+print(f"Loaded: {MODEL_FILE}")
+print(f"Config: {BEST_CFG}\n")
+
+# ── Evaluate ──────────────────────────────────────────────────────────────────
+preds, actuals = [], []
+with torch.no_grad():
+    for xb, yb in test_loader:
+        preds.extend(model(xb.to(device)).cpu().numpy())
+        actuals.extend(yb.numpy())
+
+p = torch.tensor(np.array(preds))
+a = torch.tensor(np.array(actuals))
+
+mae  = torch.mean(torch.abs(p - a)).item()
+mse  = torch.mean((p - a) ** 2).item()
+rmse = torch.sqrt(torch.tensor(mse)).item()
+r2   = (1 - torch.sum((a - p) ** 2) / torch.sum((a - torch.mean(a)) ** 2)).item()
+
+print(f"Test Set Metrics:")
+print(f"  MAE:  {mae:.4f}")
+print(f"  MSE:  {mse:.4f}")
+print(f"  RMSE: {rmse:.4f}")
+print(f"  R²:   {r2:.4f}")
+
+# ── Plots ─────────────────────────────────────────────────────────────────────
+# 1. Predictions vs actual
+plt.figure(figsize=(12, 5))
+plt.plot(actuals, label="Actual",    color="lightgrey", linewidth=1.5)
+plt.plot(preds,   label="Predicted", color="red",       linewidth=1.5)
+plt.title(f"Best Model — Predictions vs Actual (Test Set)\nR²={r2:.4f}  RMSE={rmse:.4f}", fontsize=11)
+plt.xlabel("Time"); plt.ylabel("Value")
+plt.legend(); plt.grid(True)
+plt.tight_layout()
+plt.savefig("best_model_predictions.png", dpi=150)
+plt.show()
+print("Saved: best_model_predictions.png")</code></pre>
+
+  <h2>Running it on your own computer</h2>
+  <p>
+    <a href="downloads/Folder-AI-Forecast.zip" download>Download the zip file</a> and unzip it
+    to a folder. The zip holds the programs in this series, the <code>time_series.csv</code>
+    data file and <code>pyproject.toml</code>. This note uses <code>time_13.py</code>.
+  </p>
+  <p>
+    Version 13 has one requirement that no earlier note had: it needs
+    <code>best_model_12.pt</code>, and that file exists only after <code>time_12.py</code> has
+    been run once in the same folder. Version 12 runs two hundred trials and needs a good while
+    to finish.
+    Version 13 takes seconds, because it does none of that work.
+  </p>
+  <p>
+    Open the folder in Visual Studio Code, then type these three lines in the terminal:
+  </p>
+  <pre class="code-block"><code>uv python pin 3.12.10
+uv sync
+uv run time_13.py</code></pre>
+  <p>
+    The first line records which Python version this folder uses, and the second installs every
+    package that <code>pyproject.toml</code> lists. The third line loads the saved weights,
+    prints the four scores and draws one chart, saving it as
+    <code>best_model_predictions.png</code>; close the window when you have looked at it.
+  </p>
+  <p>
+    Those three lines are needed only once. The next time you want to run the program again,
+    type just <code>uv run time_13.py</code>.
+  </p>
+  <p>
+    If you have not set up uv yet, start with
+    <a href="ai-note05.html">How to install Visual Studio Code?</a> and then the uv note for
+    <a href="ai-note03.html">Windows</a> or <a href="ai-note04.html">Mac</a>.
+  </p>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+</body>
+</html>

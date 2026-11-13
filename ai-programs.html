@@ -69,6 +69,7 @@
     <button type="button" class="chip" data-filter="face" aria-pressed="false">Face recognition</button>
     <button type="button" class="chip" data-filter="web" aria-pressed="false">Website</button>
     <button type="button" class="chip" data-filter="video" aria-pressed="false">Video</button>
+    <button type="button" class="chip" data-filter="forecast" aria-pressed="false">Forecast</button>
   </div>
   <div class="note-filters note-filters--sub" role="group" style="display:none" aria-label="Narrow the agent notes" hidden>
     <button type="button" class="chip is-active" data-sub="all" aria-pressed="true">All agents</button>
@@ -78,6 +79,84 @@
     <button type="button" class="chip" data-sub="research" aria-pressed="false">Agent research</button>
   </div>
   <noscript><p class="meta">Filtering needs JavaScript. All notes are listed below.</p></noscript>
+
+  <div class="card" data-track="forecast">
+    <h3><a href="notes/ai-note74.html">How to reuse the model you already trained (Forecast, version 13)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 13, 2026 &middot; 5 min read</p>
+    <p>The winner saved by version 12 is loaded and graded without any training: the same R&sup2; 0.4790 appears in seconds. Closes the series with an honest look at what the model does and does not know.</p>
+  </div>
+
+  <div class="card" data-track="forecast">
+    <h3><a href="notes/ai-note73.html">How wide should the search be (Forecast, version 12)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 13, 2026 &middot; 7 min read</p>
+    <p>Every range widens and 200 of 5,760 combinations are tried: the best reaches R&sup2; 0.4790, and 81 trials end worse than guessing the average, almost all of them on SGD.</p>
+  </div>
+
+  <div class="card" data-track="forecast">
+    <h3><a href="notes/ai-note72.html">How to let the program choose the window length too (Forecast, version 11)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 13, 2026 &middot; 7 min read</p>
+    <p>A sixth dial is added to the search &mdash; how many days to look back &mdash; and the winning window is the shortest one tried. The spread between trials shows how much luck a single score contains.</p>
+  </div>
+
+  <div class="card" data-track="forecast">
+    <h3><a href="notes/ai-note71.html">How to let the program search its own settings (Forecast, version 10)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 13, 2026 &middot; 7 min read</p>
+    <p>Twenty random trials out of 243 combinations of five settings, ranked in a spreadsheet: the best reaches R&sup2; 0.45, and the trials that diverge show what a learning rate too large really does.</p>
+  </div>
+
+  <div class="card" data-track="forecast">
+    <h3><a href="notes/ai-note70.html">How to try several learning rates and keep the best (Forecast, version 9)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 13, 2026 &middot; 6 min read</p>
+    <p>Three learning rates, early stopping and a saved winner: the best run reaches R&sup2; 0.44 in 37 epochs instead of 100, up from 0.24 in version 8.</p>
+  </div>
+
+  <div class="card" data-track="forecast">
+    <h3><a href="notes/ai-note69.html">How to measure the model on data it has never seen (Forecast, version 8)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 13, 2026 &middot; 6 min read</p>
+    <p>A third, untouched part of the data is kept for the final grade: MAE 5.03, RMSE 6.23 and an R&sup2; of 0.24, an honest result that leaves plenty to improve.</p>
+  </div>
+
+  <div class="card" data-track="forecast">
+    <h3><a href="notes/ai-note68.html">How to train your first forecasting model (Forecast, version 7)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 13, 2026 &middot; 6 min read</p>
+    <p>A small network of 29 inputs, two hidden layers and 1 output learns from 1,144 examples over 100 epochs, with a loss curve and an average error of about HK$4.8.</p>
+  </div>
+
+  <div class="card" data-track="forecast">
+    <h3><a href="notes/ai-note67.html">How to split the examples into training and validation (Forecast, version 6)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 13, 2026 &middot; 5 min read</p>
+    <p>The 1,431 examples are cut in date order into 1,144 for training and 287 for validation, so the model is always judged on days later than the ones it learned from.</p>
+  </div>
+
+  <div class="card" data-track="forecast">
+    <h3><a href="notes/ai-note66.html">How to shorten the slicing with a colon (Forecast, version 5)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 13, 2026 &middot; 4 min read</p>
+    <p>Two lines replace four: a bare colon means every row and a minus one means the last column, and the printed numbers stay exactly the same.</p>
+  </div>
+
+  <div class="card" data-track="forecast">
+    <h3><a href="notes/ai-note65.html">How to split each window into features and a target (Forecast, version 4)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 13, 2026 &middot; 5 min read</p>
+    <p>A 27-line program that turns 1,460 days of sales into 1,431 examples, each holding 29 past days and the 1 day to predict.</p>
+  </div>
+
+  <div class="card" data-track="forecast">
+    <h3><a href="notes/ai-note64.html">How to make the window size a setting (Forecast, version 3)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 13, 2026 &middot; 4 min read</p>
+    <p>A 9-line program that wraps the cutting in a function, so the window size becomes one number you can change instead of three values buried in the code.</p>
+  </div>
+
+  <div class="card" data-track="forecast">
+    <h3><a href="notes/ai-note63.html">How to cut a series into sliding windows (Forecast, version 2)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 13, 2026 &middot; 4 min read</p>
+    <p>An 11-line program that uses <code>unfold</code> to turn one strip of ten numbers into six training examples, the arrangement every later version learns from.</p>
+  </div>
+
+  <div class="card" data-track="forecast">
+    <h3><a href="notes/ai-note62.html">How to look at your sales data before forecasting (Forecast, version 1)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 13, 2026 &middot; 4 min read</p>
+    <p>A 10-line program that loads 1,460 days of daily sales from a CSV file and draws the line chart: before a model can predict anything, you must look at the data.</p>
+  </div>
 
   <div class="card" data-track="video">
     <h3><a href="notes/ai-note52.html">How to create a short-drama video with Jimeng's Short Drama Studio?</a></h3>

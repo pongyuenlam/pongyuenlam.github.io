@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to train your first forecasting model (Forecast, version 7)? | Howard Lam, PhD</title>
+<meta name="description" content="Version 7 adds the model at last: a small network of 29 inputs, two hidden layers of 10, and 1 output, trained for 100 passes and measured with a loss curve.">
+<link rel="canonical" href="https://pongyuenlam.github.io/notes/ai-note68.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note68.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note68.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note68.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note68.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to train your first forecasting model (Forecast, version 7)?">
+<meta property="og:description" content="Version 7 adds the model at last: a small network of 29 inputs, two hidden layers of 10, and 1 output, trained for 100 passes and measured with a loss curve.">
+<meta property="og:url" content="https://pongyuenlam.github.io/notes/ai-note68.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:alt" content="Howard Lam, PhD">
+
+<link rel="stylesheet" href="../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "How to train your first forecasting model (Forecast, version 7)?",
+  "description": "Version 7 adds the model at last: a small network of 29 inputs, two hidden layers of 10, and 1 output, trained for 100 passes and measured with a loss curve.",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-13",
+  "dateModified": "2026-11-13",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/notes/ai-note68.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../biography.html">Biography</a></li>
+        <li><a href="../research.html">Research</a></li>
+        <li><a href="../cases.html">Cases</a></li>
+        <li><a href="../books.html">Books</a></li>
+        <li><a href="../ai-programs.html">AI Notes</a></li>
+        <li><a href="../links/">Links</a></li>
+        <li><a href="../glossary/">Glossary</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1>How to train your first forecasting model (Forecast, version 7)?</h1>
+  <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 13, 2026 &middot; 6 min read</p>
+  <p class="lang-switcher">
+    <span class="current">English</span>
+    <a href="/zh-HK/notes/ai-note68.html">繁體中文</a>
+    <a href="/zh-CN/notes/ai-note68.html">简体中文</a>
+  </p>
+
+  <p>
+    This is version 7 of the forecasting series, and the first version that actually learns.
+    Versions 1 to 6 prepared the data: looked at it, cut it into windows, split each window into
+    features and a target, and set aside a validation part. Version 7 adds a small network and
+    runs it a hundred times over the training examples. Nothing about the model is clever; what
+    this version teaches is the loop that turns a pile of examples into a trained model.
+  </p>
+
+  <h2>What the model is</h2>
+  <p>
+    The model takes the 29 recent days as input and gives back one number: its guess for the next
+    day. Inside, it is a short chain of layers:
+  </p>
+  <pre class="code-block no-copy"><code>nn.Linear(29, 10)  &rarr; ReLU
+nn.Linear(10, 10)  &rarr; ReLU
+nn.Linear(10, 1)</code></pre>
+  <p>
+    A <strong>Linear</strong> layer multiplies its inputs by a set of weights and adds a bias, so
+    each of its outputs is a weighted sum of its inputs. The first layer turns 29 days into 10
+    numbers, the second turns those 10 into 10 more, and the last turns 10 into the single
+    prediction.
+  </p>
+  <p>
+    <strong>ReLU</strong> sits between the layers and does something tiny: it replaces every
+    negative number with zero and leaves positives alone. Without it the three Linear layers would
+    collapse into one, and the model could only draw straight lines through the data. With it, the
+    chain can bend.
+  </p>
+
+  <h2>How training works</h2>
+  <p>
+    One pass over the training examples is called an <strong>epoch</strong>. In each epoch the
+    program does the same four things for every batch of 32 examples:
+  </p>
+  <ol>
+    <li>Show the 29 days to the model and collect its guess.</li>
+    <li>Compare the guess with the real next day, giving a <strong>loss</strong>.</li>
+    <li>Work out which weights made the loss worse and by how much.</li>
+    <li>Nudge every weight a little in the improving direction.</li>
+  </ol>
+  <p>
+    The loss here is <strong>mean squared error</strong>: subtract the guess from the answer,
+    square it, and average over the batch. Squaring makes misses count more than near misses, and
+    makes every error positive so that they add up instead of cancelling.
+  </p>
+  <p>
+    The nudging is done by the <strong>optimizer</strong>, here Adam with its default learning
+    rate. It decides how big each nudge is. Version 9 will make that size a setting worth
+    comparing; for now the default is kept.
+  </p>
+  <p>
+    After the training batches, the program measures the loss on the validation examples &mdash;
+    the later days, which the model never learns from. Both numbers are recorded so they can be
+    drawn.
+  </p>
+
+  <h2>How the program works</h2>
+
+  <h3>1. Define the network</h3>
+  <pre class="code-block"><code>class TimeSeriesModel(nn.Module):
+    def __init__(self, window_size):
+        super(TimeSeriesModel, self).__init__()
+        self.network = nn.Sequential(
+            nn.Linear(window_size-1, 10),  # window_size-1 because our features are window_size-1
+            nn.ReLU(),
+            nn.Linear(10, 10),
+            nn.ReLU(),
+            nn.Linear(10, 1)
+        )
+
+    def forward(self, x):
+        return self.network(x)</code></pre>
+  <p>
+    <code>class ... (nn.Module)</code> is the standard way to define a PyTorch model.
+    <code>__init__</code> builds the layers once, and <code>nn.Sequential</code> means <em>run
+    these layers in this order</em>. <code>forward</code> is what happens when the model is called:
+    a batch goes in, a batch of predictions comes out. With <code>window_size = 30</code>, the
+    first layer expects 29 numbers, which is exactly what the features hold.
+  </p>
+
+  <h3>2. Choose the loss and the optimizer</h3>
+  <pre class="code-block"><code>model = TimeSeriesModel(window_size)
+criterion = nn.MSELoss()
+optimizer = optim.Adam(model.parameters())</code></pre>
+  <p>
+    <code>criterion</code> is the measuring stick, mean squared error. <code>optimizer</code> is
+    the hand that turns the dials; <code>model.parameters()</code> hands it every weight in the
+    network, so it knows what it is allowed to change.
+  </p>
+
+  <h3>3. Pick where the work happens</h3>
+  <pre class="code-block"><code>num_epochs = 100
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model.to(device)</code></pre>
+  <p>
+    <code>cuda</code> is a graphics card that can do this arithmetic faster. On a Mac or on a
+    laptop without one, the program quietly uses the <code>cpu</code> instead. <code>model.to(device)</code>
+    moves the model to that place, and the batches will be moved to match.
+  </p>
+
+  <h3>4. The training loop</h3>
+  <pre class="code-block"><code>for epoch in range(num_epochs):
+    model.train()
+    train_loss = 0
+    for batch_features, batch_targets in train_loader:
+        batch_features = batch_features.to(device)
+        batch_targets = batch_targets.to(device)
+        outputs = model(batch_features)
+        loss = criterion(outputs, batch_targets)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        train_loss += loss.item()</code></pre>
+  <p>
+    <code>model.train()</code> puts the network in learning mode. The inner loop walks the
+    training batches. For each one, <code>model(batch_features)</code> makes the guesses and
+    <code>criterion</code> turns them into a loss.
+  </p>
+  <p>
+    The next three lines are the heart of the whole series. <code>optimizer.zero_grad()</code>
+    clears the notes left over from the previous batch. <code>loss.backward()</code> works
+    backwards through the network asking each weight <em>how much did you contribute to this
+    error?</em> <code>optimizer.step()</code> then moves every weight a little, in the direction
+    that lowers the error. Every learned model in this series is the result of repeating those
+    three lines thousands of times.
+  </p>
+
+  <h3>5. Measure on the validation days</h3>
+  <pre class="code-block"><code>    model.eval()
+    val_loss = 0
+    with torch.no_grad():
+        for batch_features, batch_targets in val_loader:
+            batch_features = batch_features.to(device)
+            batch_targets = batch_targets.to(device)
+            outputs = model(batch_features)
+            val_loss += criterion(outputs, batch_targets).item()</code></pre>
+  <p>
+    <code>model.eval()</code> switches to measuring mode, and <code>torch.no_grad()</code> says
+    <em>do not bother working out which weights are to blame, we are not changing them here</em>.
+    That saves time and memory. The validation loss is then divided by the number of batches so
+    that training and validation losses are on the same scale, and the pair is printed every tenth
+    epoch.
+  </p>
+
+  <h3>6. Draw two charts</h3>
+  <pre class="code-block"><code>plt.plot(train_losses, label='Training Loss')
+plt.plot(val_losses, label='Validation Loss')</code></pre>
+  <p>
+    The first chart shows the two losses against epoch number: a line that should fall and then
+    flatten. The second chart plots the model's guesses against the real validation days, grey for
+    the truth and red for the prediction, so you can see whether the two lines sit on top of each
+    other.
+  </p>
+
+  <h3>7. Reduce everything to one number</h3>
+  <pre class="code-block"><code>mae_torch = torch.mean(torch.abs(val_predictions_tensor - val_targets_tensor))
+print(f"Validation MAE (PyTorch): {mae_torch:.4f}")</code></pre>
+  <p>
+    <strong>MAE</strong>, mean absolute error, is the average size of a miss, ignoring direction:
+    in this run about 4.76. Since daily sales in the validation part run around HK$140, that is an
+    average miss of roughly 3 per cent. MAE is easier to explain to a manager than the squared
+    loss, which is why the program reports it alongside.
+  </p>
+
+  <h2>What you should see</h2>
+  <pre class="code-block no-copy"><code>Epoch [10/100], Train Loss: 49.7555, Val Loss: 41.7937
+Epoch [20/100], Train Loss: 46.6252, Val Loss: 38.8985
+Epoch [30/100], Train Loss: 36.4138, Val Loss: 30.9879
+Epoch [40/100], Train Loss: 35.3789, Val Loss: 34.1952
+Epoch [50/100], Train Loss: 35.3108, Val Loss: 31.5904
+Epoch [60/100], Train Loss: 33.8329, Val Loss: 30.1213
+Epoch [70/100], Train Loss: 34.6491, Val Loss: 31.5292
+Epoch [80/100], Train Loss: 32.7247, Val Loss: 34.9715
+Epoch [90/100], Train Loss: 32.6162, Val Loss: 29.7084
+Epoch [100/100], Train Loss: 33.7850, Val Loss: 34.0184
+Validation MAE (PyTorch): 4.7594</code></pre>
+  <p>
+    Your numbers will not match these exactly. The weights start at random values, so every run
+    takes a slightly different path downhill. What should match is the shape: both losses fall
+    quickly at first and then wobble around a similar level.
+  </p>
+  <figure class="exhibit"><img src="/images/forecast-loss-curve.png" alt="Loss curve falling steeply in the first thirty epochs then flattening, with training and validation lines close together" style="max-width:100%; height:auto;"><figcaption>Training and validation loss over 100 epochs, drawn by time_07.py</figcaption></figure>
+  <p>
+    The two lines staying close is the healthy sign. If the training line kept falling while the
+    validation line turned upward, the model would be memorising the training days instead of
+    learning the pattern &mdash; a problem that later versions will make easier to spot.
+  </p>
+  <figure class="exhibit"><img src="/images/forecast-predictions.png" alt="Line chart of actual sales in grey and predicted sales in red, the red line tracking the grey closely" style="max-width:100%; height:auto;"><figcaption>Actual (grey) and predicted (red) values for the validation days</figcaption></figure>
+
+  <h2>The whole program</h2>
+  <p>
+    The pieces above, put back together. This is the complete file:
+  </p>
+  <pre class="code-block"><code>import torch
+from torch.utils.data import TensorDataset, DataLoader, Subset
+import pandas as pd
+import matplotlib.pyplot as plt
+def create_sliding_windows_with_target(data, window_size, shift=1):
+    windows = data.unfold(0, window_size, shift)
+    features = windows[:, :-1]  # All columns except the last
+    targets = windows[:, -1:]   # Just the last column
+    return features, targets
+
+df = pd.read_csv('time_series.csv')
+series = df['series'].values
+series_tensor = torch.tensor(series, dtype=torch.float32)
+window_size = 30
+features, targets = create_sliding_windows_with_target(series_tensor, window_size=window_size, shift=1)
+full_dataset = TensorDataset(features, targets)
+
+total_windows = len(full_dataset)
+train_size = int(total_windows * 0.8)  # 80% for training, 20% for validation
+train_indices = list(range(train_size))
+val_indices = list(range(train_size, total_windows))
+
+train_dataset = Subset(full_dataset, train_indices)
+val_dataset = Subset(full_dataset, val_indices)
+
+# Create DataLoaders
+batch_size = 32
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+
+# Define the model
+class TimeSeriesModel(nn.Module):
+    def __init__(self, window_size):
+        super(TimeSeriesModel, self).__init__()
+        self.network = nn.Sequential(
+            nn.Linear(window_size-1, 10),  # window_size-1 because our features are window_size-1
+            nn.ReLU(),
+            nn.Linear(10, 10),
+            nn.ReLU(),
+            nn.Linear(10, 1)
+        )
+
+    def forward(self, x):
+        return self.network(x)
+
+# Initialize model, loss function, and optimizer
+model = TimeSeriesModel(window_size)
+criterion = nn.MSELoss()
+optimizer = optim.Adam(model.parameters())
+
+# Training loop
+num_epochs = 100
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model.to(device)
+
+# Lists to store losses for plotting
+train_losses = []
+val_losses = []
+
+for epoch in range(num_epochs):
+    # Training phase
+    model.train()
+    train_loss = 0
+    for batch_features, batch_targets in train_loader:
+        batch_features = batch_features.to(device)
+        batch_targets = batch_targets.to(device)
+
+        # Forward pass
+        outputs = model(batch_features)
+        loss = criterion(outputs, batch_targets)
+
+        # Backward pass and optimize
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        train_loss += loss.item()
+
+    # Validation phase
+    model.eval()
+    val_loss = 0
+    with torch.no_grad():
+        for batch_features, batch_targets in val_loader:
+            batch_features = batch_features.to(device)
+            batch_targets = batch_targets.to(device)
+
+            outputs = model(batch_features)
+            val_loss += criterion(outputs, batch_targets).item()
+
+    # Calculate average losses
+    train_loss /= len(train_loader)
+    val_loss /= len(val_loader)
+
+    train_losses.append(train_loss)
+    val_losses.append(val_loss)
+
+    if (epoch + 1) % 10 == 0:
+        print(f'Epoch [{epoch+1}/{num_epochs}], '
+              f'Train Loss: {train_loss:.4f}, '
+              f'Val Loss: {val_loss:.4f}')
+
+# Plot training progress
+plt.figure(figsize=(10, 6))
+plt.plot(train_losses, label='Training Loss')
+plt.plot(val_losses, label='Validation Loss')
+plt.title('Model Loss Over Time')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# Make predictions
+model.eval()
+with torch.no_grad():
+    # Get predictions for validation set
+    val_predictions = []
+    val_targets = []
+    for batch_features, batch_targets in val_loader:
+        batch_features = batch_features.to(device)
+        outputs = model(batch_features)
+        val_predictions.extend(outputs.cpu().numpy())
+        val_targets.extend(batch_targets.numpy())
+
+# Plot predictions vs actual for validation set
+plt.plot(val_targets, label='Actual', color="lightgrey")
+plt.plot(val_predictions, label='Predicted', color="red")
+plt.title('Predictions vs Actual Values (Validation Set)')
+plt.xlabel('Time')
+plt.ylabel('Value')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+val_predictions_tensor = torch.tensor(val_predictions)
+val_targets_tensor = torch.tensor(val_targets)
+mae_torch = torch.mean(torch.abs(val_predictions_tensor - val_targets_tensor))
+print(f"Validation MAE (PyTorch): {mae_torch:.4f}")</code></pre>
+
+  <h2>Running it on your own computer</h2>
+  <p>
+    <a href="downloads/Folder-AI-Forecast.zip" download>Download the zip file</a> and unzip it
+    to a folder. The zip holds the programs in this series so far, the
+    <code>time_series.csv</code> data file, and <code>pyproject.toml</code>. This note uses
+    <code>time_07.py</code>. Open the folder in Visual Studio Code, then type these three lines
+    in the terminal:
+  </p>
+  <pre class="code-block"><code>uv python pin 3.12.10
+uv sync
+uv run time_07.py</code></pre>
+  <p>
+    The first line records which Python version this folder uses, and the second installs every
+    package that <code>pyproject.toml</code> lists. The third line prints one line every ten
+    epochs, then opens the loss chart and the prediction chart; close each window for the program
+    to continue.
+  </p>
+  <p>
+    Those three lines are needed only once. The next time you want to run the program again,
+    type just <code>uv run time_07.py</code>.
+  </p>
+  <p>
+    If you have not set up uv yet, start with
+    <a href="ai-note05.html">How to install Visual Studio Code?</a> and then the uv note for
+    <a href="ai-note03.html">Windows</a> or <a href="ai-note04.html">Mac</a>.
+  </p>
+
+  <h2>What comes next</h2>
+  <p>
+    There is a model, but its quality is judged only on the validation days, and the validation
+    days are the last 20 per cent of the data. Version 8 adds a third, untouched part &mdash; a
+    test set &mdash; and reports four measures on it: MAE, MSE, RMSE and R&sup2;.
+  </p>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+</body>
+</html>
