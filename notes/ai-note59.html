@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to recognise faces in live video (Face recognition, version 7)? | Howard Lam, PhD</title>
+<meta name="description" content="A 48-line program that encodes the faces in a folder once, then names every face in the webcam picture as it moves.">
+<link rel="canonical" href="https://pongyuenlam.github.io/notes/ai-note59.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note59.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note59.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to recognise faces in live video (Face recognition, version 7)?">
+<meta property="og:description" content="A 48-line program that encodes the faces in a folder once, then names every face in the webcam picture as it moves.">
+<meta property="og:url" content="https://pongyuenlam.github.io/notes/ai-note59.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:alt" content="Howard Lam, PhD">
+
+<link rel="stylesheet" href="../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "How to recognise faces in live video (Face recognition, version 7)?",
+  "description": "A 48-line program that encodes the faces in a folder once, then names every face in the webcam picture as it moves.",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-13",
+  "dateModified": "2026-11-13",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/notes/ai-note59.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../biography.html">Biography</a></li>
+        <li><a href="../research.html">Research</a></li>
+        <li><a href="../cases.html">Cases</a></li>
+        <li><a href="../books.html">Books</a></li>
+        <li><a href="../ai-programs.html">AI Notes</a></li>
+        <li><a href="../links/">Links</a></li>
+        <li><a href="../glossary/">Glossary</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1>How to recognise faces in live video (Face recognition, version 7)?</h1>
+  <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 13, 2026 &middot; 6 min read</p>
+
+  <p>
+    This is the version the series has been building towards. The face files in the folder are
+    turned into numbers once, at the start. Then every frame from the camera is searched for
+    faces, each face is compared with the folder, and the closest name is drawn above a green box.
+    A face that belongs to nobody in the folder is labelled <code>Unknown</code> rather than
+    guessed.
+  </p>
+  <p>
+    Nothing here is new machinery. Version 2 built the cast list. Version 3 compared one
+    photograph against it. Version 6 drew boxes and labels. Version 7 puts all three inside the
+    camera loop, and that is the whole step.
+  </p>
+
+  <h2>The program has two halves</h2>
+  <p>
+    The split is worth noticing before reading the code. Everything before
+    <code>cv2.VideoCapture(0)</code> runs <strong>once</strong>: read each file in the folder,
+    encode the face, remember the name. Everything inside the loop runs <strong>for every
+    frame</strong>. The first half is expensive but happens once, the second half is cheap on its
+    own but repeats as long as the camera is open.
+  </p>
+
+  <h2>1. Build the cast list once</h2>
+  <pre class="code-block"><code>images_path = glob.glob(os.path.join("images", "*.*"))
+
+known_face_encodings = []
+known_face_names = []
+for img_path in images_path:
+    img = cv2.imread(img_path)
+    rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    filename, ext = os.path.splitext(os.path.basename(img_path))
+    known_face_encodings.append(face_recognition.face_encodings(rgb_img)[0])
+    known_face_names.append(filename)</code></pre>
+  <p>
+    This is version 2, compressed: the folder listing, the BGR to RGB conversion, the
+    <code>[0]</code> that takes the one face in each file, and two lists kept in the same order.
+    The filename is the name that will appear on screen, so <code>images/Howard.JPG</code>
+    becomes <code>Howard</code>.
+  </p>
+
+  <h2>2. Find and encode every face in the frame</h2>
+  <pre class="code-block"><code>    rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    face_locations = face_recognition.face_locations(rgb_img)
+    face_encodings = face_recognition.face_encodings(rgb_img, face_locations)</code></pre>
+  <p>
+    Three lines, and the middle and last are version 3's work. <code>face_locations</code> holds
+    one box per face found; <code>face_encodings</code> holds the matching 128-number description
+    of each of those faces.
+  </p>
+  <p>
+    There is no <code>[0]</code> here, and that is deliberate. In the folder each file holds one
+    face, so the first is the only one. In a camera frame there may be zero, one or three faces,
+    and the program has to handle whatever arrives. When two people stand in front of the camera,
+    both boxes are found and both are processed.
+  </p>
+  <p>
+    The two lists are returned in the same order, so the first location belongs to the first
+    encoding. The program relies on that alignment later, silently, without ever checking it.
+  </p>
+
+  <h2>3. Compare each face and keep the closest name</h2>
+  <pre class="code-block"><code>    face_names = []
+    for face_encoding in face_encodings:
+        matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
+        name = "Unknown"
+        face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
+        best_match_index = np.argmin(face_distances)
+        if matches[best_match_index]:
+            name = known_face_names[best_match_index]
+        face_names.append(name)</code></pre>
+  <p>
+    For each face in the frame, <code>compare_faces</code> gives one True or False per known
+    person, and <code>face_distance</code> gives the number behind that decision; smaller means
+    more alike. <code>np.argmin</code> picks the position of the smallest distance, so the most
+    similar person in the folder is found.
+  </p>
+  <p>
+    Being the most similar is not the same as being the same. A stranger is still closest to
+    somebody, even when the distance is large, which is why line 33 checks
+    <code>matches[best_match_index]</code> before accepting the name. Without that check every
+    face would be given a name, and the folder would seem to recognise the whole world.
+  </p>
+  <p>
+    The starting value <code>"Unknown"</code> covers the remaining case, and
+    <code>append</code> sits outside the <code>if</code> so that one name is added for every face,
+    matched or not. <code>face_names</code> then has the same length as
+    <code>face_locations</code>, and position 0 in one belongs with position 0 in the other.
+  </p>
+
+  <h2>4. Pair each box with its name</h2>
+  <pre class="code-block"><code>    for face_loc, name in zip(face_locations, face_names):
+        y1, x2, y2, x1 = face_loc[0], face_loc[1], face_loc[2], face_loc[3]
+        cv2.putText(img, name, (x1, y1 - 10), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 200, 0), 2)
+        cv2.rectangle(img, (x1, y1), (x2, y2), (0, 200, 0), 4)</code></pre>
+  <p>
+    <code>zip</code> walks the two lists together: first box with first name, second with second.
+    It only works because of the care taken above, which is why the ordering was mentioned twice.
+  </p>
+  <p>
+    The odd line is the second one. <code>face_recognition</code> describes a face by its
+    <strong>top, right, bottom and left</strong> edges, in that order, while
+    <code>cv2.rectangle</code> wants a top-left corner and a bottom-right corner. The unpacking
+    shuffles the four numbers into the names the drawing calls expect: <code>y1</code> is the top,
+    <code>x2</code> the right, <code>y2</code> the bottom, <code>x1</code> the left. Name the
+    variables wrongly here and the box appears as a thin line or a large rectangle across the
+    whole picture.
+  </p>
+  <p>
+    The colour <code>(0, 200, 0)</code> is green in BGR order: no blue, a little under full green,
+    no red. The 200 instead of 255 is a matter of taste; both look green. The thickness of 4 is
+    heavier than version 6 used, so the box is visible against a busy background.
+  </p>
+
+  <h2>The whole program</h2>
+  <p>
+    Version 1's download already contains this file, so no new installation is needed:
+  </p>
+  <pre class="code-block"><code>import face_recognition
+import cv2
+import os
+import glob
+import numpy as np
+images_folder = "images"
+images_path = glob.glob(os.path.join(images_folder, "*.*"))
+
+known_face_encodings=[]
+known_face_names=[]
+for img_path in images_path:
+    img = cv2.imread(img_path)
+    rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    basename = os.path.basename(img_path)
+    (filename, ext) = os.path.splitext(basename)
+    img_encoding = face_recognition.face_encodings(rgb_img)[0]
+    known_face_encodings.append(img_encoding)
+    known_face_names.append(filename)
+
+cap = cv2.VideoCapture(0)
+while True:
+    ret, img = cap.read()
+    rgb_img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+    face_locations = face_recognition.face_locations(rgb_img)
+    face_encodings = face_recognition.face_encodings(rgb_img, face_locations)
+
+    face_names = []
+    for face_encoding in face_encodings:
+        matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
+        name = "Unknown"
+        face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
+        best_match_index = np.argmin(face_distances)
+        if matches[best_match_index]:
+            name = known_face_names[best_match_index]
+        face_names.append(name)
+
+    for face_loc, name in zip(face_locations, face_names):
+        y1, x2, y2, x1 = face_loc[0], face_loc[1], face_loc[2], face_loc[3]
+        cv2.putText(img, name, (x1, y1 - 10), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 200, 0), 2)
+        cv2.rectangle(img, (x1, y1), (x2, y2), (0, 200, 0), 4)
+
+    cv2.imshow("Frame", img)
+    key = cv2.waitKey(1)
+    if key in (ord('q'), ord('Q')):
+        break
+
+cap.release()
+cv2.destroyAllWindows()</code></pre>
+
+  <h2>What to expect on screen</h2>
+  <ul>
+    <li>Your own face gets your name if a clear photo of you is in <code>images</code>, and
+      <code>Unknown</code> if it is not.</li>
+    <li>The picture is slower than in version 4. Finding and encoding faces happens on every
+      frame, and that work is not free, so the window may lag behind your movements.</li>
+    <li>Two people can be recognised at the same time, but only if both faces are large enough
+      and reasonably lit.</li>
+    <li>Turn away, cover half your face, or stand against a window, and the label can change to
+      <code>Unknown</code> for a moment. Recognition reads the picture, not the person.</li>
+    <li>A photograph in the folder holding two faces will take the first one and quietly ignore
+      the rest, because of the <code>[0]</code> in the cast list.</li>
+  </ul>
+
+  <h2>Put your own photo in the folder first</h2>
+  <p>
+    The camera can only name people it has seen before. To be recognised yourself, drop a
+    photograph of your face into the <code>images</code> folder and name the file after the person
+    in it, for example <code>Peter.jpg</code>. The program reads the name from the file name, so
+    that file is what makes the green box say <code>Peter</code>; a file called
+    <code>IMG_4821.jpg</code> would be recognised just as well and labelled
+    <code>IMG_4821</code>. One clear face per file, facing the camera, is enough.
+  </p>
+  <p>
+    Without such a file the program still runs, but every face it sees is reported as
+    <code>Unknown</code>. Add the photo, restart the program, and the label changes.
+  </p>
+
+  <h2>Running it on your own computer</h2>
+  <p>
+    Use the same download as version 1:
+    <a href="downloads/Folder-AI-Face-Recognition.zip" download>Download the zip file</a>, unzip it,
+    and open the folder in Visual Studio Code. This note uses <code>face07.py</code>. The first
+    time in this folder, run all three lines:
+  </p>
+  <pre class="code-block"><code>uv python pin 3.12.10
+uv sync
+uv run face07.py</code></pre>
+  <p>
+    Those three lines are needed only once. The next time you want to run the program again,
+    type just <code>uv run face07.py</code>.
+  </p>
+
+  <h2>What comes next</h2>
+  <p>
+    The weakness is speed. Every frame pays the full cost of finding and encoding faces, which is
+    why the picture stutters. Version 8 deals with that cost, without giving up the recognition.
+  </p>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+</body>
+</html>

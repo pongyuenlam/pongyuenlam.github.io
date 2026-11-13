@@ -57,7 +57,7 @@
     <span class="current">繁體中文</span>
     <a href="/zh-CN/ai-programs.html">简体中文</a>
   </p>
-  <p>為非技術背景讀者而寫的 AI 短文。主題包括：入門設定、數位人、語音代理、檢索增強生成（RAG）、臉部與鏡頭（電腦視覺）、AI 影片製作，以及網站。</p>
+  <p>為非技術背景讀者而寫的 AI 短文。主題包括：入門設定、數位人、語音代理、檢索增強生成（RAG）、人臉辨識、美妝與關鍵點、AI 影片製作，以及網站。</p>
   <p class="meta">全部文章備有英文、繁體中文及簡體中文版本。</p>
 
   <div class="note-filters" role="group" aria-label="按主題篩選 AI 筆記">
@@ -66,7 +66,8 @@
     <button type="button" class="chip" data-filter="avatar" aria-pressed="false">數位人</button>
     <button type="button" class="chip" data-filter="agent" aria-pressed="false">代理</button>
     <button type="button" class="chip" data-filter="rag" aria-pressed="false">RAG 與文字</button>
-    <button type="button" class="chip" data-filter="vision" aria-pressed="false">臉部與鏡頭</button>
+    <button type="button" class="chip" data-filter="vision" aria-pressed="false">美妝與關鍵點</button>
+    <button type="button" class="chip" data-filter="face" aria-pressed="false">人臉辨識</button>
     <button type="button" class="chip" data-filter="web" aria-pressed="false">網站</button>
     <button type="button" class="chip" data-filter="video" aria-pressed="false">影片</button>
   </div>
@@ -78,6 +79,52 @@
     <button type="button" class="chip" data-sub="research" aria-pressed="false">代理研究</button>
   </div>
   <noscript><p class="meta">篩選功能需要 JavaScript。所有筆記仍列於下方。</p></noscript>
+
+  <div class="card" data-track="face">
+    <h3><a href="/zh-HK/notes/ai-note61.html">人臉比對應有多嚴格（人臉辨識，版本 9）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 閱讀時間約 6 分鐘</p>
+    <p>只改兩行：加一個容差旋鈕，決定兩張臉算不算同一個人，以及這個數值該怎樣選。</p>
+  </div>
+  <div class="card" data-track="face">
+    <h3><a href="/zh-HK/notes/ai-note60.html">如何讓即時人臉辨識跑得更快（人臉辨識，版本 8）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 閱讀時間約 6 分鐘</p>
+    <p>先縮到半寬半高再搜尋，再把框乘回原尺寸：畫面更流暢，畫質不變。</p>
+  </div>
+  <div class="card" data-track="face">
+    <h3><a href="/zh-HK/notes/ai-note59.html">如何在即時影片中辨識人臉（人臉辨識，版本 7）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 閱讀時間約 6 分鐘</p>
+    <p>先把資料夾裡的人臉編碼一次，再在每一格影格裡辨識並標註姓名，認不出就寫 Unknown。</p>
+  </div>
+  <div class="card" data-track="face">
+    <h3><a href="/zh-HK/notes/ai-note58.html">如何在每一格畫面上畫框和標籤（人臉辨識，版本 6）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 閱讀時間約 4 分鐘</p>
+    <p>用 rectangle 和 putText 每格畫一個紅框和測試標籤，為版本 7 的姓名留出位置。</p>
+  </div>
+  <div class="card" data-track="face">
+    <h3><a href="/zh-HK/notes/ai-note57.html">如何修改來自鏡頭的一格畫面（人臉辨識，版本 5）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 閱讀時間約 4 分鐘</p>
+    <p>在讀出影格與顯示之間加一行修改：轉成灰階只是示例，後續版本都在這中間一步做文章。</p>
+  </div>
+  <div class="card" data-track="face">
+    <h3><a href="/zh-HK/notes/ai-note56.html">如何顯示鏡頭的即時畫面（人臉辨識，版本 4）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 閱讀時間約 4 分鐘</p>
+    <p>用 VideoCapture 打開鏡頭，逐格顯示，按 q 退出。這一版不認臉，只驗證鏡頭。</p>
+  </div>
+  <div class="card" data-track="face">
+    <h3><a href="/zh-HK/notes/ai-note55.html">如何看出照片裡的人是誰（人臉辨識，版本 3）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 閱讀時間約 5 分鐘</p>
+    <p>用 compare_faces 與 face_distance 判斷相片裡是誰，並說明「最像」不等於「就是」。</p>
+  </div>
+  <div class="card" data-track="face">
+    <h3><a href="/zh-HK/notes/ai-note54.html">如何把每一張人臉變成一串數字（人臉辨識，版本 2）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 閱讀時間約 4 分鐘</p>
+    <p>用 face_encodings 把每張人臉變成 128 個數字，檔名就是標籤。</p>
+  </div>
+  <div class="card" data-track="face">
+    <h3><a href="/zh-HK/notes/ai-note53.html">如何顯示資料夾裡的每一張人臉照片（人臉辨識，版本 1）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 閱讀時間約 4 分鐘</p>
+    <p>用 OpenCV 顯示資料夾裡的每一張相片，檔名就是人名：13 行程式，整個系列的起點。</p>
+  </div>
 
   <div class="card" data-track="video">
     <h3><a href="/zh-HK/notes/ai-note52.html">如何使用即夢短劇工作室製作一部短劇影片？</a></h3>
@@ -260,7 +307,7 @@
     <p>從 Google Analytics 取得一小段 Google 標籤程式碼，貼到網站的每個頁面，就能知道有多少人看過你的網站、他們從哪裡來、用甚麼裝置。</p>
   </div>
 
-  <div class="card" data-track="vision">
+  <div class="card" data-track="video">
     <h3><a href="/zh-HK/notes/ai-note23.html">AI 如何在影片中計算人數？</a></h3>
     <p class="meta">林邦源 &middot; 2026年11月5日 &middot; 閱讀時間約 8 分鐘</p>
     <p>一個短短的 Python 程式，用 YOLO 觀看影片，計算每個走過畫面上那條線的人，最後另存一份標好方框的影片，並印出總數。</p>
@@ -346,7 +393,7 @@
     <p>這個 35 行的程式會在每一格網路攝影機畫面中找到你的臉，隨著你的動作把嘴唇塗成櫻桃紅。</p>
   </div>
 
-  <div class="card" data-track="vision">
+  <div class="card" data-track="basics">
     <h3><a href="/zh-HK/notes/ai-note09.html">如何從網路攝影機取得即時影像？</a></h3>
     <p class="meta">林邦源 &middot; 2026年11月1日 &middot; 閱讀時間約 4 分鐘</p>
     <p>這個 10 行的程式會開啟鏡頭，在視窗中顯示即時影像，並教你如何儲存一格畫面。</p>

@@ -65,7 +65,8 @@
     <button type="button" class="chip" data-filter="avatar" aria-pressed="false">Avatar</button>
     <button type="button" class="chip" data-filter="agent" aria-pressed="false">Agents</button>
     <button type="button" class="chip" data-filter="rag" aria-pressed="false">RAG &amp; text</button>
-    <button type="button" class="chip" data-filter="vision" aria-pressed="false">Face &amp; camera</button>
+    <button type="button" class="chip" data-filter="vision" aria-pressed="false">Face landmarks &amp; makeup</button>
+    <button type="button" class="chip" data-filter="face" aria-pressed="false">Face recognition</button>
     <button type="button" class="chip" data-filter="web" aria-pressed="false">Website</button>
     <button type="button" class="chip" data-filter="video" aria-pressed="false">Video</button>
   </div>
@@ -259,7 +260,7 @@
     <p>A step-by-step guide to getting a Google tag from Google Analytics and pasting it into your website, so you can understand how much traffic your pages receive and where it comes from &mdash; without identifying individuals.</p>
   </div>
 
-  <div class="card" data-track="vision">
+  <div class="card" data-track="video">
     <h3><a href="notes/ai-note23.html">How can AI count the people in a video?</a></h3>
     <p class="meta">Howard Pong Yuen Lam &middot; November 5, 2026 &middot; 8 min read</p>
     <p>A short Python program that watches a video, follows every person with YOLO, and counts each one who crosses an invisible line &mdash; then saves a labelled copy of the video.</p>
@@ -339,13 +340,67 @@
     <p>A program that fetches the webpage you specify and gives the text to the model before it generates an answer.</p>
   </div>
 
+  <div class="card" data-track="face">
+    <h3><a href="notes/ai-note61.html">How strict should face matching be (Face recognition, version 9)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 13, 2026 &middot; 6 min read</p>
+    <p>The last version changes two lines: a tolerance dial that decides whether a face counts as a match, and how to choose its value.</p>
+  </div>
+
+  <div class="card" data-track="face">
+    <h3><a href="notes/ai-note60.html">How to make live face recognition run faster (Face recognition, version 8)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 13, 2026 &middot; 6 min read</p>
+    <p>A 60-line program that searches a half-size copy of each frame, then doubles the boxes back onto the full picture.</p>
+  </div>
+
+  <div class="card" data-track="face">
+    <h3><a href="notes/ai-note59.html">How to recognise faces in live video (Face recognition, version 7)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 13, 2026 &middot; 6 min read</p>
+    <p>A 48-line program that encodes the faces in a folder once, then names every face in the webcam picture as it moves.</p>
+  </div>
+
+  <div class="card" data-track="face">
+    <h3><a href="notes/ai-note58.html">How to draw a box and a label on a video frame (Face recognition, version 6)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 13, 2026 &middot; 4 min read</p>
+    <p>A 14-line program that draws a red box and a caption on every webcam frame, where the name will go in the next version.</p>
+  </div>
+
+  <div class="card" data-track="face">
+    <h3><a href="notes/ai-note57.html">How to modify a frame from camera (Face recognition, version 5)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 13, 2026 &middot; 4 min read</p>
+    <p>An 11-line program that changes each webcam frame before showing it &mdash; the gap every later version builds on.</p>
+  </div>
+
+  <div class="card" data-track="face">
+    <h3><a href="notes/ai-note56.html">How to show live video from your camera (Face recognition, version 4)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 13, 2026 &middot; 4 min read</p>
+    <p>A 10-line program that opens the webcam and shows the live video until you press q, ready for recognition work.</p>
+  </div>
+
+  <div class="card" data-track="face">
+    <h3><a href="notes/ai-note55.html">How to find out who is in a photo (Face recognition, version 3)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 13, 2026 &middot; 5 min read</p>
+    <p>A 38-line program that measures the faces in a new photo, compares them with the people it already knows, and prints the names that match.</p>
+  </div>
+
+  <div class="card" data-track="face">
+    <h3><a href="notes/ai-note54.html">How to turn every face into a list of numbers (Face recognition, version 2)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 13, 2026 &middot; 4 min read</p>
+    <p>An 18-line program that measures each face into 128 numbers and stores them with the person's name.</p>
+  </div>
+
+  <div class="card" data-track="face">
+    <h3><a href="notes/ai-note53.html">How to show every face photo in a folder (Face recognition, version 1)?</a></h3>
+    <p class="meta">Howard Pong Yuen Lam &middot; November 13, 2026 &middot; 4 min read</p>
+    <p>A 13-line program that finds every photo in a folder, shows each one for a second, and prints the person's name.</p>
+  </div>
+
   <div class="card" data-track="vision">
     <h3><a href="notes/ai-note10.html">How to use AI to put lipstick on your face in real time?</a></h3>
     <p class="meta">Howard Pong Yuen Lam &middot; November 1, 2026 &middot; 7 min read</p>
     <p>A 35-line program that finds the face in every webcam frame and paints the lips cherry red as you move.</p>
   </div>
 
-  <div class="card" data-track="vision">
+  <div class="card" data-track="basics">
     <h3><a href="notes/ai-note09.html">How to get live video from your webcam?</a></h3>
     <p class="meta">Howard Pong Yuen Lam &middot; November 1, 2026 &middot; 4 min read</p>
     <p>A 10-line program that opens the camera and shows the live video in a window, plus how to save one frame.</p>

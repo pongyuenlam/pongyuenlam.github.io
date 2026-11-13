@@ -57,7 +57,7 @@
     <a href="/zh-HK/ai-programs.html">繁體中文</a>
     <span class="current">简体中文</span>
   </p>
-  <p>面向非技术读者的 AI 短文。主题包括：入门设置、数字人、语音代理、检索增强生成（RAG）、脸部与摄像头（计算机视觉）、AI 视频制作，以及网站。</p>
+  <p>面向非技术读者的 AI 短文。主题包括：入门设置、数字人、语音代理、检索增强生成（RAG）、人脸识别、美妆与关键点、AI 视频制作，以及网站。</p>
   <p class="meta">全部文章备有英文、繁体中文及简体中文版本。</p>
 
   <div class="note-filters" role="group" aria-label="按主题筛选 AI 笔记">
@@ -66,7 +66,8 @@
     <button type="button" class="chip" data-filter="avatar" aria-pressed="false">数字人</button>
     <button type="button" class="chip" data-filter="agent" aria-pressed="false">代理</button>
     <button type="button" class="chip" data-filter="rag" aria-pressed="false">RAG 与文字</button>
-    <button type="button" class="chip" data-filter="vision" aria-pressed="false">脸部与摄像头</button>
+    <button type="button" class="chip" data-filter="vision" aria-pressed="false">美妆与关键点</button>
+    <button type="button" class="chip" data-filter="face" aria-pressed="false">人脸识别</button>
     <button type="button" class="chip" data-filter="web" aria-pressed="false">网站</button>
     <button type="button" class="chip" data-filter="video" aria-pressed="false">视频</button>
   </div>
@@ -78,6 +79,52 @@
     <button type="button" class="chip" data-sub="research" aria-pressed="false">代理研究</button>
   </div>
   <noscript><p class="meta">筛选功能需要 JavaScript。所有笔记仍列于下方。</p></noscript>
+
+  <div class="card" data-track="face">
+    <h3><a href="/zh-CN/notes/ai-note61.html">人脸比对应有多严格（人脸识别，版本 9）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 阅读时间约 6 分钟</p>
+    <p>只改两行：加一个容差旋钮，决定两张脸算不算同一个人，以及这个数值该怎么选。</p>
+  </div>
+  <div class="card" data-track="face">
+    <h3><a href="/zh-CN/notes/ai-note60.html">如何让实时人脸识别跑得更快（人脸识别，版本 8）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 阅读时间约 6 分钟</p>
+    <p>先缩到半宽半高再搜索，再把框乘回原尺寸：画面更流畅，画质不变。</p>
+  </div>
+  <div class="card" data-track="face">
+    <h3><a href="/zh-CN/notes/ai-note59.html">如何在实时视频中识别人脸（人脸识别，版本 7）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 阅读时间约 6 分钟</p>
+    <p>先把文件夹里的人脸编码一次，再在每一帧里识别并标注姓名，认不出就写 Unknown。</p>
+  </div>
+  <div class="card" data-track="face">
+    <h3><a href="/zh-CN/notes/ai-note58.html">如何在每一格画面上画框和标签（人脸识别，版本 6）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 阅读时间约 4 分钟</p>
+    <p>用 rectangle 和 putText 每帧画一个红框和测试标签，为版本 7 的姓名留出位置。</p>
+  </div>
+  <div class="card" data-track="face">
+    <h3><a href="/zh-CN/notes/ai-note57.html">如何修改来自摄像头的一帧画面（人脸识别，版本 5）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 阅读时间约 4 分钟</p>
+    <p>在读出画面与显示之间加一行修改：转成灰度只是示例，后续版本都在这中间一步做文章。</p>
+  </div>
+  <div class="card" data-track="face">
+    <h3><a href="/zh-CN/notes/ai-note56.html">如何显示摄像头的实时画面（人脸识别，版本 4）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 阅读时间约 4 分钟</p>
+    <p>用 VideoCapture 打开摄像头，逐帧显示，按 q 退出。这一版不认脸，只验证摄像头。</p>
+  </div>
+  <div class="card" data-track="face">
+    <h3><a href="/zh-CN/notes/ai-note55.html">如何看出照片里的人是谁（人脸识别，版本 3）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 阅读时间约 5 分钟</p>
+    <p>用 compare_faces 与 face_distance 判断照片里的人是谁，并说明「最像」不等于「就是」。</p>
+  </div>
+  <div class="card" data-track="face">
+    <h3><a href="/zh-CN/notes/ai-note54.html">如何把每一张人脸变成一串数字（人脸识别，版本 2）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 阅读时间约 4 分钟</p>
+    <p>用 face_encodings 把每张人脸变成 128 个数字，文件名就是标签。</p>
+  </div>
+  <div class="card" data-track="face">
+    <h3><a href="/zh-CN/notes/ai-note53.html">如何显示文件夹里的每一张人脸照片（人脸识别，版本 1）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 阅读时间约 4 分钟</p>
+    <p>用 OpenCV 显示文件夹里的每一张照片，文件名就是人名：13 行程序，整个系列的起点。</p>
+  </div>
 
   <div class="card" data-track="video">
     <h3><a href="/zh-CN/notes/ai-note52.html">如何使用即梦短剧工作室制作一部短剧视频？</a></h3>
@@ -260,7 +307,7 @@
     <p>从 Google Analytics 取得一小段 Google 标签程序代码，贴到网站的每个页面，就能知道有多少人看过你的网站、他们从哪里来、用什么装置。</p>
   </div>
 
-  <div class="card" data-track="vision">
+  <div class="card" data-track="video">
     <h3><a href="/zh-CN/notes/ai-note23.html">AI 如何在视频中计算人数？</a></h3>
     <p class="meta">林邦源 · 2026年11月5日 · 阅读时间约 8 分钟</p>
     <p>一个简短的 Python 程序，用 YOLO 观看视频，统计每一个走过画面中那条线的人，最后另存一份标好框的视频，并打印总数。</p>
@@ -346,7 +393,7 @@
     <p>这个 35 行的程序会在每一帧摄像头画面中找到你的脸，随着你的动作把嘴唇涂成樱桃红。</p>
   </div>
 
-  <div class="card" data-track="vision">
+  <div class="card" data-track="basics">
     <h3><a href="/zh-CN/notes/ai-note09.html">如何从摄像头获取实时画面？</a></h3>
     <p class="meta">林邦源 &middot; 2026年11月1日 &middot; 阅读时间约 4 分钟</p>
     <p>这个 10 行的程序会打开摄像头，在窗口中显示实时画面，并教你如何保存一帧画面。</p>

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>人臉比對應有多嚴格（人臉辨識，版本 9）？ | 林邦源博士</title>
+<meta name="description" content="最後這個版本只改兩行：一個決定一張臉算不算匹配的容差旋鈕，以及怎樣選它的值。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note61.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note61.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note61.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note61.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note61.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="人臉比對應有多嚴格（人臉辨識，版本 9）？">
+<meta property="og:description" content="最後這個版本只改兩行：一個決定一張臉算不算匹配的容差旋鈕，以及怎樣選它的值。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-HK/notes/ai-note61.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="../../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "人臉比對應有多嚴格（人臉辨識，版本 9）？",
+  "description": "最後這個版本只改兩行：一個決定一張臉算不算匹配的容差旋鈕，以及怎樣選它的值。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-13",
+  "dateModified": "2026-11-13",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-HK/notes/ai-note61.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../../index.html">首頁</a></li>
+        <li><a href="../../biography.html">個人簡介</a></li>
+        <li><a href="../../research.html">研究</a></li>
+        <li><a href="../../cases.html">案例</a></li>
+        <li><a href="../../books.html">著作</a></li>
+        <li><a href="../../ai-programs.html">AI 筆記</a></li>
+        <li><a href="../../links/">連結</a></li>
+        <li><a href="../../glossary/">詞彙表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <a href="/notes/ai-note61.html">English</a>
+  <span class="current">繁體中文</span>
+  <a href="/zh-CN/notes/ai-note61.html">简体中文</a>
+</div>
+
+<main>
+  <h1>人臉比對應有多嚴格（人臉辨識，版本 9）？</h1>
+  <p class="paper-meta">林邦源博士 &middot; AI 筆記 &middot; 2026 年 11 月 13 日 &middot; 約 6 分鐘閱讀</p>
+
+  <p>
+    版本 8 處理速度。最後一個版本處理一個更安靜的問題：版本 8 判斷兩張臉是不是同一個人，
+    用的數字不是任何人選的。函式庫的預設值是 <code>0.6</code>，那是一個合理的猜測，不是一個決定。
+    版本 9 把它變成一個決定：給這個數字起名，並把它搬到檔案頂部的一個地方。
+  </p>
+  <p>
+    從版本 8 改了兩行。就這樣。改動小，是因為這個旋鈕一直都在；它只是藏在函式庫的預設值裡。
+  </p>
+
+  <h2>一個數字，兩種錯誤</h2>
+  <p>
+    匹配一張臉會產生一個距離：這張臉離一個已知的臉有多遠，用 128 個數字來量。零就是完全相同。
+    容差是那條界線——任何高於它的距離都被當成另一個人。
+  </p>
+  <p>
+    轉動這個旋鈕，兩種錯誤會朝相反方向移動，沒有任何設定能讓兩者同時消失：
+  </p>
+  <ul>
+    <li><strong>太鬆</strong> — 陌生人被安上最像的那個人的名字。螢幕自信地顯示錯誤的人。</li>
+    <li><strong>太嚴</strong> — 對的人被拒絕，因為同一張臉從來不會兩次拍得一模一樣。
+      螢幕對一個它認識的人顯示 <code>Unknown</code>。</li>
+  </ul>
+  <p>
+    哪種錯誤更要緊，是關於用途的問題，不是關於程式碼的問題。一扇絕對不能讓錯的人打開的門，
+    要嚴的設定。一個應該找出朋友每一張相片的相片庫，鬆一點也無妨。
+  </p>
+
+  <h2>1. 把容差設一次</h2>
+  <pre class="code-block"><code>images_folder = "images"
+my_tolerance = 0.5  # 函式庫預設值是 0.6</code></pre>
+  <p>
+    這個變數和其他設定放在一起，在資料夾搜尋上面，所以容易找到，也容易改。<code>#</code>
+    後面的文字是註解：Python 忽略它，它留在檔案裡，告訴下一個讀的人：沒有這一行時，數字會是多少。
+    把預設值這樣擺出來，比記住它便宜。
+  </p>
+
+  <h2>2. 把這個數字傳給 compare_faces</h2>
+  <pre class="code-block"><code>        matches = face_recognition.compare_faces(known_face_encodings, face_encoding, tolerance=my_tolerance)</code></pre>
+  <p>
+    那一行裡其他東西都是版本 7 的工作。加的是 <code>tolerance=my_tolerance</code>：
+    等號左邊的名字是 <code>compare_faces</code> 內部的設定，必須一字不差地寫成這樣；
+    等號右邊是上面設的變數。
+  </p>
+  <p>
+    注意下一行的 <code>face_distance</code> 沒有動。它沒有容差，因為它只報距離；
+    多遠的距離可以接受，這個決定屬於 <code>compare_faces</code>。所以兩行是一致的：
+    距離量一次，同一個界線套在它們上面。
+  </p>
+
+  <h2>距離大概是什麼樣子</h2>
+  <p>
+    編碼向量的長度大約是 1，所以實際上距離很少超過 1.2。典型的值：
+  </p>
+  <ul>
+    <li><code>0</code> — 兩張完全相同的相片。</li>
+    <li>大約 <code>0.3&ndash;0.5</code> — 同一個人的兩張相片，拍攝時間不同。</li>
+    <li>大約 <code>0.7</code> 以上 — 兩個不同的人。</li>
+  </ul>
+  <p>
+    所以有用的設定大致落在 0.4 到 0.7 之間：
+  </p>
+  <ul>
+    <li><code>0.4&ndash;0.5</code> — 嚴格。錯誤的姓名更少，<code>Unknown</code> 更多。</li>
+    <li><code>0.6</code> — 函式庫的預設值，也是函式庫自己的文件推薦的起點。</li>
+    <li><code>0.7</code> 以上 — 寬鬆。陌生人開始從資料夾裡借名字。</li>
+    <li><code>1.0</code> 以上 — 幾乎什麼都匹配，等於完全不檢查。</li>
+  </ul>
+  <p>
+    函式庫的建議和這張表一致：如果兩個不同的人被報成同一個人，就把數字調低。
+  </p>
+
+  <h2>容差和縮放會互相拉扯</h2>
+  <p>
+    版本 8 在編碼之前把畫面縮到一半，這要付出細節，也把距離推高一點。版本 9 又把界線收緊。
+    兩件都做，效果會疊加：一張在 0.6 預設值下以 0.57 通過的臉，現在可能坐在 0.62，在 0.5 下面失敗。
+  </p>
+  <p>
+    所以這兩個設定應該一起選。如果你收緊了容差，對的人卻一直顯示 <code>Unknown</code>，
+    先把 <code>scale_ratio</code> 調高靠近 <code>1.0</code>，再考慮放鬆容差。
+    靠保留更多像素來恢復準確率，通常比靠接受更弱的證據來恢復更好。
+  </p>
+
+  <h2>完整程式</h2>
+  <p>
+    版本 1 的下載裡已經有這個檔案。和版本 8 相比，多了一行，還有一行多了一個設定；
+    後面每一行的行號都往後挪了一位。
+  </p>
+  <pre class="code-block"><code>import face_recognition
+import cv2
+import os
+import glob
+import numpy as np
+images_folder = "images"
+my_tolerance = 0.5 # 函式庫預設值 = 0.6
+images_path = glob.glob(os.path.join(images_folder, "*.*"))
+
+known_face_encodings=[]
+known_face_names=[]
+for img_path in images_path:
+    img = cv2.imread(img_path)
+    rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    basename = os.path.basename(img_path)
+    (filename, ext) = os.path.splitext(basename)
+    img_encoding = face_recognition.face_encodings(rgb_img)[0]
+    known_face_encodings.append(img_encoding)
+    known_face_names.append(filename)
+
+cap = cv2.VideoCapture(0)
+scale_ratio = 0.5
+multiple = int(1 / scale_ratio)
+ret, img = cap.read()
+width=int(img.shape[1]*scale_ratio)
+height=int(img.shape[0]*scale_ratio)
+dim=(width,height)
+
+while True:
+    ret, img = cap.read()
+    resized=cv2.resize(img,dim,interpolation=cv2.INTER_NEAREST)
+    rgb_img = cv2.cvtColor(resized,cv2.COLOR_BGR2RGB)
+    face_locations = face_recognition.face_locations(rgb_img)
+    face_encodings = face_recognition.face_encodings(rgb_img, face_locations)
+
+    face_names = []
+    for face_encoding in face_encodings:
+        matches = face_recognition.compare_faces(known_face_encodings, face_encoding, tolerance=my_tolerance)
+        name = "Unknown"
+        face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
+        best_match_index = np.argmin(face_distances)
+        if matches[best_match_index]:
+            name = known_face_names[best_match_index]
+        face_names.append(name)
+
+    for face_loc, name in zip(face_locations, face_names):
+        y1, x2, y2, x1 = face_loc[0], face_loc[1], face_loc[2], face_loc[3]
+        y1=y1*multiple
+        x2=x2*multiple
+        y2=y2*multiple
+        x1=x1*multiple
+        cv2.putText(img, name, (x1, y1 - 10), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 200, 0), 2)
+        cv2.rectangle(img, (x1, y1), (x2, y2), (0, 200, 0), 4)
+
+    cv2.imshow("Frame", img)
+    key = cv2.waitKey(1)
+    if key in (ord('q'), ord('Q')):
+        break
+
+cap.release()
+cv2.destroyAllWindows()</code></pre>
+
+  <h2>先加上你自己的相片</h2>
+  <p>
+    和之前一樣，只有當 <code>images</code> 資料夾裡有那個名字的檔案時，臉才會被叫出名字，
+    例如 <code>Peter.jpg</code>。沒有它，不管容差是多少，每張臉都是 <code>Unknown</code>。
+  </p>
+
+  <h2>在自己的電腦上執行</h2>
+  <p>
+    用和版本 1 相同的下載：
+    <a href="../../notes/downloads/Folder-AI-Face-Recognition.zip" download>下載 zip 檔案</a>，解壓，
+    在 Visual Studio Code 裡打開資料夾。這篇筆記用的是 <code>face09.py</code>。
+    在這個資料夾裡第一次執行時，三行都跑：
+  </p>
+  <pre class="code-block"><code>uv python pin 3.12.10
+uv sync
+uv run face09.py</code></pre>
+  <p>
+    這三行只需要一次。下次想再執行程式，只打 <code>uv run face09.py</code>。
+  </p>
+
+  <h2>整個系列一眼看完</h2>
+  <ul>
+    <li>版本 1 — 顯示資料夾裡的每一張相片。</li>
+    <li>版本 2 — 把每張相片變成 128 個數字，把檔名留作標籤。</li>
+    <li>版本 3 — 給一張相片裡的人臉命名。</li>
+    <li>版本 4 — 在視窗裡顯示鏡頭。</li>
+    <li>版本 5 — 顯示之前先改動一格影格。</li>
+    <li>版本 6 — 在影格上畫一個框和一個標籤。</li>
+    <li>版本 7 — 即時辨識並命名人臉。</li>
+    <li>版本 8 — 只搜尋四分之一的像素，換取速度。</li>
+    <li>版本 9 — 選擇匹配要多嚴格。</li>
+  </ul>
+  <p>
+    九個小程式，每一個都是能用一句話說清楚的一步。拼在一起，它們是一台能叫出面前是誰的鏡頭；
+    而同一個模式——列一串數字、比對、決定、把決定畫出來——也躺在遠大於它們的系統底下。
+  </p>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&amp;hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', 'Copy code to clipboard');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', 'Copied to clipboard');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', 'Copy code to clipboard');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>

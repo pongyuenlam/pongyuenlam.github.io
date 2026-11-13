@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>如何看出照片裡的人是誰（人臉辨識，版本 3）？ | 林邦源博士</title>
+<meta name="description" content="一個 38 行的程式：量度新照片裡的每一張臉，跟它已經認識的人比較，然後印出對得上的名字。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note55.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note55.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note55.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note55.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note55.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何看出照片裡的人是誰（人臉辨識，版本 3）？">
+<meta property="og:description" content="一個 38 行的程式：量度新照片裡的每一張臉，跟它已經認識的人比較，然後印出對得上的名字。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-HK/notes/ai-note55.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="../../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "如何看出照片裡的人是誰（人臉辨識，版本 3）？",
+  "description": "一個 38 行的程式：量度新照片裡的每一張臉，跟它已經認識的人比較，然後印出對得上的名字。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-13",
+  "dateModified": "2026-11-13",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-HK/notes/ai-note55.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../../index.html">首頁</a></li>
+        <li><a href="../../biography.html">個人簡介</a></li>
+        <li><a href="../../research.html">研究</a></li>
+        <li><a href="../../cases.html">案例</a></li>
+        <li><a href="../../books.html">著作</a></li>
+        <li><a href="../../ai-programs.html">AI 筆記</a></li>
+        <li><a href="../../links/">連結</a></li>
+        <li><a href="../../glossary/">詞彙表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <a href="/notes/ai-note55.html">English</a>
+  <span class="current">繁體中文</span>
+  <a href="/zh-CN/notes/ai-note55.html">简体中文</a>
+</div>
+
+<main>
+  <h1>如何看出照片裡的人是誰（人臉辨識，版本 3）？</h1>
+  <p class="paper-meta">林邦源博士 &middot; AI 筆記 &middot; 2026 年 11 月 13 日 &middot; 約 5 分鐘閱讀</p>
+
+  <p>
+    版本 2 為它認識的每個人存了一組 128 個數字。版本 3 終於用上它們。它打開一張新照片，
+    量度裡面的每一張臉，把這些測量值跟存下來的比較，然後印出對得上的那個人的名字。
+    這是第一個能回答問題的版本，而不只是為問題做準備。
+  </p>
+  <p>
+    整個比較建立在版本 2 的一個事實上：同一個人的兩張照片會產生兩個靠得很近的清單，
+    兩個不同的人會產生離得遠一點的清單。下面所有內容，都是在量度這種接近程度，
+    並決定多近才算夠近。
+  </p>
+
+  <h2>程式怎麼運作</h2>
+
+  <h3>1. 多一個函式庫</h3>
+  <pre class="code-block"><code>import face_recognition
+import cv2
+import os
+import glob
+import numpy as np</code></pre>
+  <p>
+    <code>numpy</code> 是 <strong>NumPy</strong>，Numerical Python 的簡稱。它一次處理整份
+    數字清單，而這裡要算的正是一整串距離。<code>as np</code> 只是一個綽號，所以程式碼可以寫
+    <code>np.round</code>，不用寫 <code>numpy.round</code>。
+  </p>
+  <p>
+    前四行做的是版本 2 的同一件事：找出資料夾裡的照片，把每一張已知的臉變成數字。唯一的
+    差別是，這個版本不印出執行中的數目，而是直接去建那兩個清單。
+  </p>
+
+  <h3>2. 一張要檢查的新照片</h3>
+  <pre class="code-block"><code>img = cv2.imread("image-source.JPG")
+rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)</code></pre>
+  <p>
+    <code>image-source.JPG</code> 是你要認的那張照片：一張班級照、一張合照、別人傳給你的圖。
+    它放在程式旁邊，不在 <code>images</code> 裡面，因為它還不是程式認識的人。第二行用跟
+    版本 2 一樣的方式修正顏色順序。
+  </p>
+  <p>
+    一個實際問題：程式碼裡的檔名必須跟真實的檔案完全一致，包括大小寫。Mac 的截圖常常是
+    大寫 .JPG。Windows 和預設設定的 Mac 不管這個差別，Linux 管，所以值得檢查一下你打的名字。
+  </p>
+
+  <h3>3. 量度之前先找出人臉</h3>
+  <pre class="code-block"><code>face_locations = face_recognition.face_locations(rgb_img)
+face_encodings = face_recognition.face_encodings(rgb_img, face_locations)</code></pre>
+  <p>
+    <code>face_locations</code> 是一個清單，找到幾張臉就有幾項，每一項是框住那張臉的一個框。
+    一張合照裡可能有五個。
+  </p>
+  <p>
+    第二行把這些框交回給 <code>face_encodings</code>。函式庫自己也能再找一遍臉，但告訴它臉在哪裡，
+    省掉這份工作，也保證測量值和框指的是同一批臉。
+  </p>
+  <p>
+    注意這次沒有 <code>[0]</code>。版本 2 只留第一張臉，因為每張已知的照片裡只有一個人。
+    這裡照片裡每一張臉都要量，因為問題是誰在照片裡，而不是照片裡第一個人是誰。
+  </p>
+
+  <h3>4. 一張臉一張臉地比較</h3>
+  <pre class="code-block"><code>for face_encoding in face_encodings:
+    matches = face_recognition.compare_faces(known_face_encodings, face_encoding)</code></pre>
+  <p>
+    <code>compare_faces</code> 拿新的一張臉和整份已知臉的清單，為每個已知的人回傳一個
+    <code>True</code> 或 <code>False</code>，順序跟 <code>known_face_names</code> 一樣。
+    已知三個人時，結果看起來像 <code>[True, False, False]</code>：這張臉對得上第一個人，
+    對不上另外兩個。
+  </p>
+  <p>
+    那個 <code>True</code> 背後有一個門檻。函式庫用距離比較兩張臉，距離小於等於 0.6 就算同一個人。
+    這個系列的第 9 個版本會改這個數字；現在 0.6 是預設值。
+  </p>
+
+  <h3>5. 每張已知的臉有多遠？</h3>
+  <pre class="code-block"><code>    face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
+    print(np.round(face_distances, 2))
+    best_match_index = np.argmin(face_distances)</code></pre>
+  <p>
+    <code>face_distance</code> 回傳每個已知的人的實際數字，而不是是或否：類似
+    <code>[0.28, 0.63, 0.64]</code>。越小表示越像。同一個人拍兩次，通常低於 0.4；
+    兩個不同的人通常高於 0.6。
+  </p>
+  <p>
+    <code>np.round(..., 2)</code> 只是把顯示整理到兩位小數。然後 <code>np.argmin</code>
+    找出最小數字的位置——也就是最接近的那張已知的臉。位置從 0 開始，所以 <code>0</code>
+    表示 <code>known_face_names</code> 裡的第一個名字。
+  </p>
+
+  <h3>6. 兩個都要：最近，而且夠近</h3>
+  <pre class="code-block"><code>    name = "Unknown"
+    if matches[best_match_index]:
+        name = known_face_names[best_match_index]
+        face_names.append(name)</code></pre>
+  <p>
+    最近不等於對得上。一張陌生人的照片裡，已知清單裡總會有一個人是最近的，距離也許是 0.7。
+    <code>matches[best_match_index]</code> 這一行問的是：這個最近的人有沒有通過 0.6 的測試。
+    只有通過了，名字才被接受。
+  </p>
+  <p>
+    <code>append</code> 在 <code>if</code> 裡面，所以沒有對上的臉就直接不進清單。這就是為什麼
+    開頭設成 <code>"Unknown"</code> 的那個變數，永遠不出現在輸出裡：陌生人什麼都不加，
+    而不是加上 Unknown 這個詞。
+  </p>
+
+  <h2>完整程式</h2>
+  <p>
+    把上面的片段拼回去，為了篇幅把版本 2 裡印出執行數目的那一行去掉：
+  </p>
+  <pre class="code-block"><code>import face_recognition
+import cv2
+import os
+import glob
+import numpy as np
+
+images_folder = "images"
+images_path = glob.glob(os.path.join(images_folder, "*.*"))
+
+known_face_encodings = []
+known_face_names = []
+for img_path in images_path:
+    img = cv2.imread(img_path)
+    rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    basename = os.path.basename(img_path)
+    (filename, ext) = os.path.splitext(basename)
+    img_encoding = face_recognition.face_encodings(rgb_img)[0]
+    known_face_encodings.append(img_encoding)
+    known_face_names.append(filename)
+
+img = cv2.imread("image-source.JPG")
+rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+face_locations = face_recognition.face_locations(rgb_img)
+face_encodings = face_recognition.face_encodings(rgb_img, face_locations)
+
+face_names = []
+for face_encoding in face_encodings:
+    matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
+    name = "Unknown"
+    face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
+    best_match_index = np.argmin(face_distances)
+    if matches[best_match_index]:
+        name = known_face_names[best_match_index]
+        face_names.append(name)
+
+print("The matched name's image file is", face_names)</code></pre>
+
+  <h2>輸出是什麼意思</h2>
+  <p>
+    如果 <code>image-source.JPG</code> 是 Howard 的照片，最後一行會印出：
+  </p>
+  <pre class="code-block"><code>The matched name's image file is ['Howard']</code></pre>
+  <p>
+    如果你把兩行 <code>print</code> 加回去，執行中間會顯示推算過程：
+  </p>
+  <pre class="code-block"><code>[0.28 0.63 0.64]
+0</code></pre>
+  <p>
+    Howard 最近，距離 0.28，遠在 0.6 的範圍之內，所以留下的就是他的名字。一個陌生人會給出
+    類似 <code>[0.71 0.74 0.69]</code> 的距離，最近的是 0.69，<code>if</code> 不成立，
+    印出來的清單就是空的：<code>[]</code>。
+  </p>
+  <p>
+    空清單是正確答案，不是 bug。它的意思是照片裡沒有一個是程式認識的人。
+  </p>
+
+  <h2>在自己的電腦上執行</h2>
+  <p>
+    用跟版本 1 一樣的下載：
+    <a href="../../notes/downloads/Folder-AI-Face-Recognition.zip" download>下載壓縮檔</a>，解壓，
+    用 Visual Studio Code 打開這個資料夾。這一篇用的是 <code>face03.py</code>。
+    第一次在這個資料夾裡執行時，三行都跑：
+  </p>
+  <pre class="code-block"><code>uv python pin 3.12.10
+uv sync
+uv run face03.py</code></pre>
+  <p>
+    這三行只需要做一次。下次想再執行這個程式，只需輸入 <code>uv run face03.py</code>。
+  </p>
+  <p>
+    把想檢查的照片放在 <code>face03.py</code> 旁邊，命名為 <code>image-source.JPG</code>。
+    壓縮檔裡已經有一張，所以解壓後程式馬上就能跑。換成你自己的照片，才能測一個真實的問題。
+    一張清晰、正面對著鏡頭的臉給出最好的答案；一張轉過去或者光線很差的臉，即使那個人
+    在資料夾裡，也可能回傳沒有對上。
+  </p>
+
+  <h2>下一步</h2>
+  <p>
+    版本 1 到 3 都只處理已經存在的檔案。版本 4 會打開鏡頭，顯示即時影片，
+    那是讓辨識可以在你移動時發生的必要一步。
+  </p>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&amp;hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', 'Copy code to clipboard');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', 'Copied to clipboard');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', 'Copy code to clipboard');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>

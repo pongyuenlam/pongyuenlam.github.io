@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>如何让实时人脸识别跑得更快（人脸识别，版本 8）？ | 林邦源博士</title>
+<meta name="description" content="一个 60 行的程序：在每一帧缩小一半的副本上找脸，再把框乘以 2 画回完整画面。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note60.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note60.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note60.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note60.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note60.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何让实时人脸识别跑得更快（人脸识别，版本 8）？">
+<meta property="og:description" content="一个 60 行的程序：在每一帧缩小一半的副本上找脸，再把框乘以 2 画回完整画面。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-CN/notes/ai-note60.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="../../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "如何让实时人脸识别跑得更快（人脸识别，版本 8）？",
+  "description": "一个 60 行的程序：在每一帧缩小一半的副本上找脸，再把框乘以 2 画回完整画面。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-13",
+  "dateModified": "2026-11-13",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-CN/notes/ai-note60.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../../index.html">首页</a></li>
+        <li><a href="../../biography.html">个人简介</a></li>
+        <li><a href="../../research.html">研究</a></li>
+        <li><a href="../../cases.html">案例</a></li>
+        <li><a href="../../books.html">著作</a></li>
+        <li><a href="../../ai-programs.html">AI 笔记</a></li>
+        <li><a href="../../links/">链接</a></li>
+        <li><a href="../../glossary/">词汇表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <a href="/notes/ai-note60.html">English</a>
+  <a href="/zh-HK/notes/ai-note60.html">繁體中文</a>
+  <span class="current">简体中文</span>
+</div>
+
+<main>
+  <h1>如何让实时人脸识别跑得更快（人脸识别，版本 8）？</h1>
+  <p class="paper-meta">林邦源博士 &middot; AI 笔记 &middot; 2026 年 11 月 13 日 &middot; 约 6 分钟阅读</p>
+
+  <p>
+    版本 7 能用，而且会卡。每一帧都按摄像头的原始分辨率付找脸和编码的成本，这份成本就是画面落后于你动作的原因。
+    版本 8 在<strong>宽度和高度都缩到一半的副本</strong>上做同样的识别，然后把框画回原始尺寸的画面。
+    输出看起来一样。等待变短了。
+  </p>
+
+  <h2>宽度减半，工作量是四分之一</h2>
+  <p>
+    一帧宽 1280 像素、高 720 像素，大约有 920,000 个像素。两个数字都减半，就是 640 乘 360，
+    大约 230,000 个——是四分之一，不是一半。检测是在画面里扫描图案，所以它的成本跟着像素数量走，
+    不跟宽度走。这就是为什么一个听起来保守的改动，能买回大部分速度。
+  </p>
+
+  <h2>1. 先量出画面有多大</h2>
+  <pre class="code-block"><code>cap = cv2.VideoCapture(0)
+scale_ratio = 0.5
+multiple = int(1 / scale_ratio)
+ret, img = cap.read()
+width = int(img.shape[1] * scale_ratio)
+height = int(img.shape[0] * scale_ratio)
+dim = (width, height)</code></pre>
+  <p>
+    摄像头必须在循环之前读一次，原因只有一个：不知道画面尺寸，就算不出更小的尺寸。
+    那一帧用完就被循环里的第一次读取替换掉，所以什么也没有浪费。
+  </p>
+  <p>
+    <code>img.shape</code> 先报高再报宽，所以 <code>shape[1]</code> 是宽，<code>shape[0]</code> 是高。
+    乘以 <code>0.5</code> 得到更小的数字，<code>int</code> 丢掉小数，因为尺寸必须是整数个像素。
+    <code>dim</code> 把这一对数字准备好，交给 <code>cv2.resize</code>。
+  </p>
+  <p>
+    <code>multiple</code> 是后面用来乘框的数字：<code>1 / 0.5</code> 是 2。两个比例都从一个变量算出来，
+    所以只改一处的 <code>scale_ratio</code>，两边就能保持一致。
+  </p>
+
+  <h2>2. 缩小画面，再在缩小后的画面上找</h2>
+  <pre class="code-block"><code>    ret, img = cap.read()
+    resized = cv2.resize(img, dim, interpolation=cv2.INTER_NEAREST)
+    rgb_img = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
+    face_locations = face_recognition.face_locations(rgb_img)
+    face_encodings = face_recognition.face_encodings(rgb_img, face_locations)</code></pre>
+  <p>
+    原始尺寸的 <code>img</code> 保持不动，留给窗口用。版本 7 的每一次识别调用现在都换成接收
+    <code>resized</code>，所以找脸和编码都在四分之一的像素上做。
+  </p>
+  <p>
+    <code>interpolation=cv2.INTER_NEAREST</code> 的意思是每个新像素直接复制最近的那个旧像素。
+    它是各种缩放方法里最快、也最不好看的，这里不重要：小画面从来不给人看，只用来找。
+    窗口显示的仍然是原图。
+  </p>
+
+  <h2>3. 把框乘回原来的尺寸</h2>
+  <pre class="code-block"><code>    for face_loc, name in zip(face_locations, face_names):
+        y1, x2, y2, x1 = face_loc[0], face_loc[1], face_loc[2], face_loc[3]
+        y1 = y1 * multiple
+        x2 = x2 * multiple
+        y2 = y2 * multiple
+        x1 = x1 * multiple</code></pre>
+  <p>
+    就是这一步会出错。脸是在小画面里找到的，所以那里顶部在 100 的框，在完整画面上应该在 200。
+    四条边都得先乘 2 再画。
+  </p>
+  <p>
+    忘了它不会崩溃，所以才容易漏掉。框只是出现在错误的位置、以错误的尺寸——通常挤在左上角，
+    尺寸是预期的一半。形状对但位置不对的框，几乎总是说明这个乘法被跳过了，或者只乘了四个数字里的某几个。
+  </p>
+
+  <h2>4. 按原始尺寸绘制和显示</h2>
+  <pre class="code-block"><code>        cv2.putText(img, name, (x1, y1 - 10), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 200, 0), 2)
+        cv2.rectangle(img, (x1, y1), (x2, y2), (0, 200, 0), 4)
+
+    cv2.imshow("Frame", img)</code></pre>
+  <p>
+    绘制调用和版本 7 一样，收到的仍然是 <code>img</code>。唯一的区别是
+    <code>x1, y1, x2, y2</code> 里的数字已经还原到原始尺寸的比例。
+  </p>
+
+  <h2>完整程序</h2>
+  <p>
+    版本 1 的下载里已经有这个文件，不需要重新安装：
+  </p>
+  <pre class="code-block"><code>import face_recognition
+import cv2
+import os
+import glob
+import numpy as np
+images_folder = "images"
+images_path = glob.glob(os.path.join(images_folder, "*.*"))
+
+known_face_encodings=[]
+known_face_names=[]
+for img_path in images_path:
+    img = cv2.imread(img_path)
+    rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    basename = os.path.basename(img_path)
+    (filename, ext) = os.path.splitext(basename)
+    img_encoding = face_recognition.face_encodings(rgb_img)[0]
+    known_face_encodings.append(img_encoding)
+    known_face_names.append(filename)
+
+cap = cv2.VideoCapture(0)
+scale_ratio = 0.5
+multiple = int(1 / scale_ratio)
+ret, img = cap.read()
+width=int(img.shape[1]*scale_ratio)
+height=int(img.shape[0]*scale_ratio)
+dim=(width,height)
+
+while True:
+    ret, img = cap.read()
+    resized=cv2.resize(img,dim,interpolation=cv2.INTER_NEAREST)
+    rgb_img = cv2.cvtColor(resized,cv2.COLOR_BGR2RGB)
+    face_locations = face_recognition.face_locations(rgb_img)
+    face_encodings = face_recognition.face_encodings(rgb_img, face_locations)
+
+    face_names = []
+    for face_encoding in face_encodings:
+        matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
+        name = "Unknown"
+        face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
+        best_match_index = np.argmin(face_distances)
+        if matches[best_match_index]:
+            name = known_face_names[best_match_index]
+        face_names.append(name)
+
+    for face_loc, name in zip(face_locations, face_names):
+        y1, x2, y2, x1 = face_loc[0], face_loc[1], face_loc[2], face_loc[3]
+        y1=y1*multiple
+        x2=x2*multiple
+        y2=y2*multiple
+        x1=x1*multiple
+        cv2.putText(img, name, (x1, y1 - 10), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 200, 0), 2)
+        cv2.rectangle(img, (x1, y1), (x2, y2), (0, 200, 0), 4)
+
+    cv2.imshow("Frame", img)
+    key = cv2.waitKey(1)
+    if key in (ord('q'), ord('Q')):
+        break
+
+cap.release()
+cv2.destroyAllWindows()</code></pre>
+
+  <h2>选择比例</h2>
+  <p>
+    <code>0.5</code> 是笔记本上合理的起点。数值越低，越快也越看不清：
+  </p>
+  <ul>
+    <li><code>1.0</code> — 版本 7 的行为，不缩小，最适合小的或远处的人脸。</li>
+    <li><code>0.5</code> — 四分之一的像素，在普通摄像头上大约流畅三到四倍，仍然能找到占画面合理比例的人脸。</li>
+    <li><code>0.25</code> — 十六分之一的像素，非常流畅，但脸必须离摄像头很近，才熬得过缩放。</li>
+  </ul>
+  <p>
+    有一个要求：<code>1 / scale_ratio</code> 必须算出整数，因为 <code>int</code> 会截断。
+    <code>0.5</code> 得 2，<code>0.25</code> 得 4，都没问题。像 <code>0.7</code> 这样的比例算出 1.42，
+    截断成 1，框就永远不会被放大——和上面一样的安静错位。如果你要四分之三，自己算
+    <code>multiple</code>，例如 <code>multiple = 1.4286</code>，并且让它保持小数，不要套上 <code>int</code>。
+  </p>
+
+  <h2>会看到什么</h2>
+  <ul>
+    <li>窗口明显比版本 7 流畅，画面仍然是原始质量，因为只有副本被缩小了。</li>
+    <li>框和名字留在正确的位置；如果没有，就去看那个乘法。</li>
+    <li>离摄像头远的脸现在可能认不出来，或者比版本 7 更常变回 <code>Unknown</code>。
+      编码是用更少的像素做的，细节已经没了。靠近一点，或者把比例调高。</li>
+    <li>亮度和颜色没有被动过；<code>INTER_NEAREST</code> 只改变小像素怎样采样。</li>
+  </ul>
+
+  <h2>先加上你自己的照片</h2>
+  <p>
+    和版本 7 一样，只有当 <code>images</code> 文件夹里有那个名字的文件时，脸才会被叫出名字，
+    例如 Peter 对应 <code>Peter.jpg</code>。没有它，不管比例是多少，每张脸都会报成 <code>Unknown</code>。
+  </p>
+
+  <h2>在自己的电脑上运行</h2>
+  <p>
+    用和版本 1 相同的下载：
+    <a href="../../notes/downloads/Folder-AI-Face-Recognition.zip" download>下载 zip 文件</a>，解压，
+    在 Visual Studio Code 里打开文件夹。这篇笔记用的是 <code>face08.py</code>。
+    在这个文件夹里第一次运行时，三行都跑：
+  </p>
+  <pre class="code-block"><code>uv python pin 3.12.10
+uv sync
+uv run face08.py</code></pre>
+  <p>
+    这三行只需要一次。下次想再运行程序，只打 <code>uv run face08.py</code>。
+  </p>
+
+  <h2>下一步</h2>
+  <p>
+    速度不再是问题，但标签还在闪：几帧一个名字，然后 <code>Unknown</code>，然后又变回名字。
+    版本 9 是系列的最后一篇，处理这个闪烁。
+  </p>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&amp;hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', 'Copy code to clipboard');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', 'Copied to clipboard');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', 'Copy code to clipboard');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>
