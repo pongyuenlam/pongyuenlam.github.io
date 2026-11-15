@@ -75,13 +75,13 @@
 
   <p>
     This is version 10 of the forecasting series. Version 9 compared three learning rates by hand.
-    Version 10 hands the job to the program: it lists the choices for five settings, works out every
-    combination, tries twenty of them at random, keeps the best model and saves the whole comparison
-    as a spreadsheet. The training loop itself is untouched &mdash; what changes is who decides the
-    settings.
+    Version 10 lets the program do the comparison: it lists the choices for five settings, works out
+    every combination, tries twenty of them at random, keeps the best model and saves the whole
+    comparison as a spreadsheet. The training loop itself is unchanged; what changes is who chooses
+    the settings.
   </p>
 
-  <h2>Five dials and 243 combinations</h2>
+  <h2>Five settings and 243 combinations</h2>
   <pre class="code-block"><code>SEARCH_SPACE = {
     "epochs":       [50, 100, 200],
     "learning_rate":[0.001, 0.01, 0.1],
@@ -94,9 +94,9 @@
     3 &times; 3 &times; 3 &times; 3 &times; 3 = 243 possible combinations.
   </p>
   <p>
-    Trying all 243 would take hours for a gain nobody would notice. Instead the program draws
-    <code>N_TRIALS = 20</code> combinations at random from the 243. That is enough to see which
-    corners of the space are hopeless, at a fraction of the cost.
+    Trying all 243 would take hours for an improvement that would be hard to notice. Instead the
+    program draws <code>N_TRIALS = 20</code> combinations at random from the 243. That is enough to
+    show which combinations perform badly, at a much lower cost.
   </p>
 
   <h2>How the search works</h2>
@@ -108,9 +108,13 @@ sampled = random.sample(combos, min(N_TRIALS, len(combos)))</code></pre>
   <p>
     <code>itertools.product</code> builds all 243 combinations, taking one value from each list in
     turn. <code>random.sample</code> then picks 20 of them without repeating any. The seed is fixed
-    at the top of the file, so the twenty chosen here are the same twenty on every run &mdash; which
-    is why the table below can be reproduced.
+    at the top of the file, so the twenty chosen here are the same twenty on every run.
   </p>
+  <pre class="code-block"><code># ── Reproducibility ──────────────────────────────────────────────────────────
+SEED = 42
+random.seed(SEED)
+np.random.seed(SEED)
+torch.manual_seed(SEED)</code></pre>
 
   <h3>2. Turn one combination into a model</h3>
   <pre class="code-block"><code>def build_model(hidden_size, num_layers):
@@ -124,7 +128,8 @@ sampled = random.sample(combos, min(N_TRIALS, len(combos)))</code></pre>
   <p>
     Version 7's network was spelled out layer by layer. This version builds it from two numbers
     instead. The loop adds one hidden layer per <code>num_layers</code>, each of width
-    <code>hidden_size</code>, and the last line outside the loop adds the single output. With
+    <code>hidden_size</code>, and the last line outside the loop adds the single output:
+    <code>layers.append(nn.Linear(in_dim, 1))</code>. With
     <code>hidden_size = 64</code> and <code>num_layers = 3</code>, the result is the three-layer
     network of the winning trial.
   </p>
@@ -137,8 +142,12 @@ sampled = random.sample(combos, min(N_TRIALS, len(combos)))</code></pre>
   <p>
     <code>zip(keys, combo)</code> pairs each setting name with its value, and <code>dict</code>
     makes that a labelled configuration such as
-    <code>{"epochs": 50, "learning_rate": 0.001, ...}</code>. Training is version 9's, with early
-    stopping and best-weight restoring, so a hopeless trial gives up rather than running to the end.
+    <code>{"epochs": 50, "learning_rate": 0.001, ...}</code>. This dictionary is stored in
+    <code>cfg</code>, short for <strong>configuration</strong>: one complete set of settings for a
+    single trial. <code>train_trial(cfg)</code> then builds and trains a model using those settings.
+    Training works as in version 9: a trial stops early if the validation error does not improve
+    for 10 epochs, and the weights that gave the lowest validation error are kept. A trial that
+    stops improving therefore ends early instead of running to the maximum number of epochs.
   </p>
 
   <h3>4. Remember the winner and write everything out</h3>
@@ -152,13 +161,12 @@ results_df.to_excel("search_results.xlsx", index_label="Rank")</code></pre>
     <code>best_r2</code> starts at negative infinity, so the first trial always becomes the
     benchmark and later trials must beat it to replace it. At the end two files appear: the winning
     weights in <code>best_model.pt</code>, and every trial ranked by R&sup2; in
-    <code>search_results.xlsx</code>. The spreadsheet is the useful part &mdash; it shows not only
-    what won but what lost.
+    <code>search_results.xlsx</code>. The spreadsheet is the useful part, because it shows every
+    trial, not only the winner.
   </p>
   <p>
     Writing the Excel file needs one extra package, <code>openpyxl</code>, which is why it is listed
-    in <code>pyproject.toml</code>. Without it pandas prints the table happily and then fails at the
-    moment of saving.
+    in <code>pyproject.toml</code>.
   </p>
 
   <h2>What you should see</h2>
@@ -192,25 +200,26 @@ Best config : {'epochs': 50, 'learning_rate': 0.001, 'optimizer': 'Adam', 'hidde
 Best R²     : 0.4511  |  MAE: 4.2143  |  RMSE: 5.2633
 Results table saved → search_results.xlsx</code></pre>
   <p>
-    Three things in that table are worth more than the winning number.
+    Three things in that table matter more than the winning number.
   </p>
   <p>
-    <strong>The disasters all involve a learning rate of 0.1.</strong> Trials 5, 6, 11, 12, 13 and 15
-    report negative R&sup2; values in the hundreds, and RMSE in the seventies and hundreds instead of
-    around 5. A negative R&sup2; means the model is worse than always replying with the average.
-    That is what a step too large looks like: the weights jump about and never settle. Version 9 saw
-    the mild version of this; here it is unmistakable.
+    <strong>Every very poor result uses a learning rate of 0.1.</strong> Trials 5, 6, 11, 12, 13 and
+    15 report negative R&sup2; values in the hundreds, and RMSE in the seventies and hundreds instead
+    of around 5. A negative R&sup2; means the model performs worse than predicting the average sales
+    value for every day. This happens when each adjustment is too large: the weights change too
+    much, so the errors do not become smaller. Version 9 showed a mild case of this; here it is much
+    clearer.
   </p>
   <p>
-    <strong>The Epochs column is a ceiling, not a record.</strong> It shows the maximum allowed.
+    <strong>The Epochs column shows the maximum allowed, not the number actually used.</strong>
     Early stopping may have finished long before, and the spreadsheet keeps a column,
-    <code>actual_epochs</code>, with the truth.
+    <code>actual_epochs</code>, with the real number.
   </p>
   <p>
     <strong>The winner is only a little better than version 9.</strong> R&sup2; of 0.4511 against
-    0.4394. Twenty trials of searching bought a small gain on top of the early stopping, which is
-    the honest lesson: tuning helps at the margin, and no amount of tuning turned this model into a
-    good one. That is a fact about the model, not about the search.
+    0.4394. Running twenty trials produced a small improvement on top of early stopping. The honest
+    lesson is that tuning helps a little, and no amount of tuning made this model a good one. That is
+    a fact about the model, not about the search.
   </p>
   <figure class="exhibit"><img src="/images/forecast-v10-loss.png" alt="Loss curves of the winning trial, falling and flattening with the two lines close together" style="max-width:100%; height:auto;"><figcaption>Loss curves of the winning trial</figcaption></figure>
   <figure class="exhibit"><img src="/images/forecast-v10-predictions.png" alt="Actual test-day sales in grey and predicted values in red following the trend" style="max-width:100%; height:auto;"><figcaption>Actual (grey) and predicted (red) values for the test days</figcaption></figure>

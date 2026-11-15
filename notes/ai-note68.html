@@ -74,54 +74,34 @@
   </p>
 
   <p>
-    This is version 7 of the forecasting series, and the first version that actually learns.
-    Versions 1 to 6 prepared the data: looked at it, cut it into windows, split each window into
-    features and a target, and set aside a validation part. Version 7 adds a small network and
-    runs it a hundred times over the training examples. Nothing about the model is clever; what
-    this version teaches is the loop that turns a pile of examples into a trained model.
+    This is version 7 of the forecasting series. Version 6 prepared and split the data; version 7
+    adds a small neural network and trains it for 100 passes through the training examples.
   </p>
 
   <h2>What the model is</h2>
   <p>
     The model takes the 29 recent days as input and gives back one number: its guess for the next
-    day. Inside, it is a short chain of layers:
-  </p>
-  <pre class="code-block no-copy"><code>nn.Linear(29, 10)  &rarr; ReLU
-nn.Linear(10, 10)  &rarr; ReLU
-nn.Linear(10, 1)</code></pre>
-  <p>
-    A <strong>Linear</strong> layer multiplies its inputs by a set of weights and adds a bias, so
-    each of its outputs is a weighted sum of its inputs. The first layer turns 29 days into 10
-    numbers, the second turns those 10 into 10 more, and the last turns 10 into the single
-    prediction.
-  </p>
-  <p>
-    <strong>ReLU</strong> sits between the layers and does something tiny: it replaces every
-    negative number with zero and leaves positives alone. Without it the three Linear layers would
-    collapse into one, and the model could only draw straight lines through the data. With it, the
-    chain can bend.
+    day. Inside, it is a neural network model. We will not explain neural networks in detail in
+    this note. A future AI Note will explain how they work.
   </p>
 
   <h2>How training works</h2>
   <p>
-    One pass over the training examples is called an <strong>epoch</strong>. In each epoch the
-    program does the same four things for every batch of 32 examples:
+    An <strong>epoch</strong> is one complete pass through all the training examples, meaning the
+    model has seen every example once. In each epoch the program does the same four things for
+    every batch of 32 examples:
   </p>
   <ol>
     <li>Show the 29 days to the model and collect its guess.</li>
-    <li>Compare the guess with the real next day, giving a <strong>loss</strong>.</li>
+    <li>Compare the guess with the real next day to calculate the error, called the <strong>loss</strong>.</li>
     <li>Work out which weights made the loss worse and by how much.</li>
-    <li>Nudge every weight a little in the improving direction.</li>
+    <li>Adjust every weight slightly to reduce the loss.</li>
   </ol>
   <p>
-    The loss here is <strong>mean squared error</strong>: subtract the guess from the answer,
-    square it, and average over the batch. Squaring makes misses count more than near misses, and
-    makes every error positive so that they add up instead of cancelling.
-  </p>
-  <p>
-    The nudging is done by the <strong>optimizer</strong>, here Adam with its default learning
-    rate. It decides how big each nudge is. Version 9 will make that size a setting worth
-    comparing; for now the default is kept.
+    A <strong>batch</strong> is a group of training examples processed together. In this program,
+    a full batch contains 32 examples. The loss here is <strong>mean squared error</strong>:
+    subtract the guess from the answer, square it, and average over the batch. Squaring makes
+    misses count more than near misses.
   </p>
   <p>
     After the training batches, the program measures the loss on the validation examples &mdash;
@@ -158,9 +138,9 @@ nn.Linear(10, 1)</code></pre>
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters())</code></pre>
   <p>
-    <code>criterion</code> is the measuring stick, mean squared error. <code>optimizer</code> is
-    the hand that turns the dials; <code>model.parameters()</code> hands it every weight in the
-    network, so it knows what it is allowed to change.
+    <code>criterion</code> calculates the error using mean squared error. <code>optimizer</code>
+    uses that error to adjust the model's weights. <code>model.parameters()</code> gives the
+    optimizer every weight in the network, so it knows which values it can change.
   </p>
 
   <h3>3. Pick where the work happens</h3>
@@ -168,8 +148,9 @@ optimizer = optim.Adam(model.parameters())</code></pre>
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model.to(device)</code></pre>
   <p>
-    <code>cuda</code> is a graphics card that can do this arithmetic faster. On a Mac or on a
-    laptop without one, the program quietly uses the <code>cpu</code> instead. <code>model.to(device)</code>
+    <code>cuda</code> is NVIDIA's technology for using its graphics cards to do this arithmetic
+    faster. On a Mac or on a laptop without an NVIDIA graphics card, the program quietly uses the
+    <code>cpu</code> instead. <code>model.to(device)</code>
     moves the model to that place, and the batches will be moved to match.
   </p>
 
@@ -192,12 +173,10 @@ model.to(device)</code></pre>
     <code>criterion</code> turns them into a loss.
   </p>
   <p>
-    The next three lines are the heart of the whole series. <code>optimizer.zero_grad()</code>
-    clears the notes left over from the previous batch. <code>loss.backward()</code> works
-    backwards through the network asking each weight <em>how much did you contribute to this
-    error?</em> <code>optimizer.step()</code> then moves every weight a little, in the direction
-    that lowers the error. Every learned model in this series is the result of repeating those
-    three lines thousands of times.
+    The next three lines help the model learn from each batch. <code>optimizer.zero_grad()</code>
+    clears the adjustment calculations from the previous batch. <code>loss.backward()</code>
+    works out how each weight should change to reduce the error. <code>optimizer.step()</code>
+    applies those changes. Repeating these three lines thousands of times is how the model learns.
   </p>
 
   <h3>5. Measure on the validation days</h3>
@@ -227,14 +206,18 @@ plt.plot(val_losses, label='Validation Loss')</code></pre>
     other.
   </p>
 
+  <figure class="exhibit"><img src="/images/forecast-loss-curve.png" alt="Loss curve falling steeply in the first thirty epochs then flattening, with training and validation lines close together" style="max-width:100%; height:auto;"><figcaption>Training and validation loss over 100 epochs, drawn by time_07.py</figcaption></figure>
+
   <h3>7. Reduce everything to one number</h3>
   <pre class="code-block"><code>mae_torch = torch.mean(torch.abs(val_predictions_tensor - val_targets_tensor))
 print(f"Validation MAE (PyTorch): {mae_torch:.4f}")</code></pre>
   <p>
-    <strong>MAE</strong>, mean absolute error, is the average size of a miss, ignoring direction:
-    in this run about 4.76. Since daily sales in the validation part run around HK$140, that is an
-    average miss of roughly 3 per cent. MAE is easier to explain to a manager than the squared
-    loss, which is why the program reports it alongside.
+    <strong>MAE</strong>, mean absolute error, is the average difference between the predictions
+    and the actual values, ignoring whether each prediction was too high or too low. In this run,
+    it is about HK$4.76. Daily sales in the validation part are around HK$140, so
+    <code>(4.76 &divide; 140) &times; 100 &asymp; 3.4%</code>. In other words, the average
+    prediction error is roughly 3% of a typical day's sales. MAE is easier to explain to a manager
+    than the squared loss because it is measured in sales dollars.
   </p>
 
   <h2>What you should see</h2>
@@ -253,12 +236,6 @@ Validation MAE (PyTorch): 4.7594</code></pre>
     Your numbers will not match these exactly. The weights start at random values, so every run
     takes a slightly different path downhill. What should match is the shape: both losses fall
     quickly at first and then wobble around a similar level.
-  </p>
-  <figure class="exhibit"><img src="/images/forecast-loss-curve.png" alt="Loss curve falling steeply in the first thirty epochs then flattening, with training and validation lines close together" style="max-width:100%; height:auto;"><figcaption>Training and validation loss over 100 epochs, drawn by time_07.py</figcaption></figure>
-  <p>
-    The two lines staying close is the healthy sign. If the training line kept falling while the
-    validation line turned upward, the model would be memorising the training days instead of
-    learning the pattern &mdash; a problem that later versions will make easier to spot.
   </p>
   <figure class="exhibit"><img src="/images/forecast-predictions.png" alt="Line chart of actual sales in grey and predicted sales in red, the red line tracking the grey closely" style="max-width:100%; height:auto;"><figcaption>Actual (grey) and predicted (red) values for the validation days</figcaption></figure>
 

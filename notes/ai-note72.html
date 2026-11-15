@@ -82,7 +82,7 @@
     first five change the model; the sixth changes the data.
   </p>
 
-  <h2>Six dials and 972 combinations</h2>
+  <h2>Six settings and 972 combinations</h2>
   <p>
     The search space in version 11 is the old one with a single line added. The old five settings
     still offer three values each; the new one offers four.
@@ -99,10 +99,10 @@
     Three values in five lists and four in the last gives 3 &times; 3 &times; 3 &times; 3 &times; 3
     &times; 4 = 972 combinations, up from 243. The budget is unchanged at
     <code>N_TRIALS = 20</code>, so the same twenty random draws now cover four times as much
-    ground. That thinning is the price of adding a sixth dial.
+    ground. That is the cost of adding a sixth setting.
   </p>
 
-  <h2>Why the window length is different from the other dials</h2>
+  <h2>Why the window length is different from the other settings</h2>
   <p>
     From version 2 onwards the window length was a fixed line near the top of the file,
     <code>WINDOW_SIZE = 30</code>. Everyone who ran the program trained on the same examples. In
@@ -111,18 +111,11 @@
   <p>
     It has three consequences, and only the first is obvious. Changing the window changes how many
     examples exist: 1,460 days cut into windows of length <em>w</em> gives 1,460 &minus; <em>w</em>
-    + 1 examples, which is 1,451 for <em>w</em> = 10 but 1,411 for <em>w</em> = 50. It also changes
-    how many numbers each input holds: <em>w</em> &minus; 1 of them, so 9 at the shortest window and
-    49 at the longest. And because the input length feeds the network's first layer, it changes the
-    shape of the model itself.
-  </p>
-  <p>
-    A trial with <em>w</em> = 10 is trained on 1,451 examples of 9 numbers each; a trial with
-    <em>w</em> = 50 on 1,411 examples of 49 numbers each. A 70/15/15 split also means the test
-    sets differ slightly in length &mdash; 218 days at <em>w</em> = 10, 212 at <em>w</em> = 50
-    &mdash; so the scores are not measured on exactly the same days. This is not a flaw to
-    apologise for. The question being asked is which look-back period forecasts best, and a fair
-    answer has to be allowed to change the data.
+    + 1 examples, which is 1,431 for <em>w</em> = 30, as worked through in
+    <a href="ai-note65.html">How to split each window into features and a target (version 4)</a>. It
+    also changes how many numbers each input holds: <em>w</em> &minus; 1 of them, so 29 at a window
+    of 30, 9 at the shortest window of 10 and 49 at the longest window of 50. And because the input
+    length feeds the network's first layer, it changes the shape of the model itself.
   </p>
 
   <h2>How the search works</h2>
@@ -163,11 +156,11 @@
     layers.append(nn.Linear(in_dim, 1))
     return nn.Sequential(*layers).to(device)</code></pre>
   <p>
-    The one call that matters follows the first line of <code>train_trial</code>:
-    <code>model = build_model(cfg["window_size"] - 1, cfg["hidden_size"], cfg["num_layers"])</code>.
-    At <em>w</em> = 10 the first layer reads 9 numbers per example; at <em>w</em> = 50 it reads 49.
-    Everything after the first layer is unaffected, which is why a window change costs less than it
-    sounds.
+    The layers are built exactly as explained in
+    <a href="ai-note71.html">How to let the program search its own settings (version 10)</a>. The
+    only change is that the number of input values is now passed in from outside instead of being
+    read from a fixed constant, so the first layer takes 9, 19, 29 or 49 numbers depending on the
+    window length.
   </p>
 
   <h3>3. Train and grade each combination</h3>
@@ -177,10 +170,13 @@
     r2, mae, rmse, preds, actuals = evaluate(model, test_loader)</code></pre>
   <p>
     The configuration now carries six values, for example
-    <code>{"epochs": 50, "learning_rate": 0.001, ..., "window_size": 10}</code>. Training is
-    unchanged from version 9: early stopping watches the validation loss and restores the best
-    weights, so a hopeless trial gives up rather than running to the end. The test loader comes
-    back out of <code>train_trial</code> only because it was built for that trial's window.
+    <code>{"epochs": 50, "learning_rate": 0.001, ..., "window_size": 10}</code>. This dictionary is
+    stored in <code>cfg</code>, short for <strong>configuration</strong>: one complete set of
+    settings for a single trial. Training works as in version 9: a trial stops early if the
+    validation error does not improve for 10 epochs, and the weights that gave the lowest validation
+    error are kept. A trial that stops improving therefore ends early instead of running to the
+    maximum number of epochs. The test loader comes back out of <code>train_trial</code> only
+    because it was built for that trial's window.
   </p>
 
   <h3>4. Keep the winner and write the files</h3>
@@ -195,8 +191,8 @@ results_df.to_excel("search_results.xlsx", index_label="Rank")</code></pre>
     weights, <code>search_results.xlsx</code> holds all twenty trials ranked by R&sup2; with a
     <code>window_size</code> column that version 10 did not have, and three charts are saved as
     <code>best_model_loss.png</code>, <code>best_model_predictions.png</code> and
-    <code>trial_r2_chart.png</code>. The spreadsheet is still the useful one, because it keeps the
-    losers.
+    <code>trial_r2_chart.png</code>. The spreadsheet is still the useful one, because it keeps
+    every trial, not only the winner.
   </p>
 
   <h2>What you should see</h2>
@@ -241,24 +237,8 @@ Results table saved → search_results.xlsx</code></pre>
     short look-back wins.
   </p>
   <p>
-    <strong>The gain over version 10 is real but small.</strong> Version 10's best was 0.4511;
-    version 11's is 0.4573. Six thousandths of R&sup2; is not a new model, it is a nudge. Two things
-    keep the number honest. The test sets are not identical, since a window of 10 is scored on 218
-    days and a window of 30 on 215. And the twenty trials are now spread over 972 combinations
-    rather than 243, so each setting family gets less attention: in this draw the best trial that
-    used a window of 30 scored 0.4424, well below version 10's winner at the same window. Part of
-    the apparent gain is luck of the draw, not a better idea.
-  </p>
-  <p>
-    <strong>Five trials collapsed, four of them on SGD.</strong> Trials 5, 6, 11, 13 and 16 report
-    R&sup2; from &minus;86.7 down to &minus;835.4, with RMSE in the sixties and two hundreds instead
-    of around 5. A negative R&sup2; means the model is worse than ignoring the input and always
-    replying with the average; the weights jumped about and never settled. A step of 0.1 accounts
-    for four of the five. The fifth is the surprise: trial 11 used the cautious 0.001 with SGD and
-    a narrow three-layer net and still blew up, so a large step is not the only way to fail. Nor is
-    0.1 doomed by itself &mdash; trials 7 and 14 used it with Adam and 32 hidden units and still
-    scored 0.4351 and 0.4367. What matters is the pairing, not any single value. Window length
-    played no part in the collapses; short and long windows appear on both sides of the line.
+    <strong>The gain over version 10 is small.</strong> Version 10's best was 0.4511 and version
+    11's is 0.4573, and part of that difference is luck of the draw rather than a better idea.
   </p>
   <figure class="exhibit"><img src="/images/forecast-v11-loss.png" alt="Loss curves of the winning trial, dropping sharply at the first epoch and then flattening with the training and validation lines almost on top of each other" style="max-width:100%; height:auto;"><figcaption>Loss curves of the winning trial. Training ended at epoch 23 of the 50 allowed, because early stopping had seen no improvement for 15 epochs.</figcaption></figure>
   <figure class="exhibit"><img src="/images/forecast-v11-predictions.png" alt="Actual test-day sales in pale grey and predicted values as a smooth red line following the upward trend but missing the daily swings" style="max-width:100%; height:auto;"><figcaption>Actual (grey) and predicted (red) values over the 218 test days with a window of 10. The model tracks the trend and smooths away the noise.</figcaption></figure>

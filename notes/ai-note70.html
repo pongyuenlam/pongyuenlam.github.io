@@ -82,15 +82,16 @@
 
   <h2>What the learning rate does</h2>
   <p>
-    In version 7 the optimizer nudged every weight a little after each batch. The learning rate is
-    the size of that nudge.
+    In version 7 the optimizer adjusted every weight slightly after each batch. The learning rate
+    controls the size of that adjustment.
   </p>
   <ul>
-    <li><strong>Too small</strong> &mdash; the model crawls downhill and may never get far in the
-    epochs available.</li>
-    <li><strong>Too large</strong> &mdash; the model jumps over the bottom of the valley, bouncing
-    from side to side instead of settling.</li>
-    <li><strong>About right</strong> &mdash; it arrives quickly and then stays.</li>
+    <li><strong>Too small</strong> &mdash; the weights change too little each time, so the model
+    learns slowly and may still have large errors after 100 epochs.</li>
+    <li><strong>Too large</strong> &mdash; the weights change too much each time, so the errors may
+    keep rising and falling instead of steadily becoming smaller.</li>
+    <li><strong>About right</strong> &mdash; the weights change by a suitable amount, so the model
+    learns quickly and the errors settle at a low level.</li>
   </ul>
   <p>
     There is no formula that tells you which value is right for a given dataset, so the practical
@@ -99,14 +100,18 @@
 
   <h2>What early stopping does</h2>
   <p>
-    Version 8 always ran the full hundred epochs, and always kept the weights from the last one
-    &mdash; even if the validation loss had started to climb twenty epochs earlier. Version 9
-    watches the validation loss and remembers the best weights it has seen. If the loss fails to
-    improve for ten epochs in a row, training stops and those remembered weights are restored.
+    Version 8 always completed 100 epochs and used the model from the final epoch, even if the
+    error on the validation days had started increasing earlier. One reason is that the training
+    batches are randomly shuffled, so some weight adjustments can make predictions on the
+    validation days worse. Version 9 checks that error after every epoch and saves the model
+    whenever it reaches a new lowest error. If the error does not
+    improve for 10 epochs in a row, training stops. The program then restores the saved model with
+    the lowest validation error instead of using the model from the final epoch.
   </p>
   <p>
-    Two things follow. Runs finish sooner, because a hopeless run gives up quickly. And the model
-    that survives is the best one seen, not merely the last one.
+    This has two benefits. Training can finish sooner when more epochs are no longer improving the
+    model. The program also keeps the model that performed best on the validation days, not simply
+    the model from the final epoch.
   </p>
 
   <h2>How the program works</h2>
@@ -117,8 +122,9 @@
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=lr)</code></pre>
   <p>
-    Everything inside repeats version 7's training, with one change: <code>lr</code> is now a
-    parameter, so the same function can be called with different learning rates. A fresh model is
+    Everything inside repeats version 7's training, with one change: <code>lr</code>, short for
+    <strong>learning rate</strong>, is now a parameter, so the same function can be called with
+    different learning rates. A fresh model is
     built on each call, so the three runs start from independent random weights and do not
     contaminate one another.
   </p>
@@ -131,7 +137,9 @@
     <code>best_val_loss</code> starts at infinity, so the first epoch always counts as an
     improvement. <code>best_state</code> holds a copy of the weights at that moment. The
     <code>.clone()</code> matters: without it the copy would keep changing as the model changed,
-    and there would be nothing to go back to.
+    and there would be nothing to go back to. <code>patience_ctr</code> counts how many
+    consecutive epochs have passed without an improvement in the validation error. It starts at
+    zero because no epochs have run yet.
   </p>
 
   <h3>3. Stop when improvement stops</h3>
@@ -144,8 +152,8 @@
             if patience_ctr >= PATIENCE:
                 break</code></pre>
   <p>
-    A new best resets the counter to zero. A worse epoch adds one. When ten worse epochs have piled
-    up in a row, <code>break</code> leaves the loop early. Afterwards
+    A new best resets the counter, <code>patience_ctr</code>, to zero. A worse epoch adds one to
+    it. When ten worse epochs have piled up in a row, <code>break</code> leaves the loop early. Afterwards
     <code>model.load_state_dict(best_state)</code> puts the best weights back, so the returned model
     is the one that scored best on the validation days, not the one that happened to be last.
   </p>
@@ -166,9 +174,12 @@ for lr in learning_rates:
   <pre class="code-block"><code>best = max(results, key=lambda r: r["r2"])
 torch.save(best["model"].state_dict(), "best_model.pt")</code></pre>
   <p>
-    <code>max</code> with a <code>key</code> means <em>the entry with the largest R&sup2;</em>.
-    <code>torch.save</code> writes that model's weights to a file called
-    <code>best_model.pt</code>, so a later program can reuse it without training again.
+    <code>max</code> selects a result from the <code>results</code> list. The
+    <code>key=lambda r: r["r2"]</code> part tells Python to compare the results by their R&sup2;
+    values, so the result with the highest R&sup2; is stored in <code>best</code>.
+    <code>torch.save</code> then writes that model's learned weights to a file called
+    <code>best_model.pt</code>. A later program can load this file and reuse the model without
+    training it again.
   </p>
 
   <h2>What you should see</h2>
@@ -181,16 +192,16 @@ torch.save(best["model"].state_dict(), "best_model.pt")</code></pre>
 Best learning rate: 0.01  (R² = 0.4394)
 Best model saved → best_model.pt</code></pre>
   <p>
-    Your numbers will differ, but the pattern is the lesson. The two smaller learning rates reach a
-    similar quality, and 0.01 gets there in 37 epochs rather than 68 &mdash; same destination,
-    shorter journey. The large rate of 0.1 collapses: it gives up after 12 epochs with an
-    R&sup2; of 0.09, the picture of a step too big to settle anywhere.
+    Your numbers will differ, but the pattern is what matters. The two smaller learning rates reach
+    a similar quality, and 0.01 reaches it in 37 epochs rather than 68. Both give a similar result,
+    but 0.01 needs fewer epochs. The large rate of 0.1 stops after 12 epochs with an R&sup2; of
+    0.09, because each adjustment is too large for the errors to become smaller steadily.
   </p>
   <p>
-    Two things improved since version 8. The R&sup2; moved from 0.24 to about 0.44, and a good part
-    of that came from early stopping rather than from the learning rate: keeping the best weights
-    instead of the final ones is worth real points. The run also saves its effort, finishing in
-    37 epochs instead of 100.
+    Two things improved since version 8. R&sup2; moved from 0.24 to about 0.44, and much of that
+    improvement came from early stopping rather than from the learning rate: keeping the best
+    weights instead of the final ones raises the score noticeably. Training also finishes in 37
+    epochs instead of 100.
   </p>
   <figure class="exhibit"><img src="/images/forecast-v9-loss.png" alt="Loss curves for the best run, falling and then flattening, with training and validation lines close together" style="max-width:100%; height:auto;"><figcaption>Loss curves of the winning run, stopped at epoch 37</figcaption></figure>
   <figure class="exhibit"><img src="/images/forecast-v9-predictions.png" alt="Actual test-day sales in grey and predicted values in red, the red line tracking the grey more closely than before" style="max-width:100%; height:auto;"><figcaption>Actual (grey) and predicted (red) values for the test days, best run</figcaption></figure>
@@ -432,9 +443,9 @@ uv run time_09.py</code></pre>
 
   <h2>What comes next</h2>
   <p>
-    Three trials by hand already feel repetitive. The learning rate is only one dial among many
-    &mdash; the number of hidden layers, their width, the optimizer and the window length are all
-    choices too. The next version lets the program try many combinations by itself and keep the
+    Trying three values by hand is already repetitive. The learning rate is only one setting among
+    many &mdash; the number of hidden layers, their width, the optimizer and the window length are
+    all choices too. The next version lets the program try many combinations by itself and keep the
     best.
   </p>
 </main>

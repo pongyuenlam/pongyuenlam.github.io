@@ -66,7 +66,7 @@
 
 <main>
   <h1>How to reuse the model you already trained (Forecast, version 13)?</h1>
-  <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 13, 2026 &middot; 5 min read</p>
+  <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 13, 2026 &middot; 3 min read</p>
   <p class="lang-switcher">
     <span class="current">English</span>
     <a href="/zh-HK/notes/ai-note74.html">繁體中文</a>
@@ -74,47 +74,25 @@
   </p>
 
   <p>
-    This is the last note in the forecasting series. Version 12 trained two hundred models,
-    graded each of them on days it had never seen, and saved the winner's weights to a file
-    called <code>best_model_12.pt</code>. Version 13 is the reward for that work: a program of
-    eighty-six lines that trains nothing at all. It rebuilds the same network, drops the saved
-    weights into it, and reports the same four scores in a few seconds.
-  </p>
-  <p>
-    Nothing new is learned here. The point is that the old answer comes back exactly, from a
-    file of just over half a megabyte. If you have ever trained something once and then lost
-    the habit of using it, this is the step that turns a training run into a tool.
+    This is the last note in the forecasting series. Version 12 trained two hundred models and saved
+    the winner's weights in a file called <code>best_model_12.pt</code>. Version 13 trains nothing at
+    all: it rebuilds the same network, loads those saved weights, and reports the same four scores in
+    a few seconds.
   </p>
 
   <h2>What is actually saved</h2>
   <p>
     The last line of version 12's model section is
-    <code>torch.save(best_trial["model"].state_dict(), "best_model_12.pt")</code>. The important
-    word is <code>state_dict</code>.
+    <code>torch.save(best_trial["model"].state_dict(), "best_model_12.pt")</code>. A
+    <code>state_dict</code> is a dictionary of numbers: the weights and biases of each layer, named
+    after the layer they belong to. It holds no program and no settings, and the file is a little over
+    half a megabyte.
   </p>
   <p>
-    A state dict is a dictionary of tensors: one weight matrix and one bias vector for each
-    layer, named after the layer they belong to. It holds no program, no configuration, no
-    data and no optimiser. The file produced by this run is 551,521 bytes, a little over half
-    a megabyte, and every byte of it is numbers. Because early stopping restored the best
-    weights before the model was returned, the file also holds the weights from the best of
-    the eighty epochs that version 12 actually ran, not the three hundred it was allowed.
-  </p>
-  <p>
-    So the file cannot rebuild itself. The recipe &mdash; how many layers, how wide, how long
-    the window &mdash; lives only in the source code, and version 13 has to supply it again.
-    It builds an empty shell of the same shape, then <code>load_state_dict</code> copies each
-    saved tensor into the layer whose name and shape match. If a shape does not match, PyTorch
-    raises an error: missing keys, unexpected keys, size mismatch. A wrong
-    <code>num_layers</code> or <code>hidden_size</code> therefore gives you a failed load
-    rather than a plausible-looking wrong forecast, which is a good way to fail.
-  </p>
-  <p>
-    There is one quiet failure that the load cannot catch. If you rebuild the windows from a
-    different data file, or with a different window size in the input layer, the model can
-    still load and still print four numbers; they are simply not the old numbers. Architecture
-    mistakes are loud. Data mistakes are silent, and only a comparison with a known result
-    reveals them.
+    So the file cannot rebuild itself. Version 13 has to supply the shape &mdash; how many layers, how
+    wide, and how long the window. It builds an empty network of that shape, and then
+    <code>load_state_dict</code> copies the saved numbers into it. If the shape does not match,
+    PyTorch stops with an error rather than producing a wrong forecast.
   </p>
 
   <h2>Where the config comes from</h2>
@@ -135,25 +113,16 @@ BEST_CFG = {
     "num_layers":  int(best_row["num_layers"]),
 }</code></pre>
   <p>
-    <code>read_excel</code> loads the 200-row table into a table-shaped object. Sorting it by
-    <code>r2</code>, highest first, and taking <code>.iloc[0]</code> picks the winning row. The
-    three settings that matter are then copied out of it by column name.
+    <code>read_excel</code> loads the 200-row table. Sorting it by <code>r2</code>, highest first,
+    and taking <code>.iloc[0]</code> picks the winning row, and the three settings that decide the
+    shape are copied out by column name. <code>int()</code> turns them into plain integers, because
+    layer sizes must be plain integers.
   </p>
   <p>
-    <code>int()</code> is there because a value lifted out of a spreadsheet arrives as a pandas
-    number rather than a plain Python integer, and layer sizes must be plain integers.
-  </p>
-  <p>
-    Only three of the winning row's six settings are used. Epochs, learning rate and optimiser
-    belong to a training run, and this program does not train. What it needs is the shape: the
-    window sets the input size, and the hidden size and layer count decide every layer after the
-    first.
-  </p>
-  <p>
-    Reading the table rather than typing the numbers has one practical consequence. If you rerun
-    version 12 and a different combination wins, this program follows the new winner by itself. No
-    line here needs editing, and the model on disk and the settings used to rebuild it can never
-    drift apart.
+    Only three of the six settings are needed. Epochs, learning rate and optimizer belong to a
+    training run, and this program does not train. Because the table is read rather than typed, if
+    version 12 is rerun and a different combination wins, this program follows the new winner by
+    itself.
   </p>
 
   <h2>How the program works</h2>
@@ -170,12 +139,9 @@ val_end = int(total * 0.85)
 test_loader = DataLoader(Subset(full_dataset, range(val_end, total)),
                          batch_size=BATCH_SIZE, shuffle=False)</code></pre>
   <p>
-    The data file has 1,460 rows. Cutting it into windows of 20 gives 1,441 examples, each one
-    19 numbers followed by the twentieth as the answer. The split arithmetic is unchanged from
-    version 12: <code>int(1441 * 0.85)</code> is 1,224, so the test loader holds the last 217
-    examples. Same arithmetic, same days, therefore comparable scores. Notice what is not
-    built: there is no training loader and no validation loader, because nothing is being
-    fitted. Only the test slice exists.
+    The windows and the test split are built exactly as explained in
+    <a href="ai-note73.html">How wide should the search be (version 12)</a>, with one difference:
+    only the test loader is built, because nothing is being trained.
   </p>
 
   <h3>2. Rebuild the architecture and load the weights</h3>
@@ -192,35 +158,37 @@ model.load_state_dict(torch.load(MODEL_FILE, map_location=device))
 model.to(device)
 model.eval()</code></pre>
   <p>
-    This is the same factory version 12 used, copied over so that the shape is identical: the
-    first layer reads 19 numbers, three hidden layers of 256 hold the work, and the last layer
-    returns a single number. <code>load_state_dict</code> is strict by default, which is what
-    makes the check meaningful. <code>map_location</code> puts the saved tensors on whichever
-    device is available, the model is moved to the same place, and it is switched to evaluation
-    mode before anything is measured.
+    The network is built exactly as in
+    <a href="ai-note73.html">How wide should the search be (version 12)</a>, so its shape matches the
+    saved file. The line that matters is
+    <code>model.load_state_dict(torch.load(MODEL_FILE, map_location=device))</code>:
+    <code>torch.load</code> reads the file and <code>load_state_dict</code> copies every saved number
+    into the matching layer. <code>map_location</code> places those numbers on whichever device is
+    available, and <code>model.to(device)</code> moves the network to the same place.
+    <code>model.eval()</code> switches it to test mode.
   </p>
 
-  <h3>3. Run the test loader once under no_grad</h3>
+  <h3>3. Run the test days through the saved model</h3>
   <pre class="code-block"><code>preds, actuals = [], []
 with torch.no_grad():
     for xb, yb in test_loader:
         preds.extend(model(xb.to(device)).cpu().numpy())
         actuals.extend(yb.numpy())</code></pre>
   <p>
-    <code>torch.no_grad()</code> tells PyTorch not to record the operations for later
-    differentiation. Nothing here will be improved by a gradient, so the bookkeeping is pure
-    waste; switching it off is both faster and lighter. The predictions and the true values are
-    collected in the same order, because the loader shuffles nothing.
+    <code>torch.no_grad()</code> tells PyTorch that nothing is being learned here. The program is only
+    making predictions, not improving the model, so this setting saves time and memory. The
+    predictions and the true values stay in the same order, because the loader does not shuffle them.
   </p>
   <p>
-    <code>model.eval()</code> is a different switch, and it is the one beginners forget. Some
-    layers behave one way while training and another way at test time: dropout throws units
-    away during training and passes all of them afterwards, and batch normalisation uses the
-    current batch's statistics during training and its stored averages afterwards. Evaluation
-    mode selects the second behaviour. This particular network is built from
-    <code>nn.Linear</code> and <code>nn.ReLU</code> only, so today <code>eval()</code> changes
-    no number. It is in the file because the day a dropout layer is added, forgetting it would
-    quietly change the predictions instead of raising an error.
+    <code>model.eval()</code> puts the network into testing mode. Some kinds of layers behave
+    differently while training and while testing, and this setting selects the testing behaviour.
+    This network has only simple layers, so it makes no difference here, but it keeps the program
+    correct if another kind of layer is added later.
+  </p>
+  <p>
+    Because the model is already trained, you can also use it on different data. Put the new sales
+    values in a CSV file in the same format, keep the same window size, and run the program again. It
+    loads the saved weights and produces predictions for those new days instead of the 217 test days.
   </p>
 
   <h3>4. Compute the four measures</h3>
@@ -229,12 +197,10 @@ mse  = torch.mean((p - a) ** 2).item()
 rmse = torch.sqrt(torch.tensor(mse)).item()
 r2   = (1 - torch.sum((a - p) ** 2) / torch.sum((a - torch.mean(a)) ** 2)).item()</code></pre>
   <p>
-    MAE averages the absolute misses and stays in the units of the data. MSE squares them
-    first, which punishes large misses harder, and RMSE takes the square root so the result is
-    back in those original units. R&sup2; compares the model's squared error with the squared
-    error of the simplest possible answer, always replying with the average of the test days:
-    1.0 is perfect, 0 is no better than that flat average, and a negative value is worse than
-    it.
+    MAE averages the size of the misses, MSE squares them first, and RMSE takes the square root so the
+    number is back in sales dollars. R&sup2; compares the model with always predicting the average of
+    the test days, as explained in
+    <a href="ai-note69.html">How to measure the model on data it has never seen (version 8)</a>.
   </p>
 
   <h2>What you should see</h2>
@@ -251,13 +217,9 @@ Test Set Metrics:
   R²:   0.4790
 Saved: best_model_predictions.png</code></pre>
   <p>
-    The four numbers match what version 12 printed for its winner to the fourth decimal place:
-    R&sup2; 0.4790, MAE 4.1235, RMSE 5.1695, and MSE 26.7236, which is the square of the RMSE
-    up to rounding. Nothing
-    was trained, nothing was shuffled, and no random seed took part in the scoring. This is not
-    a lucky repeat; it is the same arithmetic on the same weights over the same 217 days. A
-    saved model is a promise that the answer can be produced again, and this is the evidence
-    that the promise holds.
+    The four numbers match what version 12 printed for its winner exactly, to the fourth decimal
+    place. Nothing was trained, nothing was shuffled, and no random seed took part in the scoring. The
+    same weights on the same 217 days give the same answer, which is what a saved model is for.
   </p>
   <figure class="exhibit"><img src="/images/forecast-v13-predictions.png" alt="Actual daily sales in pale grey and the saved model's predictions as a red line that follows the upward trend while smoothing the day-to-day swings" style="max-width:100%; height:auto;"><figcaption>Actual (grey) and predicted (red) values over the 217 test days, produced by loading <code>best_model_12.pt</code> and running no training. The chart is titled with R&sup2; 0.4790 and RMSE 5.1695.</figcaption></figure>
 
@@ -273,22 +235,17 @@ Saved: best_model_predictions.png</code></pre>
     to pick it up again.
   </p>
   <p>
-    What the model can do is modest and useful: it follows the level and the slow upward drift
-    of the series, turning 19 past values into one number in a fraction of a second. What it
-    cannot do is follow the daily swings. An R&sup2; of about 0.48 means roughly half of the
-    variation in the test days is still unexplained. The network reads raw lagged values through
-    plain linear layers and ReLU. It has no idea what day of the week it is, no notion of a
-    month or a holiday, and no mechanism built for sequences. It is a feed-forward network
-    doing its best with a short, unadorned history.
+    What the model can do is modest: it follows the level and the slow upward drift of the series,
+    turning 19 past values into one number in a fraction of a second. It cannot follow the daily
+    swings; an R&sup2; of about 0.48 means roughly half of the variation in the test days is still
+    unexplained. The network sees only the recent sales values, so it does not know the day of the
+    week, the month or a holiday.
   </p>
   <p>
-    The competent next step is not a bigger search. It is better inputs or a different shape of
-    model: add calendar context such as day-of-week and month, or use a model designed for
-    sequences, which can carry a memory of longer patterns. One practical obstacle comes first.
-    The time column in <code>time_series.csv</code> is a step number running from 1 to 1,460,
-    not a date, so day-of-week and month cannot be computed until real dates are attached to the
-    rows. None of this is a promise of a better score; the only way to know is to build it and
-    grade it on the same kind of held-out days.
+    A better next step is not a bigger search but better inputs or a different kind of model, such as
+    one that can remember longer patterns. One obstacle comes first: the time column in
+    <code>time_series.csv</code> is a step number from 1 to 1,460, not a date, so day-of-week and month
+    cannot be worked out until real dates are attached to the rows.
   </p>
 
   <h2>The whole program</h2>

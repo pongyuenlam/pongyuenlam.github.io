@@ -210,6 +210,32 @@ pre.code-block {
   margin: 0.5rem 0 1.5rem;
 }
 
+pre.terminal-output {
+  position: relative;
+  background: #1f2937;
+  color: #f9fafb;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  padding: 2.25rem 1.25rem 1rem;
+  overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0.5rem 0 1.5rem;
+}
+
+pre.terminal-output::before {
+  content: "Terminal output";
+  position: absolute;
+  top: 0.65rem;
+  left: 1.25rem;
+  color: #86efac;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .copy-btn {
   position: absolute;
   top: 0.6rem;

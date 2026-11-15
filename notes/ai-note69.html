@@ -83,12 +83,13 @@
 
   <h2>Why three parts, not two</h2>
   <p>
-    The validation days are used while training is still going on. Every epoch the program measures
-    the loss on them, so you can see whether the model is improving or beginning to memorise. But
-    that same number quietly steers the work as well: it is what you glance at when deciding
-    whether to train for more epochs, and later versions will use it to choose between settings. A
-    measure that has been consulted this many times ends up a little flattering, in the same way
-    that a practice exam you have already seen twice stops being a fair test of what you know.
+    The validation days are used while training is still going on. After every epoch, the program
+    measures their loss, so you can see whether the model is improving or beginning to memorise.
+    These results also guide your decisions: whether to train for more epochs and, in later
+    versions, which settings to choose. Because the validation results influence those decisions,
+    they stop being a completely independent check. It is like using the same practice exam
+    repeatedly: a good score may reflect familiarity with those particular questions rather than
+    how well you would do on new ones.
   </p>
   <p>
     The test part deals with that problem by being kept out of the room. It is sealed before
@@ -135,7 +136,7 @@ test_size = total_windows - train_size - val_size</code></pre>
   <p>
     R&sup2; of 0.24 here is the number worth staring at. The model is clearly better than guessing
     the average, but it accounts for only about a quarter of the movement in the test days. This
-    is an honest, modest result, and versions 9 and 10 try to improve it rather than hide it.
+    is an honest, modest result, and versions 9 and 10 try to improve it.
   </p>
 
   <h2>How the program works</h2>
@@ -194,15 +195,17 @@ r2 = 1 - ss_res / ss_tot</code></pre>
     the squared differences; RMSE takes the square root of MSE.
   </p>
   <p>
-    R&sup2; needs two totals. <code>ss_res</code> is the squared error left by the model.
-    <code>ss_tot</code> is the squared error of the laziest possible forecast &mdash; always
-    answering with the average of the test days. Dividing one by the other says how much of the
-    lazy error remains, and subtracting from 1 turns that into how much was removed.
+    R&sup2; compares the model with a simple alternative: if we did not have a useful model, we
+    could use the average sales value of the test days as the prediction for every day.
+    <code>ss_res</code> is the total squared error from the model, and <code>ss_tot</code> is the
+    total squared error from this average-based prediction. Dividing one by the other shows how
+    much error remains compared with the simple average, and subtracting from 1 shows how much
+    error the model removes.
   </p>
   <p>
-    If the model were as lazy as the average, the two totals would be equal, the ratio would be 1,
-    and R&sup2; would be 0. If the model were perfect, <code>ss_res</code> would be 0 and R&sup2;
-    would be 1.
+    If the model performs no better than the average-based prediction, the two totals are equal,
+    the ratio is 1, and R&sup2; is 0. If the model is perfect, <code>ss_res</code> is 0 and
+    R&sup2; is 1.
   </p>
 
   <h2>What you should see</h2>

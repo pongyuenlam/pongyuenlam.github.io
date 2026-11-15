@@ -74,7 +74,7 @@
   </p>
 
   <p>
-    This is version 1 of a new series that builds, one small step at a time, a program that
+    This is version 1 of a series that builds, one small step at a time, a program that
     forecasts future sales from past sales. Version 1 contains no AI at all. It reads a file of
     daily sales numbers and draws one line chart. That is deliberate: before the computer can
     predict anything, you must first look at the data you are asking it to learn from.
@@ -92,6 +92,12 @@
 2.0,33.40659
 3.0,37.858486
 4.0,29.14184</code></pre>
+  <p>
+    The day numbers are written as <code>1.0</code>, <code>2.0</code> and so on rather than
+    <code>1</code>, <code>2</code>: the <code>.0</code> marks them as decimal (floating-point)
+    numbers, the same kind of number as the sales figures, so the file uses one consistent
+    numeric format throughout.
+  </p>
   <p>
     A record of numbers arranged in time order like this is called a <strong>time series</strong>,
     which is where the file gets its name. Forecasting means using the first part of such a
@@ -117,7 +123,7 @@ series = df['series'].values</code></pre>
     The first line reads the CSV file into <code>df</code>, a <strong>data frame</strong> &mdash;
     pandas' name for a table with named columns. The second line picks out one column by name,
     <code>df['series']</code>, and <code>.values</code> strips away the table dressing to leave
-    just the bare numbers: 1,460 sales figures in a row, ready to be drawn or crunched.
+    just the bare numbers: 1,460 sales figures in a row, ready to be drawn or used in calculations.
   </p>
   <p>
     Notice what the program does <em>not</em> do with the <code>time</code> column: nothing. In
@@ -134,26 +140,26 @@ plt.grid(True)
 plt.show()</code></pre>
   <p>
     <code>plt.plot(series)</code> draws one line through all 1,460 numbers. The next three lines
-    add the finishing touches: a title, a label under the horizontal axis, and a label beside the
-    vertical axis. <code>plt.grid(True)</code> adds light background lines that make it easier to
-    read values off the chart. None of these four lines changes the data; they only change how
-    it looks.
+    add the finishing touches: <code>plt.title('Sales per day')</code> for the title,
+    <code>plt.xlabel('Day')</code> for the label under the
+    horizontal axis, and <code>plt.ylabel('Sales-HK$')</code> for the label beside the vertical
+    axis. <code>plt.grid(True)</code> adds light background lines that make it easier to
+    read values off the chart.
   </p>
   <p>
-    The last line, <code>plt.show()</code>, is what actually puts the window on your screen. Up
-    to that point the chart has only been built in memory.
+    The last line, <code>plt.show()</code>, is what actually puts the window on your screen.
   </p>
 
   <h2>What you should see</h2>
   <p>
     A window opens with a line that climbs from left to right: sales start near HK$30 per day
-    and end near HK$160, with wiggles along the way.
+    and end near HK$160, with small ups and downs along the way.
   </p>
   <figure class="exhibit"><img src="/images/sales-per-day-chart.png" alt="Line chart of daily sales climbing from about HK$30 to about HK$160" style="max-width:100%; height:auto;"><figcaption>Sales per day, drawn by time_01.py</figcaption></figure>
   <p>
     Two things are worth noticing before any forecasting begins. First, the series
     <strong>trends upward</strong> &mdash; later days are systematically higher than earlier ones.
-    Second, the wiggles are <strong>random-looking noise</strong> around that trend. Versions to
+    Second, these ups and downs are <strong>random-looking noise</strong> around that trend. Versions to
     come will have to deal with both facts, and seeing them with your own eyes is the reason
     this chart is drawn first.
   </p>

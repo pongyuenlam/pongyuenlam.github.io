@@ -113,13 +113,13 @@ def create_sliding_windows(data, window_size, shift):
   </p>
 
   <h3>2. Make a longer series</h3>
-  <pre class="code-block"><code>data = torch.arange(1, 60)
+  <pre class="code-block"><code>data = torch.arange(1, 61)
 window_size = 30</code></pre>
   <p>
-    <code>torch.arange(1, 60)</code> builds the whole numbers from 1 up to 59. The 60 is where the
-    sequence stops, not a number that appears, so the series holds 59 values &mdash; close enough
-    to two months of daily sales. The second line states the window length once, in a variable
-    whose name says exactly what it is.
+    <code>torch.arange(1, 61)</code> builds the whole numbers from 1 up to 60. The 61 is the
+    stopping point and is not included by Python. So the series holds 60 values &mdash; two months
+    of daily sales. The second line states the window length once, in a variable whose name says
+    exactly what it is.
   </p>
 
   <h3>3. Call the function</h3>
@@ -136,24 +136,24 @@ window_size = 30</code></pre>
     print(window.numpy())</code></pre>
   <p>
     The loop is unchanged from version 2: take the pieces one at a time and print each as a plain
-    array. What has changed is how many lines come out. With 59 numbers and a window of 30, there
-    are 30 possible starting positions, so 30 windows are printed.
+    array. What has changed is how many lines come out. With 60 numbers and a window of 30, there
+    are 60 &minus; 30 + 1 = 31 possible starting positions, so 31 windows are printed, as shown below.
   </p>
 
   <h2>What you should see</h2>
   <p>
-    Thirty windows, each holding 30 numbers. The first two and the last one look like this:
+    Thirty-one windows, each holding 30 numbers. The first two and the last one look like this:
   </p>
   <pre class="code-block no-copy"><code>[ 1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
  25 26 27 28 29 30]
 [ 2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25
  26 27 28 29 30 31]
 ...
-[30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53
- 54 55 56 57 58 59]</code></pre>
+[31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54
+ 55 56 57 58 59 60]</code></pre>
   <p>
     Each window starts one number later than the one before it, and the whole series has been
-    swept from left to right. The last window ends on 59, the final value in the series, which
+    swept from left to right. The last window ends on 60, the final value in the series, which
     confirms that the sweep did reach the end.
   </p>
 
@@ -165,7 +165,7 @@ window_size = 30</code></pre>
 def create_sliding_windows(data, window_size, shift):
     windows = data.unfold(0, window_size, shift)
     return windows
-data = torch.arange(1, 60)
+data = torch.arange(1, 61)
 window_size = 30
 windows = create_sliding_windows(data, window_size, 1)
 for window in windows:
@@ -184,7 +184,7 @@ uv sync
 uv run time_03.py</code></pre>
   <p>
     The first line records which Python version this folder uses, and the second installs every
-    package that <code>pyproject.toml</code> lists. The third line prints the 30 windows in the
+    package that <code>pyproject.toml</code> lists. The third line prints the 31 windows in the
     terminal.
   </p>
   <p>

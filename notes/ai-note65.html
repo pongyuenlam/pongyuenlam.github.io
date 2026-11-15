@@ -77,36 +77,34 @@
     This is version 4 of the forecasting series, and the last version before training begins.
     Version 4 cuts every window into two parts: the <strong>features</strong>, which are the days
     the model is allowed to look at, and the <strong>target</strong>, which is the day it must
-    guess. It also switches from the ten toy numbers of version 2 to the real sales file, so the
-    counts are now worth reading.
+    guess.
   </p>
 
   <h2>Features and target</h2>
   <p>
     Take one window of 30 days. The first 29 days are what the model will see; the 30th day is
-    what it must predict. That single cut turns a window into one teachable example, and the
-    words used for the two halves are worth remembering, because every later version uses them:
+    what it must predict. This turns each window into one training example. The two parts have
+    names that are worth remembering, because every later version uses them:
   </p>
   <ul>
     <li><strong>Features</strong> &mdash; the 29 known days. The input.</li>
     <li><strong>Target</strong> &mdash; the 30th day. The answer the model is graded against.</li>
   </ul>
   <p>
-    Because every window loses one number to the target, a window of 30 yields 29 features, not
-    30. That is where the number 29 comes from everywhere in this program.
+    Because the last sales values in every window is used as the target, a window of 30 yields 29
+    features, not 30. That is why 29 appears throughout this program.
   </p>
 
   <h2>How the program works</h2>
 
   <h3>1. Import torch, its data tools, and pandas</h3>
   <pre class="code-block"><code>import torch
-from torch.utils.data import TensorDataset, DataLoader, Subset
+from torch.utils.data import TensorDataset, DataLoader
 import pandas as pd</code></pre>
   <p>
-    <code>TensorDataset</code> pairs up features with targets so the two never drift apart.
-    <code>DataLoader</code> serves those pairs to the model in batches. <code>Subset</code> is
-    imported for the next version and is not used yet. <code>pandas</code> reads the CSV file, as
-    in version 1.
+    <code>TensorDataset</code> pairs up features with targets.
+    <code>DataLoader</code> serves those pairs to the model in batches. <code>pandas</code> reads
+    the CSV file.
   </p>
 
   <h3>2. Cut and split in one function</h3>
@@ -127,10 +125,7 @@ import pandas as pd</code></pre>
     <em>every row, columns 0 up to but not including the last</em>, which is the 29 known days.
     <code>windows[0:row_n, col_n-1:col_n]</code> means <em>every row, the last column only</em>,
     which is the answer. The comment on each line says the same thing in fewer words, and the
-    last line returns both halves.
-  </p>
-  <p>
-    Note that the two slices do not overlap: no number is counted as both an input and an answer.
+    last line returns features and targets.
   </p>
 
   <h3>3. Load the real sales file</h3>
@@ -140,9 +135,9 @@ series_tensor = torch.tensor(series, dtype=torch.float32)
 window_size = 30</code></pre>
   <p>
     The first two lines bring in the 1,460 daily sales figures. The third line converts them from
-    a plain array into a PyTorch <strong>tensor</strong>, the container the library calculates
-    with, and <code>dtype=torch.float32</code> makes each number a decimal rather than an integer
-    &mdash; required, because sales figures have cents.
+    a plain array into a PyTorch <strong>tensor</strong>, which is simply the format PyTorch uses
+    to do its calculations, and <code>dtype=torch.float32</code> makes each number a decimal rather
+    than an integer &mdash; required, because sales figures have cents.
   </p>
 
   <h3>4. Build the dataset of examples</h3>
@@ -151,18 +146,13 @@ dataset = TensorDataset(features, targets)
 batch_size = 32
 train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)</code></pre>
   <p>
-    The first line calls the function and gets two lists back, the same length and in the same
-    order: the first 29-day input belongs with the first answer, the second 29-day input with the
-    second answer, and so on. <code>TensorDataset</code> glues each input to its own answer, so the two
-    can never be separated by accident. <code>DataLoader</code> then hands the examples to the
-    model 32 at a time instead of all 1,431 at once, and <code>shuffle=True</code> reshuffles the
-    order before every pass. The reshuffling matters because the days arrive in date order;
-    without it the model keeps seeing the same sequence and may learn a habit that comes from the
-    order rather than from the sales themselves.
-  </p>
-  <p>
-    1,431 examples handed over 32 at a time makes 45 groups: 44 full ones and a last group
-    holding the remaining 23.
+    The first line calls the function, <code>create_sliding_windows_with_target</code>, to give us
+    two lists, <code>features</code> and <code>targets</code>. The first list holds the 29-day
+    inputs, and the second holds the matching answers. <code>TensorDataset</code> keeps each input
+    together with its own answer. <code>DataLoader</code> then gives the examples to the model in
+    groups of 32 instead of all 1,431 at once. Setting <code>shuffle=True</code> changes the order
+    of the examples each time the model sees them, so it learns from the sales values rather than
+    memorising their date order.
   </p>
 
   <h3>5. Print what was built</h3>
@@ -185,8 +175,7 @@ print(f"Target shape: {targets.shape}")</code></pre>
     The loop runs three times, once for each of the first three examples. Inside it, the first
     <code>print</code> labels the example, the second prints the 29 features rounded to two
     decimals, and the third prints the one target. The <code>:.2f</code> inside the braces means
-    <em>show two decimal places</em>; without it the screen would fill with the full 17-digit
-    version of every number.
+    <em>show two decimal places</em>.
   </p>
 
   <h2>What you should see</h2>
@@ -201,18 +190,22 @@ Window 1:
 Features (previous 29 days): ['29.40', '33.41', '37.86', ... '27.24', '28.71']
 Target (next day): 27.08</code></pre>
   <p>
-    Three numbers explain the whole output. The series has 1,460 days. A window of 30 over those
-    1,460 days has 1,460 &minus; 30 + 1 = 1,431 possible starting positions, so there are 1,431
-    examples. The first starting position holds days 1 to 30, so it ends with day 30. The last
-    starting position is 1,431: it holds days 1,431 to 1,460, so it ends with day 1,460, the final
-    day in the file. Each example holds 29 inputs and 1 answer, which is why the two shapes are
-    <code>[1431, 29]</code> and <code>[1431, 1]</code>.
+    The series has 1,460 days, and each window covers
+    30 of them. The first window contains days <code>[1, 2, 3, ..., 30]</code>, the second
+    contains days <code>[2, 3, 4, ..., 31]</code>, and so on, with each window starting one day
+    later than the previous one.
   </p>
   <p>
-    Look closely at the first example: the last feature is 28.71 and the target is 27.08. Then
-    look at the second window in the full output. Its features begin where the first one ended,
-    starting with 33.41, and its target is 39.27. That is exactly what a sliding window should do:
-    shift by one day, keep the same 30 numbers, and let the earliest one fall away.
+    You can calculate a window's starting day from its ending day:
+    <code>starting day = ending day &minus; 30 + 1</code>. The second window ends on day 31, so
+    it starts on day <code>31 &minus; 30 + 1 = 2</code>. The last window ends on day 1,460, so
+    it starts on day <code>1,460 &minus; 30 + 1 = 1,431</code>. The windows therefore start on
+    days 1, 2, and so on up to 1,431, giving 1,431 windows in total.
+  </p>
+  <p>
+    Each window becomes one training example. Its first 29 values are the inputs, and its last
+    value is the target. That is why the feature shape is <code>[1431, 29]</code> and the target
+    shape is <code>[1431, 1]</code>: there are 1,431 examples, each with 29 inputs and 1 answer.
   </p>
 
   <h2>The whole program</h2>
@@ -220,7 +213,7 @@ Target (next day): 27.08</code></pre>
     The pieces above, put back together. This is the complete file, 27 lines in all:
   </p>
   <pre class="code-block"><code>import torch
-from torch.utils.data import TensorDataset, DataLoader, Subset
+from torch.utils.data import TensorDataset, DataLoader
 import pandas as pd
 def create_sliding_windows_with_target(data, window_size, shift=1):
     windows = data.unfold(0, window_size, shift)

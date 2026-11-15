@@ -99,36 +99,17 @@
     <code>N_TRIALS = 200</code>, so the program draws 200 of those 5,760 at random and trains each
     one. That is a little under 3.5 per cent of the space.
   </p>
-  <p>
-    Nothing here is clever. A wider space and a bigger sample are both bought with computer time, and
-    that bill is paid in a straight line: twice the trials, twice the hours. Version 11 finished
-    quickly enough to read its table on screen. Two hundred rows do not fit on a screen, which is why
-    this version leans on <code>search_results_12.xlsx</code> rather than the terminal. The table is
-    the same program's output, sorted and saved so it can be paged through afterwards.
-  </p>
 
-  <h2>What "diverged" means, and how often it happened</h2>
+  <h2>What "diverged" means</h2>
   <p>
-    R&sup2; is measured against a lazy baseline. A score of 1.0 is a perfect forecast, 0.0 is exactly
-    as good as ignoring the input and always replying with the average, and a negative score is worse
-    than that lazy reply. So a large negative number is not a near miss. It means the model's guesses
-    were further from the truth than a flat line would have been, which in practice means the weights
-    jumped about during training and never settled. The program does not treat this as an error; it
-    records the score and moves on to the next trial.
-  </p>
-  <p>
-    In this run, 81 of the 200 trials ended with a negative R&sup2;. Almost all of the damage came from
-    one optimiser. Every one of the 74 trials that used SGD finished below zero &mdash; the best of
-    them only reached &minus;1.4951. Adam had 65 trials and 5 of them collapsed; RMSprop had 61 and
-    only 2 collapsed, which is why it supplied the winner. The best score by optimiser was 0.4790 for
-    RMSprop, 0.4660 for Adam and &minus;1.4951 for SGD. The worst single result was &minus;518.1212
-    with an RMSE of 163.8729, against RMSE values around 5.2 for the good trials.
-  </p>
-  <p>
-    The collapses are spread across every learning rate rather than concentrated at the top: 12 at
-    0.0001, 13 at 0.001, 16 at 0.005, 14 at 0.01, 7 at 0.05 and 19 at 0.1. A large step is one way to
-    fail, not the only way. What separates the two groups is the pairing of optimiser and step size,
-    not either value on its own.
+    R&sup2; is measured against a simple alternative: predicting the average sales value for every
+    day. That comparison is explained in
+    <a href="ai-note69.html">How to measure the model on data it has never seen (version 8)</a>. A
+    score of 1.0 is a perfect forecast. A score of 0.0 is exactly as good as that average-based
+    prediction. A negative score is worse. So a large negative number is not a near miss. It means
+    the model's guesses were further from the truth than a flat average line would have been. In
+    practice, the weights changed too much during training and the errors did not become smaller. The
+    program does not treat this as an error. It records the score and moves on to the next trial.
   </p>
 
   <h2>What you should see</h2>
@@ -167,33 +148,23 @@ Results table saved → search_results_12.xlsx</code></pre>
   <p>
     Trial 70 is the winner: 300 epochs, learning rate 0.0001, RMSprop, 256 hidden units, 3 layers and
     a window of 20. Early stopping ended its training after 80 of the 300 allowed epochs, so the extra
-    epochs in the setting were never used. Its test set has 217 days in it, because a window of 20
-    turns 1,460 days into 1,441 examples and the last 15 per cent of those is the test block.
+    epochs in the setting were never used.
   </p>
   <p>
-    <strong>Two hundred trials bought 0.0217 of R&sup2;.</strong> Version 11's best was 0.4573; this
-    one is 0.4790. In exchange for ten times the computing, the score moved by about two hundredths.
-    Only 25 of the 200 trials beat 0.45 at all, and only 2 beat 0.47. The search did not find a
-    different kind of model; it found a slightly better corner of the same one.
+    <strong>Two hundred trials bought 0.0217 of R&sup2;.</strong> Version 11's best was 0.4573 and
+    this one is 0.4790, so ten times the computing moved the score by 0.0217.
   </p>
   <p>
     <strong>Best-of-20 and best-of-200 are not the same measurement.</strong> A larger draw has more
-    chances to catch a lucky configuration, so part of the gain is the size of the net rather than the
-    quality of the fishing. The honest reading is that the true advantage of 200 trials is smaller
-    than 0.0217, and that most of what the extra trials bought was confidence that no much better
-    corner was being missed.
+    chances of catching a lucky configuration.
   </p>
   <p>
-    <strong>The winner takes very small steps.</strong> A learning rate of 0.0001 is the smallest
-    value on offer, and the intuition that a bigger step learns faster would predict it to be the
-    worst. It won instead: the best score at each learning rate was 0.4790 at 0.0001, 0.4733 at 0.001,
-    0.4616 at 0.005, 0.4556 at 0.01, 0.4660 at 0.05 and 0.4483 at 0.1. RMSprop rescales each step as
-    it goes, so a tiny base rate is not as timid as it looks with a plain optimiser. The search found
-    what it found, and the explanation is worth less than the number.
+    <strong>The winner takes very small steps.</strong> The smallest learning rate on offer, 0.0001,
+    won with 0.4790.
   </p>
   <p>
-    The window answer also moved. The best score at each window length was 0.4660 at 10, 0.4790 at 20,
-    0.4733 at 30 and 0.4552 at 50. Version 11 pointed at 10; this larger search points at 20.
+    The window answer also moved: version 11 pointed at a window of 10, while this larger search
+    points at 20.
   </p>
   <figure class="exhibit"><img src="/images/forecast-v12-loss.png" alt="Loss curves of the winning trial, with a training line and a validation line drawn by the program" style="max-width:100%; height:auto;"><figcaption>Loss curves of the winning trial, drawn by the program's own plotting code. Training stopped after 80 of the 300 allowed epochs, when early stopping had seen no improvement for 30 epochs.</figcaption></figure>
   <figure class="exhibit"><img src="/images/forecast-v12-predictions.png" alt="Actual values in pale grey and predicted values as a red line across the test days of the winning trial" style="max-width:100%; height:auto;"><figcaption>Actual (grey) and predicted (red) values on the 217 test days of the winning trial, with a window of 20.</figcaption></figure>

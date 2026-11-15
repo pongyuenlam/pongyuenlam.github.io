@@ -83,17 +83,17 @@
 
   <h2>Why sliding windows?</h2>
   <p>
-    A forecasting model learns one kind of sentence: <em>given these recent values, the next
-    value is that</em>. To train it, you need many examples of that sentence, and a long series
-    of sales figures does not look like a pile of examples at all &mdash; it looks like one long
-    strip.
+    A forecasting model learns one basic pattern: <em>given these recent values, predict the next
+    value</em>. For example, with sales figures from 10 time periods, we can use the values from
+    periods 1 to 4 to predict period 5, the values from periods 2 to 5 to predict period 6, the
+    values from periods 3 to 6 to predict period 7, and so on.
   </p>
   <p>
-    A <strong>sliding window</strong> turns the strip into examples. Cut out a short piece of the
-    series, slide one step forward, cut again, and repeat. Each piece is then one example:
-    the numbers inside it except the last are the <em>given</em> part, and the last number is
-    the <em>answer</em>. A model that trains on many such pieces learns how the recent past
-    shapes the next day.
+    This way of making training examples is called a <strong>sliding window</strong>. Take a short
+    piece of the series, move one time period forward, take the next piece, and repeat. In each
+    piece, every value except the last is what the model is <em>given</em>, and the last value is
+    the <em>answer</em> it must learn to predict. With many such examples, the model learns how
+    recent sales relate to the next day's sales.
   </p>
 
   <h2>How the program works</h2>
@@ -127,20 +127,18 @@ windows = data.unfold(0, 5, 1)</code></pre>
     third, <code>1</code>, is the <strong>step</strong>: the window slides forward one position
     each time.
   </p>
-  <p>
-    With ten numbers, a window of five can start at position 0, at position 1, and so on up to
-    position 5, because the window needs five numbers and the last one that still fits begins at
-    5. That gives six starting positions, so <code>windows</code> holds 6 pieces of 5 numbers.
-  </p>
-
   <h3>4. Show each window</h3>
   <pre class="code-block"><code>for window in windows:
     print(window.numpy())</code></pre>
   <p>
-    The <code>for</code> line takes the pieces one at a time; everything indented under it runs
-    once per piece. <code>window.numpy()</code> converts the PyTorch piece into a plain array
-    for tidy printing. Six lines appear, and on each line the window has slid one step to the
-    right.
+    The <code>for</code> loop takes the windows one at a time, and the indented line runs once for
+    each of them. <code>window.numpy()</code> converts the current window into a plain array so it
+    prints neatly.
+  </p>
+
+  <p>
+    With ten numbers, a window of five, we can create <code>[0 1 2 3 4]</code>,
+    <code>[1 2 3 4 5]</code>, <code>[2 3 4 5 6]</code> as shown below.
   </p>
 
   <h2>What you should see</h2>
@@ -154,14 +152,10 @@ windows = data.unfold(0, 5, 1)</code></pre>
   <p>
     The first line is the raw series. If the first four numbers of a window are the
     <em>given</em> days and the last number is the day to predict, then the program has already
-    manufactured six training examples out of one strip of ten numbers. That is the whole trick
-    this version teaches.
+    manufactured six training examples out of one series of ten numbers.
   </p>
 
   <h2>The whole program</h2>
-  <p>
-    The pieces above, put back together. This is the complete file, 11 lines in all:
-  </p>
   <pre class="code-block"><code>import torch
 data = torch.arange(10)
 print(data)
@@ -185,7 +179,7 @@ uv sync
 uv run time_02.py</code></pre>
   <p>
     The first line records which Python version this folder uses, and the second installs every
-    package that <code>pyproject.toml</code> lists. The third line prints the strip and its
+    package that <code>pyproject.toml</code> lists. The third line prints the series and its
     windows in the terminal.
   </p>
   <p>

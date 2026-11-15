@@ -113,11 +113,11 @@ print("Features and targets shapes:")
 print(features.shape)
 print(targets.shape)
 full_dataset = TensorDataset(features, targets)</code></pre>
-  <p>
-    This is version 5's work, plus three extra <code>print</code> lines that show the shapes as
-    they are built: 1,460 days, then 1,431 rows of 29 features, then 1,431 rows of 1 target.
-    Reading the shapes as you go is a cheap way to catch a mistake early.
-  </p>
+  <pre class="terminal-output"><code>Series tensor shape:
+torch.Size([1460])
+Features and targets shapes:
+torch.Size([1431, 29])
+torch.Size([1431, 1])</code></pre>
 
   <h3>2. Choose where to cut</h3>
   <pre class="code-block"><code>total_windows = len(full_dataset)
@@ -125,14 +125,14 @@ train_size = int(total_windows * 0.8)  # 80% for training, 20% for validation
 train_indices = list(range(train_size))
 val_indices = list(range(train_size, total_windows))</code></pre>
   <p>
-    <code>len(full_dataset)</code> is 1,431. Eighty per cent of 1,431 is 1,144.8, and
+    <code>len(full_dataset)</code> is 1,431. 80% of 1,431 is 1,144.8, and
     <code>int()</code> throws away everything after the decimal point, so <code>train_size</code>
     becomes 1,144.
   </p>
   <p>
     <code>range(1144)</code> counts 0 up to 1,143: the first 1,144 examples, the earliest days.
     <code>range(1144, 1431)</code> counts from 1,144 to 1,430: the remaining 287 examples, the
-    latest days. Nothing is shuffled, so the two lists are two unbroken stretches of time.
+    latest days.
   </p>
 
   <h3>3. Make two views of the one dataset</h3>
@@ -148,9 +148,16 @@ val_dataset = Subset(full_dataset, val_indices)</code></pre>
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)</code></pre>
   <p>
-    The training loader shuffles, which helps the model avoid picking up habits from the order in
-    which the days happen to be served. The validation loader does not shuffle, so the same
-    examples are always measured in the same order and two runs can be compared fairly.
+    Each time the model goes through the training data, the training loader shuffles the order of
+    the windows. It does not change the chronological order of the days inside each window. This
+    helps the model learn from the sales values within the windows rather than from the order in
+    which the windows are presented.
+  </p>
+  <p>
+    The validation loader keeps the examples in the same order every time. If two runs produce
+    different error measurements for the validation days, you know that the difference is not
+    simply because the examples were presented in a
+    different order.
   </p>
 
   <h3>5. Print the counts</h3>
@@ -158,10 +165,10 @@ val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)</code
 print(f"Total number of windows: {total_windows}")
 print(f"Training windows: {len(train_dataset)}")
 print(f"Validation windows: {len(val_dataset)}")</code></pre>
-  <p>
-    Three numbers should add up: 1,144 training windows plus 287 validation windows equals the
-    1,431 built from 1,460 days.
-  </p>
+  <pre class="terminal-output"><code>Original series length: 1460
+Total number of windows: 1431
+Training windows: 1144
+Validation windows: 287</code></pre>
 
   <h3>6. Draw the split</h3>
   <pre class="code-block"><code>plt.plot(range(train_size), series[:train_size], 'b-', label='Training Data')
@@ -175,25 +182,14 @@ plt.grid(True)
 plt.show()</code></pre>
   <p>
     The first two lines draw the sales figures in two colours: <code>'b-'</code> is a blue line
-    for the training days, <code>'r-'</code> a red line for the validation days. The third adds a
-    black dashed vertical line at the cut. <code>plt.legend()</code> prints the small key that
+    for the training days, <code>'r-'</code> a red line for the validation days. The third uses
+    <code>plt.axvline</code> to add a black dashed vertical line at the cut. <code>plt.legend()</code> prints the small key that
     explains the colours, and <code>plt.show()</code> opens the window.
   </p>
 
-  <h2>What you should see</h2>
-  <pre class="code-block no-copy"><code>Series tensor shape:
-torch.Size([1460])
-Features and targets shapes:
-torch.Size([1431, 29])
-torch.Size([1431, 1])
-Original series length: 1460
-Total number of windows: 1431
-Training windows: 1144
-Validation windows: 287</code></pre>
   <figure class="exhibit"><img src="/images/forecast-train-val-split.png" alt="Line chart of daily sales with the first 1,144 days in blue and the last 316 in red, divided by a dashed vertical line" style="max-width:100%; height:auto;"><figcaption>Training days in blue, validation days in red, drawn by time_06.py</figcaption></figure>
   <p>
-    Almost five sixths of the picture is blue and the last stretch is red, which is what 80/20
-    looks like on a chart. The dashed line marks the boundary: everything to its left the model
+    The dashed line marks the boundary: everything to its left the model
     may learn from, everything to its right it may only be judged on.
   </p>
 

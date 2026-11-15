@@ -74,16 +74,13 @@
   </p>
 
   <p>
-    This is version 5 of the forecasting series, and nothing about the result changes. Version 4
-    counted the rows and columns before slicing them; version 5 writes the same two slices in
-    shorthand, using a colon that means <em>everything</em> and a minus one that means
-    <em>the last</em>. Two lines become two shorter lines, four helper variables disappear, and
-    the printed numbers are identical.
+    This is version 5 of the forecasting series. The only changes from version 4 are two lines
+    that use shorthand to produce the same features and targets.
   </p>
   <p>
     A version that changes nothing visible is still worth writing, because the shorthand appears
-    in almost every Python program you will read from here on. Learning to decode it once saves
-    confusion many times later.
+    in almost every Python program you will read from here on, and often in other Python programs
+    by other developers. Learning to decode it once saves confusion many times later.
   </p>
 
   <h2>The two ways of saying the same thing</h2>
@@ -100,10 +97,10 @@ targets = windows[0:row_n, col_n-1:col_n]</code></pre>
   <pre class="code-block no-copy"><code>features = windows[:, :-1]
 targets = windows[:, -1:]</code></pre>
   <p>
-    Every part of the long form is still there, just implied. <code>0:row_n</code> meant
-    <em>every row</em>, so it became a bare <code>:</code>. <code>0:col_n-1</code> meant
-    <em>all but the last column</em>, so it became <code>:-1</code>. And
-    <code>col_n-1:col_n</code> meant <em>only the last column</em>, so it became <code>-1:</code>.
+    Every part of the long form is still there, just implied.<br>
+    <code>0:row_n</code> meant <em>every row</em>, so it became a bare <code>:</code>.<br>
+    <code>0:col_n-1</code> meant <em>all but the last column</em>, so it became <code>:-1</code>.<br>
+    And <code>col_n-1:col_n</code> meant <em>only the last column</em>, so it became <code>-1:</code>.
   </p>
 
   <h2>How to read a colon and a minus one</h2>
@@ -125,12 +122,6 @@ windows[:, -1:]</code></pre>
     column</em> &mdash; the 29 known days. And <code>-1:</code> means <em>from the last column to
     the end</em> &mdash; the single day being predicted.
   </p>
-  <p>
-    The trailing colon in <code>-1:</code> is the part easiest to drop by accident. Written as
-    <code>windows[:, -1]</code> without it, the slice would collapse to one dimension and the
-    target shape would print as <code>[1431]</code> instead of <code>[1431, 1]</code>. One column
-    and one flat list of numbers are different things to PyTorch, so the colon is kept.
-  </p>
 
   <h3>3. The rest of the file is untouched</h3>
   <p>
@@ -145,9 +136,7 @@ Number of windows: 1431
 Feature shape: torch.Size([1431, 29])
 Target shape: torch.Size([1431, 1])</code></pre>
   <p>
-    The same four numbers as before, and the same three example windows after them. That is the
-    test of a rewrite: if the output has not moved, the shorter form really did say what the
-    longer form said. If any number had changed, the shorthand would have been wrong.
+    The same four numbers as before, and the same three example windows after them.
   </p>
 
   <h2>The whole program</h2>
