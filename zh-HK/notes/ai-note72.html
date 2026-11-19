@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>如何也讓程式選擇視窗長度（預測，版本 11）？ | 林邦源博士</title>
+<meta name="description" content="版本 11 在搜尋中加入第六個設定：視窗長度。二十個試驗在 972 個組合中決定模型應該往回看多遠。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note72.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note72.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note72.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note72.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note72.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何也讓程式選擇視窗長度（預測，版本 11）？">
+<meta property="og:description" content="版本 11 在搜尋中加入第六個設定：視窗長度。二十個試驗在 972 個組合中決定模型應該往回看多遠。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-HK/notes/ai-note72.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="../../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "如何也讓程式選擇視窗長度（預測，版本 11）？",
+  "description": "版本 11 在搜尋中加入第六個設定：視窗長度。二十個試驗在 972 個組合中決定模型應該往回看多遠。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-13",
+  "dateModified": "2026-11-13",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-HK/notes/ai-note72.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../../index.html">首頁</a></li>
+        <li><a href="../../biography.html">個人簡介</a></li>
+        <li><a href="../../research.html">研究</a></li>
+        <li><a href="../../cases.html">案例</a></li>
+        <li><a href="../../books.html">著作</a></li>
+        <li><a href="../../ai-programs.html">AI 筆記</a></li>
+        <li><a href="../../links/">連結</a></li>
+        <li><a href="../../glossary/">詞彙表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <a href="/notes/ai-note72.html">English</a>
+  <span class="current">繁體中文</span>
+  <a href="/zh-CN/notes/ai-note72.html">简体中文</a>
+</div>
+
+<main>
+  <h1>如何也讓程式選擇視窗長度（預測，版本 11）？</h1>
+  <p class="paper-meta">林邦源博士 &middot; AI 筆記 &middot; 2026 年 11 月 13 日 &middot; 約 6 分鐘閱讀</p>
+
+  <p>
+    這是預測系列的第 11 個版本。版本 10 搜尋五個設定：訓練多久、每步走多大、用哪個優化器、
+    隱藏層應該多寬，以及疊多少層。版本 11 加入第六個：視窗長度 &mdash; 每個例子由多長的一段
+    過去值建成，換句話說，模型在作出猜測之前往回看多遠。這個設定和其他不一樣。前五個改變模型；
+    第六個改變資料。
+  </p>
+
+  <h2>六個設定與 972 個組合</h2>
+  <p>
+    版本 11 的搜尋空間就是舊的那個，只加了一行。舊的五個設定仍然各提供三個值；新的那個提供
+    四個。
+  </p>
+  <pre class="code-block"><code>SEARCH_SPACE = {
+    "epochs":       [50, 100, 200],
+    "learning_rate":[0.001, 0.01, 0.1],
+    "optimizer":    ["Adam", "SGD", "RMSprop"],
+    "hidden_size":  [10, 32, 64],
+    "num_layers":   [1, 2, 3],
+    "window_size":  [10, 20, 30, 50],
+}</code></pre>
+  <p>
+    五個清單各有三個值，最後一個有四個，得出
+    3 &times; 3 &times; 3 &times; 3 &times; 3 &times; 4 = 972 個組合，比 243 多。預算不變，仍是
+    <code>N_TRIALS = 20</code>，所以同樣的二十次隨機抽樣，現在覆蓋的面積大了四倍。這就是加入
+    第六個設定的代價。
+  </p>
+
+  <h2>為甚麼視窗長度和其他設定不同</h2>
+  <p>
+    由版本 2 開始，視窗長度一直是檔案頂部附近的一行固定程式碼，<code>WINDOW_SIZE = 30</code>。
+    每個執行程式的人都在同樣的例子上訓練。在版本 11，那一行沒有了，<code>window_size</code>
+    作為其中一個設定送進來。
+  </p>
+  <p>
+    它帶來三個後果，而只有第一個是明顯的。改變視窗就改變有多少個例子：1,460 天切成長度為
+    <em>w</em> 的視窗，得到 1,460 &minus; <em>w</em> + 1 個例子，當 <em>w</em> = 30 時是 1,431，
+    這個計算在
+    <a href="/notes/ai-note65.html">如何把每個視窗分成特徵與目標（版本 4）</a>
+    中做過。它也改變每個輸入包含多少個數字：<em>w</em> &minus; 1 個，所以視窗 30 時是 29 個，
+    最短的視窗 10 時是 9 個，最長的視窗 50 時是 49 個。而且因為輸入長度會餵給網路的第一層，
+    它也改變了模型本身的形狀。
+  </p>
+
+  <h2>搜尋怎樣運作</h2>
+
+  <h3>1. 在每個試驗裡重建資料</h3>
+  <p>
+    版本 10 在搜尋開始之前只建一次視窗。版本 11 把同樣的工作包進一個函式，這樣就可以為每個
+    視窗長度重複：
+  </p>
+  <pre class="code-block"><code>def make_loaders(window_size):
+    windows      = series_tensor.unfold(0, window_size, 1)
+    features     = windows[:, :-1]
+    targets      = windows[:, -1:]
+    full_dataset = TensorDataset(features, targets)
+    total        = len(full_dataset)
+    tr_end       = int(total * 0.70)
+    val_end      = int(total * 0.85)</code></pre>
+  <p>
+    <code>unfold</code> 把一個指定長度的框沿着數列滑動，每個框的最後一個數字成為答案，其餘
+    成為問題。分割點然後按新的總數重新計算，所以比例在每個視窗長度都成立。這個函式的第一個
+    呼叫者是訓練常式本身：
+    <code>train_loader, val_loader, test_loader = make_loaders(cfg["window_size"])</code>。
+  </p>
+
+  <h3>2. 讓第一層改變大小</h3>
+  <p>
+    模型工廠現在把輸入大小當作引數，而不是讀取一個常數。在版本 10，它裡面的那一行是
+    <code>input_size = WINDOW_SIZE - 1</code>；在版本 11，這個數字是由外面送進來的：
+  </p>
+  <pre class="code-block"><code>def build_model(input_size, hidden_size, num_layers):
+    layers = []
+    in_dim = input_size
+    for _ in range(num_layers):
+        layers += [nn.Linear(in_dim, hidden_size), nn.ReLU()]
+        in_dim = hidden_size
+    layers.append(nn.Linear(in_dim, 1))
+    return nn.Sequential(*layers).to(device)</code></pre>
+  <p>
+    各層的建立方式與
+    <a href="/zh-HK/notes/ai-note71.html">如何讓程式自己搜尋它的設定（版本 10）</a>
+    中解釋的完全一樣。唯一的改變是輸入值的數目現在由外面傳入，而不是從一個固定常數讀取，所以
+    第一層按視窗長度接收 9、19、29 或 49 個數字。
+  </p>
+
+  <h3>3. 訓練每個組合並保留它的驗證分數</h3>
+  <pre class="code-block"><code>for i, combo in enumerate(sampled):
+    cfg = dict(zip(keys, combo))
+    model, t_losses, v_losses, trial_val_loss, test_loader = train_trial(cfg)
+
+    row = {**cfg, "val_loss": trial_val_loss, "actual_epochs": len(t_losses)}
+    results.append(row)</code></pre>
+  <p>
+    組態現在帶着六個值，例如
+    <code>{"epochs": 50, "learning_rate": 0.001, ..., "window_size": 10}</code>。這個字典存放在
+    <code>cfg</code>，是 <strong>configuration</strong>（組態）的簡寫：一個試驗的一整套完整
+    設定。<code>train_trial</code> 現在回傳<em>五</em>樣東西：模型、它的訓練與驗證損失曲線、
+    訓練期間見過的最佳驗證損失，以及為那個試驗的視窗建立的測試載入器。我們把驗證分數記錄在
+    結果那一行，但<em>不會</em>在迴圈裡對測試集呼叫 <code>evaluate</code>。每個試驗只用驗證
+    資料評分，所以測試集一直隱藏到選出優勝者為止。
+  </p>
+  <p>
+    訓練的運作與版本 9 一樣：如果驗證誤差連續 15 個回合沒有改善
+    （<code>EARLY_STOP_PATIENCE = 15</code>），試驗就會提早停止，而帶來最低驗證誤差的權重會被
+    保留。因此，一個停止改善的試驗會提早結束，而不是跑到最大回合數。測試載入器之所以從
+    <code>train_trial</code> 帶回來，只是因為它是為那個試驗的視窗而建的；它還沒有被用到。
+  </p>
+
+  <h3>4. 按驗證損失選出優勝者，然後誠實地評分</h3>
+  <pre class="code-block"><code>if trial_val_loss &lt; best_val_loss:
+    best_val_loss = trial_val_loss
+    best_trial = {"cfg": cfg, "model": model, ...}
+
+# Evaluate once on the test set after the winner is chosen
+r2, mae, rmse, preds, actuals = evaluate(best_trial["model"], best_trial["test_loader"])
+
+torch.save(best_trial["model"].state_dict(), "best_model.pt")
+results_df.to_excel("search_results.xlsx", index_label="Rank")</code></pre>
+  <p>
+    <code>best_val_loss</code> 由正無限大開始，所以第一個試驗一定成為基準，後面的試驗必須
+    <em>降低</em>它才能取代它。只有在這個決定確定之後，腳本才對測試集呼叫 <code>evaluate</code>
+    一次 &mdash; 同一個直到現在都沒有任何試驗看過的測試日。最後，資料夾裡會出現五個檔案。
+    <code>best_model.pt</code> 保存優勝的權重，<code>search_results.xlsx</code> 保存全部二十個
+    試驗按驗證損失排列的結果，並有一個版本 10 沒有的 <code>window_size</code> 欄，而三張圖表
+    分別存成 <code>best_model_loss.png</code>、<code>best_model_predictions.png</code> 和
+    <code>trial_val_loss_chart.png</code>。試算表仍然是有用的那一個，因為它保留每一個試驗，
+    不只是優勝者。
+  </p>
+
+  <h2>你應該會看到甚麼</h2>
+  <p>
+    一次真實執行的完整表格，未經修改。<code>Win</code> 欄是那個試驗的視窗長度。
+  </p>
+  <pre class="code-block no-copy"><code>Running 20 random trials...
+
+Trial   Win  Epochs      LR      Opt  Hidden  Layers      Val Loss
+------------------------------------------------------------------------------
+    1    30     200   0.001     Adam      10       2       38.8653
+    2    30      50    0.01     Adam      10       2       38.1330
+    3    20      50   0.001     Adam      64       1       37.3501
+    4    50     200    0.01     Adam      10       1       39.2846
+    5    20      50     0.1      SGD      64       2           inf
+    6    30      50     0.1     Adam      64       3       38.4867
+    7    10      50     0.1     Adam      32       1       37.4087
+    8    30      50    0.01     Adam      64       3       38.1892
+    9    30     200   0.001  RMSprop      64       3       40.5453
+   10    10      50   0.001  RMSprop      64       3       36.7209
+   11    10     200   0.001      SGD      10       3           inf
+   12    30     200    0.01     Adam      10       1       37.9963
+   13    20     200     0.1      SGD      32       1     2929.5016
+   14    30     100     0.1     Adam      32       2       38.3152
+   15    20      50   0.001  RMSprop      32       2       38.1311
+   16    10     100     0.1      SGD      64       2           inf
+   17    10     100    0.01     Adam      10       1       37.3275
+   18    10      50   0.001     Adam      64       3       35.7390
+   19    30      50   0.001     Adam      64       2       38.3012
+   20    50      50   0.001  RMSprop      32       3       40.7830
+
+Best model saved → best_model.pt
+Best config : {'epochs': 50, 'learning_rate': 0.001, 'optimizer': 'Adam', 'hidden_size': 64, 'num_layers': 3, 'window_size': 10}
+Best validation MSE: 35.7390
+Test R²: 0.4542  |  MAE: 4.2441  |  RMSE: 5.3134
+Results table saved → search_results.xlsx</code></pre>
+  <p>
+    <strong>優勝者只往回看十天。</strong> 試驗 18 &mdash; 50 個回合、學習率 0.001、Adam、
+    64 個隱藏單元、3 層、視窗 10 &mdash; 給出最低的驗證損失 35.7390。第二名，試驗 10，也用了
+    視窗 10（驗證損失 36.7209）。這是我們第一次真正回答搜尋被問的那個問題。在這份資料上，
+    短的回看贏了。
+  </p>
+  <p>
+    只有在優勝者確定之後，腳本才碰測試日：R&sup2; 0.4542、MAE 4.2441 和 RMSE 5.3134。這些數字
+    才是誠實的分數，因為沒有試驗在它們上面競爭。
+  </p>
+  <p>
+    <strong>相比版本 10 的增益很小。</strong> 版本 10 最好的測試分數是 R&sup2; 0.4471，版本 11
+    的是 0.4542，而其中一部分差異是抽樣的運氣，不是更好的想法。三個試驗回報 <code>inf</code>：
+    損失爆炸了，再也沒有回來，所以沒有東西可以排名。
+  </p>
+  <figure class="exhibit"><img src="/images/forecast-v11-loss.png" alt="優勝試驗的損失曲線，在第一個回合急劇下降然後變平，訓練與驗證兩條線幾乎疊在一起" style="max-width:100%; height:auto;"><figcaption>優勝試驗的損失曲線。訓練在允許的 50 個回合中的第 29 個回合結束，因為提前停止已經連續 15 個回合沒有看到改善。</figcaption></figure>
+  <figure class="exhibit"><img src="/images/forecast-v11-predictions.png" alt="測試日的實際銷售額以淺灰色顯示，預測值是一條平滑的紅線，跟隨趨勢但錯過了每日的波動" style="max-width:100%; height:auto;"><figcaption>視窗為 10 時，218 個測試日的實際值（灰）與預測值（紅）。模型跟隨趨勢，並把噪音抹平。</figcaption></figure>
+  <figure class="exhibit"><img src="/images/forecast-v11-r2-bar.png" alt="二十個試驗的驗證損失柱狀圖，所有好的試驗在底部幾乎看不見，因為一個發散的試驗升到接近三千" style="max-width:100%; height:auto;"><figcaption>全部二十個試驗的驗證損失，由最好排到最差，最好的標為綠色。右邊一個發散的試驗達到接近 3,000，把每一個好試驗壓扁在紅色最佳分數線旁；三個損失為無限大的試驗完全沒有柱子。</figcaption></figure>
+
+  <h2>完整程式</h2>
+  <p>
+    把上面的各部分放回一起。這就是完整的檔案：
+  </p>
+  <pre class="code-block"><code>import os
+os.environ[&quot;KMP_DUPLICATE_LIB_OK&quot;] = &quot;TRUE&quot;
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import TensorDataset, DataLoader, Subset
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import random
+import itertools
+
+# ── Reproducibility ──────────────────────────────────────────────────────────
+SEED = 42
+random.seed(SEED)
+np.random.seed(SEED)
+torch.manual_seed(SEED)
+
+# ── Search space ─────────────────────────────────────────────────────────────
+SEARCH_SPACE = {
+    &quot;epochs&quot;:       [50, 100, 200],
+    &quot;learning_rate&quot;:[0.001, 0.01, 0.1],
+    &quot;optimizer&quot;:    [&quot;Adam&quot;, &quot;SGD&quot;, &quot;RMSprop&quot;],
+    &quot;hidden_size&quot;:  [10, 32, 64],
+    &quot;num_layers&quot;:   [1, 2, 3],
+    &quot;window_size&quot;:  [10, 20, 30, 50],
+}
+N_TRIALS            = 20
+EARLY_STOP_PATIENCE = 15
+BATCH_SIZE          = 32
+
+# ── Data ─────────────────────────────────────────────────────────────────────
+df = pd.read_csv(&quot;time_series.csv&quot;)
+series = df[&quot;series&quot;].values
+series_tensor = torch.tensor(series, dtype=torch.float32)
+
+def make_loaders(window_size):
+    windows      = series_tensor.unfold(0, window_size, 1)
+    features     = windows[:, :-1]
+    targets      = windows[:, -1:]
+    full_dataset = TensorDataset(features, targets)
+    total        = len(full_dataset)
+    tr_end       = int(total * 0.70)
+    val_end      = int(total * 0.85)
+    train_loader = DataLoader(Subset(full_dataset, range(tr_end)),           batch_size=BATCH_SIZE, shuffle=True)
+    val_loader   = DataLoader(Subset(full_dataset, range(tr_end, val_end)),  batch_size=BATCH_SIZE, shuffle=False)
+    test_loader  = DataLoader(Subset(full_dataset, range(val_end, total)),   batch_size=BATCH_SIZE, shuffle=False)
+    return train_loader, val_loader, test_loader
+
+device = torch.device(&quot;cuda&quot; if torch.cuda.is_available() else &quot;cpu&quot;)
+
+# ── Model factory ─────────────────────────────────────────────────────────────
+def build_model(input_size, hidden_size, num_layers):
+    layers = []
+    in_dim = input_size
+    for _ in range(num_layers):
+        layers += [nn.Linear(in_dim, hidden_size), nn.ReLU()]
+        in_dim = hidden_size
+    layers.append(nn.Linear(in_dim, 1))
+    return nn.Sequential(*layers).to(device)
+
+def get_optimizer(name, params, lr):
+    return {&quot;Adam&quot;: optim.Adam, &quot;SGD&quot;: optim.SGD, &quot;RMSprop&quot;: optim.RMSprop}[name](params, lr=lr)
+
+# ── Train one trial ───────────────────────────────────────────────────────────
+def train_trial(cfg):
+    train_loader, val_loader, test_loader = make_loaders(cfg[&quot;window_size&quot;])
+    model     = build_model(cfg[&quot;window_size&quot;] - 1, cfg[&quot;hidden_size&quot;], cfg[&quot;num_layers&quot;])
+    criterion = nn.MSELoss()
+    optimizer = get_optimizer(cfg[&quot;optimizer&quot;], model.parameters(), cfg[&quot;learning_rate&quot;])
+
+    best_val_loss = float(&quot;inf&quot;)
+    best_state    = {k: v.clone() for k, v in model.state_dict().items()}
+    patience_ctr  = 0
+    train_losses, val_losses = [], []
+
+    for epoch in range(cfg[&quot;epochs&quot;]):
+        # train
+        model.train()
+        t_loss = 0
+        for xb, yb in train_loader:
+            xb, yb = xb.to(device), yb.to(device)
+            optimizer.zero_grad()
+            loss = criterion(model(xb), yb)
+            loss.backward()
+            optimizer.step()
+            t_loss += loss.item()
+        t_loss /= len(train_loader)
+
+        # validate
+        model.eval()
+        v_loss = 0
+        with torch.no_grad():
+            for xb, yb in val_loader:
+                v_loss += criterion(model(xb.to(device)), yb.to(device)).item()
+        v_loss /= len(val_loader)
+
+        train_losses.append(t_loss)
+        val_losses.append(v_loss)
+
+        # early stopping
+        if v_loss &lt; best_val_loss:
+            best_val_loss = v_loss
+            best_state    = {k: v.clone() for k, v in model.state_dict().items()}
+            patience_ctr  = 0
+        else:
+            patience_ctr += 1
+            if patience_ctr &gt;= EARLY_STOP_PATIENCE:
+                break
+
+    model.load_state_dict(best_state)
+    return model, train_losses, val_losses, best_val_loss, test_loader
+
+# ── Evaluate on test set ──────────────────────────────────────────────────────
+def evaluate(model, test_loader):
+    model.eval()
+    preds, actuals = [], []
+    with torch.no_grad():
+        for xb, yb in test_loader:
+            preds.extend(model(xb.to(device)).cpu().numpy())
+            actuals.extend(yb.numpy())
+    p = torch.tensor(np.array(preds))
+    a = torch.tensor(np.array(actuals))
+    mae  = torch.mean(torch.abs(p - a)).item()
+    rmse = torch.sqrt(torch.mean((p - a) ** 2)).item()
+    ss_res = torch.sum((a - p) ** 2)
+    ss_tot = torch.sum((a - torch.mean(a)) ** 2)
+    r2 = (1 - ss_res / ss_tot).item()
+    return r2, mae, rmse, preds, actuals
+
+# ── Random search; select by validation loss ──────────────────────────────────
+keys   = list(SEARCH_SPACE.keys())
+combos = list(itertools.product(*SEARCH_SPACE.values()))
+sampled = random.sample(combos, min(N_TRIALS, len(combos)))
+
+results = []
+best_val_loss = float(&quot;inf&quot;)
+best_trial = None
+
+print(f&quot;Running {N_TRIALS} random trials...\n&quot;)
+print(f&quot;{&#x27;Trial&#x27;:&gt;5}  {&#x27;Win&#x27;:&gt;4}  {&#x27;Epochs&#x27;:&gt;6}  {&#x27;LR&#x27;:&gt;6}  {&#x27;Opt&#x27;:&gt;7}  {&#x27;Hidden&#x27;:&gt;6}  {&#x27;Layers&#x27;:&gt;6}  {&#x27;Val Loss&#x27;:&gt;12}&quot;)
+print(&quot;-&quot; * 78)
+
+for i, combo in enumerate(sampled):
+    cfg = dict(zip(keys, combo))
+    model, t_losses, v_losses, trial_val_loss, test_loader = train_trial(cfg)
+
+    row = {**cfg, &quot;val_loss&quot;: trial_val_loss, &quot;actual_epochs&quot;: len(t_losses)}
+    results.append(row)
+
+    print(f&quot;{i+1:&gt;5}  {cfg[&#x27;window_size&#x27;]:&gt;4}  {cfg[&#x27;epochs&#x27;]:&gt;6}  {cfg[&#x27;learning_rate&#x27;]:&gt;6}  &quot;
+          f&quot;{cfg[&#x27;optimizer&#x27;]:&gt;7}  {cfg[&#x27;hidden_size&#x27;]:&gt;6}  {cfg[&#x27;num_layers&#x27;]:&gt;6}  &quot;
+          f&quot;{trial_val_loss:&gt;12.4f}&quot;)
+
+    if trial_val_loss &lt; best_val_loss:
+        best_val_loss = trial_val_loss
+        best_trial = {&quot;cfg&quot;: cfg, &quot;model&quot;: model, &quot;t_losses&quot;: t_losses,
+                      &quot;v_losses&quot;: v_losses, &quot;val_loss&quot;: trial_val_loss,
+                      &quot;test_loader&quot;: test_loader}
+
+# ── Evaluate the selected model on the test set once ─────────────────────────
+r2, mae, rmse, preds, actuals = evaluate(best_trial[&quot;model&quot;], best_trial[&quot;test_loader&quot;])
+best_trial.update({&quot;r2&quot;: r2, &quot;mae&quot;: mae, &quot;rmse&quot;: rmse,
+                   &quot;preds&quot;: preds, &quot;actuals&quot;: actuals})
+
+# ── Save best model ───────────────────────────────────────────────────────────
+torch.save(best_trial[&quot;model&quot;].state_dict(), &quot;best_model.pt&quot;)
+print(f&quot;\nBest model saved → best_model.pt&quot;)
+print(f&quot;Best config : {best_trial[&#x27;cfg&#x27;]}&quot;)
+print(f&quot;Best validation MSE: {best_val_loss:.4f}&quot;)
+print(f&quot;Test R²: {r2:.4f}  |  MAE: {mae:.4f}  |  RMSE: {rmse:.4f}&quot;)
+
+# ── Save results table ranked by validation loss ─────────────────────────────
+results_df = pd.DataFrame(results).sort_values(&quot;val_loss&quot;).reset_index(drop=True)
+results_df.index += 1
+results_df.to_excel(&quot;search_results.xlsx&quot;, index_label=&quot;Rank&quot;)
+print(&quot;Results table saved → search_results.xlsx&quot;)
+
+# ── Plots for best model only ─────────────────────────────────────────────────
+# 1. Loss curves
+plt.figure(figsize=(10, 5))
+plt.plot(best_trial[&quot;t_losses&quot;], label=&quot;Train Loss&quot;)
+plt.plot(best_trial[&quot;v_losses&quot;], label=&quot;Val Loss&quot;)
+plt.title(f&quot;Best Model — Loss Curves\n{best_trial[&#x27;cfg&#x27;]}&quot;, fontsize=11)
+plt.xlabel(&quot;Epoch&quot;); plt.ylabel(&quot;MSE Loss&quot;)
+plt.legend(); plt.grid(True)
+plt.tight_layout()
+plt.savefig(&quot;best_model_loss.png&quot;, dpi=150)
+plt.show()
+
+# 2. Predictions vs actual
+plt.figure(figsize=(12, 5))
+plt.plot(best_trial[&quot;actuals&quot;], label=&quot;Actual&quot;,    color=&quot;lightgrey&quot;, linewidth=1.5)
+plt.plot(best_trial[&quot;preds&quot;],   label=&quot;Predicted&quot;, color=&quot;red&quot;,       linewidth=1.5)
+plt.title(f&quot;Best Model — Predictions vs Actual (Test Set)\nR²={best_trial[&#x27;r2&#x27;]:.4f}  RMSE={best_trial[&#x27;rmse&#x27;]:.4f}&quot;, fontsize=11)
+plt.xlabel(&quot;Time&quot;); plt.ylabel(&quot;Value&quot;)
+plt.legend(); plt.grid(True)
+plt.tight_layout()
+plt.savefig(&quot;best_model_predictions.png&quot;, dpi=150)
+plt.show()
+
+# 3. Validation-loss bar chart across all trials
+plt.figure(figsize=(12, 4))
+colors = [&quot;#70AD47&quot; if rank == 1 else &quot;#4472C4&quot; for rank in results_df.index]
+plt.bar(results_df.index, results_df[&quot;val_loss&quot;], color=colors)
+plt.axhline(best_val_loss, color=&quot;red&quot;, linestyle=&quot;--&quot;, linewidth=1,
+            label=f&quot;Best Val Loss={best_val_loss:.4f}&quot;)
+plt.title(&quot;Validation Loss Across All Trials (green = best)&quot;)
+plt.xlabel(&quot;Rank&quot;); plt.ylabel(&quot;Validation MSE Loss&quot;)
+plt.legend(); plt.grid(axis=&quot;y&quot;, alpha=0.4)
+plt.tight_layout()
+plt.savefig(&quot;trial_val_loss_chart.png&quot;, dpi=150)
+plt.show()
+</code></pre>
+
+  <h2>在自己的電腦上執行</h2>
+  <p>
+    <a href="../../notes/downloads/Folder-AI-Forecast.zip" download>下載 zip 檔案</a>並解壓到一個
+    資料夾。zip 裡有這個系列到目前為止的程式、<code>time_series.csv</code> 資料檔，以及
+    <code>pyproject.toml</code>。這篇筆記用的是 <code>time_11.py</code>。在 Visual Studio Code
+    裡打開資料夾，然後在終端機輸入這三行：
+  </p>
+  <pre class="code-block"><code>uv python pin 3.12.10
+uv sync
+uv run time_11.py</code></pre>
+  <p>
+    第一行記錄這個資料夾用哪個 Python 版本，第二行安裝 <code>pyproject.toml</code> 列出的每一個
+    套件。第三行執行二十個試驗，每個視窗長度重建一次資料，然後在顯示之前把圖表存到磁碟；關閉
+    每個視窗以繼續。最後你會有 <code>best_model.pt</code>、<code>search_results.xlsx</code> 和
+    三個 PNG 檔案。
+  </p>
+  <p>
+    這三行只需要一次。下次想再執行程式，只打 <code>uv run time_11.py</code>。
+  </p>
+  <p>
+    如果你還沒有設定 uv，先看
+    <a href="/zh-HK/notes/ai-note05.html">如何安裝 Visual Studio Code？</a>，然後看 uv 筆記的
+    <a href="/zh-HK/notes/ai-note03.html">Windows</a> 或 <a href="/zh-HK/notes/ai-note04.html">Mac</a>。
+  </p>
+
+  <h2>接下來是甚麼</h2>
+  <p>
+    這次搜尋仍然很小：幾十個試驗，一個短短的數值清單。版本 12 把每個範圍都擴大 &mdash; 更多
+    回合、更多學習率、更寬的隱藏層、更多層 &mdash; 並跑 200 個試驗而不是 20 個，所以表格會長
+    到足以讀成一個地貌，而不只是一個樣本。
+  </p>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&amp;hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', 'Copy code to clipboard');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', 'Copied to clipboard');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', 'Copy code to clipboard');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>如何尝试多个学习率并保留最好的一个（预测，版本 9）？ | 林邦源博士</title>
+<meta name="description" content="版本 9 用不同的学习率把同一段训练跑三次，每次不再改善就停下来，并保留最好的模型。R&sup2; 由 0.24 升到 0.44。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note70.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note70.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note70.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note70.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note70.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何尝试多个学习率并保留最好的一个（预测，版本 9）？">
+<meta property="og:description" content="版本 9 用不同的学习率把同一段训练跑三次，每次不再改善就停下来，并保留最好的模型。R2 由 0.24 升到 0.44。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-CN/notes/ai-note70.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="../../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "如何尝试多个学习率并保留最好的一个（预测，版本 9）？",
+  "description": "版本 9 用不同的学习率把同一段训练跑三次，每次不再改善就停下来，并保留最好的模型。R2 由 0.24 升到 0.44。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-13",
+  "dateModified": "2026-11-13",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-CN/notes/ai-note70.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../../index.html">首页</a></li>
+        <li><a href="../../biography.html">个人简介</a></li>
+        <li><a href="../../research.html">研究</a></li>
+        <li><a href="../../cases.html">案例</a></li>
+        <li><a href="../../books.html">著作</a></li>
+        <li><a href="../../ai-programs.html">AI 笔记</a></li>
+        <li><a href="../../links/">链接</a></li>
+        <li><a href="../../glossary/">词汇表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <a href="/notes/ai-note70.html">English</a>
+  <a href="/zh-HK/notes/ai-note70.html">繁體中文</a>
+  <span class="current">简体中文</span>
+</div>
+
+<main>
+  <h1>如何尝试多个学习率并保留最好的一个（预测，版本 9）？</h1>
+  <p class="paper-meta">林邦源博士 &middot; AI 笔记 &middot; 2026 年 11 月 13 日 &middot; 约 6 分钟阅读</p>
+
+  <p>
+    这是预测系列的第 9 个版本。到目前为止，所有设定都是猜的：Adam 的默认学习率、一百个回合、
+    最后一个回合结束时刚好存在的那些权重。版本 9 把学习率当成一件可以比较的事：用不同的学习率
+    把同一段训练跑三次，每次不再改善就停下来，并保留得分最好的那个模型。
+  </p>
+
+  <h2>学习率的作用</h2>
+  <p>
+    在版本 7 中，优化器在每一批之后把每一个权重稍微调整一次。学习率控制那次调整的幅度。
+  </p>
+  <ul>
+    <li><strong>太小</strong> &mdash; 权重每次都改变得太少，所以模型学得慢，跑完 100 个回合之后
+    可能仍然有很大的误差。</li>
+    <li><strong>太大</strong> &mdash; 权重每次都改变得太多，所以误差可能一直上下起伏，而不是
+    稳定地变小。</li>
+    <li><strong>差不多刚好</strong> &mdash; 权重的改变幅度合适，所以模型学得快，误差也稳定在
+    较低水平。</li>
+  </ul>
+  <p>
+    没有任何公式可以告诉你某个数据集该用哪个值，所以实用的答案是试几个，然后看。
+  </p>
+
+  <h2>提前停止的作用</h2>
+  <p>
+    版本 8 总是跑完 100 个回合，并使用最后一个回合的模型，即使验证日的误差早已开始上升。其中一个
+    原因是训练批次是随机打乱的，所以有些权重的调整会令验证日的预测变差。版本 9 在每个回合之后
+    都检查那个误差，每当它达到新的最低误差，就把模型保存起来。如果误差连续 10 个回合没有改善，
+    训练就停下来。之后程序会还原已保存、验证误差最低的那个模型，而不是使用最后一个回合的模型。
+  </p>
+  <p>
+    这有两个好处。当更多回合已经不能再改善模型时，训练可以更早完成。程序保留的也是在验证日
+    表现最好的模型，而不只是最后一个回合的模型。
+  </p>
+
+  <h2>程序怎样运作</h2>
+
+  <h3>1. 把一次训练包在一个函数里</h3>
+  <pre class="code-block"><code>def train_one_model(lr):
+    model     = TimeSeriesModel(window_size).to(device)
+    criterion = nn.MSELoss()
+    optimizer = optim.Adam(model.parameters(), lr=lr)</code></pre>
+  <p>
+    函数里面重复的是版本 7 的训练，只改了一件事：<code>lr</code> 是
+    <strong>learning rate</strong>（学习率）的简写，现在是一个参数，所以同一个函数可以用不同的
+    学习率调用。每次调用都会建立一个全新的模型，所以三次训练各自从独立的随机权重开始，互不
+    干扰。
+  </p>
+
+  <h3>2. 保留最好的权重</h3>
+  <pre class="code-block"><code>    best_val_loss = float('inf')
+    best_state    = {k: v.clone() for k, v in model.state_dict().items()}
+    patience_ctr  = 0</code></pre>
+  <p>
+    <code>best_val_loss</code> 从无穷大开始，所以第一个回合一定算作一次改善。
+    <code>best_state</code> 保存那一刻权重的一份副本。<code>.clone()</code> 很重要：没有它，
+    副本会随着模型改变而继续改变，就没有东西可以回去了。<code>patience_ctr</code> 计算连续
+    多少个回合验证误差没有改善。它从零开始，因为还没有任何回合跑过。
+  </p>
+
+  <h3>3. 改善停了就停下来</h3>
+  <pre class="code-block"><code>        if v_loss < best_val_loss:
+            best_val_loss = v_loss
+            best_state    = {k: v.clone() for k, v in model.state_dict().items()}
+            patience_ctr  = 0
+        else:
+            patience_ctr += 1
+            if patience_ctr >= PATIENCE:
+                break</code></pre>
+  <p>
+    出现新的最佳值时，计数器 <code>patience_ctr</code> 重设为零。一个更差的回合就把它加一。
+    当连续累积了十个更差的回合，<code>break</code> 就提前离开循环。之后
+    <code>model.load_state_dict(best_state)</code> 把最好的权重放回去，所以返回的模型是在验证日
+    得分最好的那一个，而不是刚好排在最后的那一个。
+  </p>
+
+  <h3>4. 跑这三个学习率</h3>
+  <pre class="code-block"><code>learning_rates = [0.001, 0.01, 0.1]
+
+for lr in learning_rates:
+    model, t_losses, v_losses, epochs, val_loss = train_one_model(lr)</code></pre>
+  <p>
+    循环的每一轮都训练一个完整的模型。函数现在返回五个值，而不是四个：模型、它的训练损失曲线
+    与验证损失曲线、实际跑了多少个回合，以及训练期间见过的最佳验证损失。我们只从每次训练收集
+    那个验证损失分数 &mdash; 测试日的 R&sup2; 只在选出优胜者之后评估一次。结果放进一个列表，
+    方便之后比较和排序。
+  </p>
+
+  <h3>5. 保留优胜者</h3>
+  <pre class="code-block"><code>best = min(results, key=lambda r: r["val_loss"])
+torch.save(best["model"].state_dict(), "best_model.pt")</code></pre>
+  <p>
+    <code>min</code> 从 <code>results</code> 列表中选出一个结果。
+    <code>key=lambda r: r["val_loss"]</code> 这部分告诉 Python 按验证损失分数来比较结果，所以
+    验证损失<em>最低</em>的结果 &mdash; 也就是优胜者 &mdash; 会存进 <code>best</code>。我们用
+    验证损失（来自模型从未训练过的日子的数据），而不是用测试集，因为在选择之前先看测试集，
+    等于用一些只应该留作最后诚实检查的数据来「作弊」。然后 <code>torch.save</code> 把那个模型
+    学到的权重写进一个叫 <code>best_model.pt</code> 的文件。之后的程序可以加载这个文件，重用
+    模型而不必再训练一次。
+  </p>
+
+  <h2>你应该会看到什么</h2>
+  <pre class="code-block no-copy"><code>      lr   epochs      Val Loss
+--------------------------------
+   0.001       73       39.9478
+    0.01       26       40.9754
+     0.1       73     3136.5420
+
+Best learning rate: 0.001  (Validation MSE = 39.9478)
+
+Test Set Metrics:
+  MAE:  4.3036
+  RMSE: 5.3494
+  R²:   0.4393
+Best model saved → best_model.pt</code></pre>
+  <p>
+    你的数字会不同，但要看的是那个模式。两个较小的学习率都达到差不多 40 左右的低验证损失，而
+    0.01 用 26 个回合就达到，不是 73 个。两者给出差不多的测试集 R&sup2;，大约 0.44，但 0.01
+    需要较少回合。0.1 这个大学习率的验证损失高出三十倍，因为每次调整都太大，误差无法稳定地
+    变小。
+  </p>
+  <p>
+    相比版本 8，有两件事改善了。R&sup2; 由 0.24 升到约 0.44，而大部分改善来自提前停止，而不是
+    来自学习率：保留最好的权重而不是最后的权重，明显提高了分数。训练也由 100 个回合缩短到
+    26 个回合完成。
+  </p>
+  <figure class="exhibit"><img src="/images/forecast-v9-loss.png" alt="优胜那次训练的损失曲线，先下降然后变平，训练与验证两条线靠得很近" style="max-width:100%; height:auto;"><figcaption>优胜那次训练的损失曲线，在第 26 个回合停下来</figcaption></figure>
+  <figure class="exhibit"><img src="/images/forecast-v9-predictions.png" alt="测试日的实际销售额以灰色显示，预测值以红色显示，红线比之前更贴近灰线" style="max-width:100%; height:auto;"><figcaption>测试日的实际值（灰）与预测值（红），最好的一次训练</figcaption></figure>
+  <figure class="exhibit"><img src="/images/forecast-v9-r2-bar.png" alt="三个学习率的验证损失柱状图，最短的柱是绿色，代表最好" style="max-width:100%; height:auto;"><figcaption>三个学习率的验证损失，绿色是优胜者</figcaption></figure>
+
+  <h2>完整程序</h2>
+  <p>
+    把上面的各部分放回一起。这就是完整的文件：
+  </p>
+  <pre class="code-block"><code>import os
+os.environ[&quot;KMP_DUPLICATE_LIB_OK&quot;] = &quot;TRUE&quot;
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import TensorDataset, DataLoader, Subset
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+# ── Data preparation (same as time_08) ────────────────────────────────────────
+def create_sliding_windows_with_target(data, window_size, shift=1):
+    windows = data.unfold(0, window_size, shift)
+    features = windows[:, :-1]
+    targets = windows[:, -1:]
+    return features, targets
+
+df = pd.read_csv(&#x27;time_series.csv&#x27;)
+series = df[&#x27;series&#x27;].values
+series_tensor = torch.tensor(series, dtype=torch.float32)
+window_size = 30
+features, targets = create_sliding_windows_with_target(series_tensor, window_size=window_size, shift=1)
+full_dataset = TensorDataset(features, targets)
+
+total_windows = len(full_dataset)
+train_size = int(total_windows * 0.7)
+val_size = int(total_windows * 0.15)
+test_size = total_windows - train_size - val_size
+
+train_indices = list(range(train_size))
+val_indices = list(range(train_size, train_size + val_size))
+test_indices = list(range(train_size + val_size, total_windows))
+
+train_loader = DataLoader(Subset(full_dataset, train_indices),
+                         batch_size=32, shuffle=True)
+val_loader   = DataLoader(Subset(full_dataset, val_indices),
+                         batch_size=32, shuffle=False)
+test_loader  = DataLoader(Subset(full_dataset, test_indices),
+                         batch_size=32, shuffle=False)
+
+device = torch.device(&#x27;cuda&#x27; if torch.cuda.is_available() else &#x27;cpu&#x27;)
+
+# ── Visualize train/val/test split (same as time_08) ─────────────────────────
+val_start = train_size
+test_start = train_size + val_size
+plt.figure(figsize=(12, 4))
+plt.plot(range(val_start), series[:val_start], &#x27;b-&#x27;, label=&#x27;Training Data&#x27;)
+plt.plot(range(val_start, test_start), series[val_start:test_start], &#x27;r-&#x27;, label=&#x27;Validation Data&#x27;)
+plt.plot(range(test_start, len(series)), series[test_start:], &#x27;g-&#x27;, label=&#x27;Test Data&#x27;)
+plt.axvline(x=val_start, color=&#x27;k&#x27;, linestyle=&#x27;--&#x27;, label=&#x27;Train/Val Split&#x27;)
+plt.axvline(x=test_start, color=&#x27;purple&#x27;, linestyle=&#x27;--&#x27;, label=&#x27;Val/Test Split&#x27;)
+plt.title(&#x27;Time Series Train/Validation/Test Split&#x27;)
+plt.xlabel(&#x27;Time&#x27;); plt.ylabel(&#x27;Value&#x27;)
+plt.legend(); plt.grid(True); plt.show()
+
+# ── Model (same as time_07/08) ────────────────────────────────────────────────
+class TimeSeriesModel(nn.Module):
+    def __init__(self, window_size):
+        super(TimeSeriesModel, self).__init__()
+        self.network = nn.Sequential(
+            nn.Linear(window_size - 1, 10),
+            nn.ReLU(),
+            nn.Linear(10, 10),
+            nn.ReLU(),
+            nn.Linear(10, 1)
+        )
+
+    def forward(self, x):
+        return self.network(x)
+
+# ── NEW: training with early stopping ────────────────────────────────────────
+# Early stopping: if val loss does not improve for PATIENCE consecutive epochs,
+# stop training early and restore the best weights seen so far.
+PATIENCE   = 10
+MAX_EPOCHS = 100
+
+def train_one_model(lr):
+    model     = TimeSeriesModel(window_size).to(device)
+    criterion = nn.MSELoss()
+    optimizer = optim.Adam(model.parameters(), lr=lr)
+
+    best_val_loss = float(&#x27;inf&#x27;)
+    best_state    = {k: v.clone() for k, v in model.state_dict().items()}
+    patience_ctr  = 0
+    train_losses, val_losses = [], []
+
+    for epoch in range(MAX_EPOCHS):
+        # ── train ──
+        model.train()
+        t_loss = 0
+        for batch_features, batch_targets in train_loader:
+            batch_features = batch_features.to(device)
+            batch_targets  = batch_targets.to(device)
+            optimizer.zero_grad()
+            loss = criterion(model(batch_features), batch_targets)
+            loss.backward()
+            optimizer.step()
+            t_loss += loss.item()
+        t_loss /= len(train_loader)
+
+        # ── validate ──
+        model.eval()
+        v_loss = 0
+        with torch.no_grad():
+            for batch_features, batch_targets in val_loader:
+                batch_features = batch_features.to(device)
+                batch_targets  = batch_targets.to(device)
+                v_loss += criterion(model(batch_features), batch_targets).item()
+        v_loss /= len(val_loader)
+
+        train_losses.append(t_loss)
+        val_losses.append(v_loss)
+
+        # ── early stopping check ──
+        if v_loss &lt; best_val_loss:
+            best_val_loss = v_loss
+            best_state    = {k: v.clone() for k, v in model.state_dict().items()}
+            patience_ctr  = 0
+        else:
+            patience_ctr += 1
+            if patience_ctr &gt;= PATIENCE:
+                break
+
+    # restore the best weights
+    model.load_state_dict(best_state)
+    actual_epochs = len(train_losses)
+    return model, train_losses, val_losses, actual_epochs, best_val_loss
+
+# ── NEW: evaluate on test set (returns R², RMSE, MAE) ────────────────────────
+def evaluate_on_test(model):
+    model.eval()
+    preds, actuals = [], []
+    with torch.no_grad():
+        for batch_features, batch_targets in test_loader:
+            preds.extend(model(batch_features.to(device)).cpu().numpy())
+            actuals.extend(batch_targets.numpy())
+
+    p = torch.tensor(np.array(preds))
+    a = torch.tensor(np.array(actuals))
+
+    mae  = torch.mean(torch.abs(p - a)).item()
+    rmse = torch.sqrt(torch.mean((p - a) ** 2)).item()
+    ss_res = torch.sum((a - p) ** 2)
+    ss_tot = torch.sum((a - torch.mean(a)) ** 2)
+    r2 = (1 - ss_res / ss_tot).item()
+    return r2, rmse, mae, preds, actuals
+
+# ── Manually try 3 learning rates; select by validation loss ─────────────────
+learning_rates = [0.001, 0.01, 0.1]
+results = []
+
+print(f&quot;{&#x27;lr&#x27;:&gt;8}  {&#x27;epochs&#x27;:&gt;7}  {&#x27;Val Loss&#x27;:&gt;12}&quot;)
+print(&quot;-&quot; * 32)
+
+for lr in learning_rates:
+    model, t_losses, v_losses, epochs, val_loss = train_one_model(lr)
+    results.append({
+        &quot;lr&quot;: lr, &quot;epochs&quot;: epochs, &quot;val_loss&quot;: val_loss,
+        &quot;model&quot;: model, &quot;t_losses&quot;: t_losses, &quot;v_losses&quot;: v_losses,
+    })
+    print(f&quot;{lr:&gt;8}  {epochs:&gt;7}  {val_loss:&gt;12.4f}&quot;)
+
+# ── Select on validation data, then evaluate the test set once ───────────────
+best = min(results, key=lambda r: r[&quot;val_loss&quot;])
+print(f&quot;\nBest learning rate: {best[&#x27;lr&#x27;]}  (Validation MSE = {best[&#x27;val_loss&#x27;]:.4f})&quot;)
+
+r2, rmse, mae, preds, actuals = evaluate_on_test(best[&quot;model&quot;])
+best.update({&quot;r2&quot;: r2, &quot;rmse&quot;: rmse, &quot;mae&quot;: mae, &quot;preds&quot;: preds, &quot;actuals&quot;: actuals})
+
+print(f&quot;\nTest Set Metrics:&quot;)
+print(f&quot;  MAE:  {mae:.4f}&quot;)
+print(f&quot;  RMSE: {rmse:.4f}&quot;)
+print(f&quot;  R²:   {r2:.4f}&quot;)
+
+torch.save(best[&quot;model&quot;].state_dict(), &quot;best_model.pt&quot;)
+print(&quot;Best model saved → best_model.pt&quot;)
+
+# ── Plots ──────────────────────────────────────────────────────────────────────
+# 1. Loss curves for the best trial
+plt.figure(figsize=(10, 5))
+plt.plot(best[&quot;t_losses&quot;], label=&quot;Train Loss&quot;)
+plt.plot(best[&quot;v_losses&quot;], label=&quot;Val Loss&quot;)
+plt.title(f&quot;Best Model — Loss Curves\nlr={best[&#x27;lr&#x27;]}  (stopped at epoch {best[&#x27;epochs&#x27;]})&quot;)
+plt.xlabel(&quot;Epoch&quot;); plt.ylabel(&quot;MSE Loss&quot;)
+plt.legend(); plt.grid(True); plt.tight_layout(); plt.show()
+
+# 2. Predictions vs actual on test set (best trial)
+plt.figure(figsize=(12, 5))
+plt.plot(best[&quot;actuals&quot;], label=&quot;Actual&quot;,    color=&quot;lightgrey&quot;, linewidth=1.5)
+plt.plot(best[&quot;preds&quot;],   label=&quot;Predicted&quot;, color=&quot;red&quot;,       linewidth=1.5)
+plt.title(f&quot;Best Model — Predictions vs Actual (Test Set)\nR²={best[&#x27;r2&#x27;]:.4f}  RMSE={best[&#x27;rmse&#x27;]:.4f}&quot;)
+plt.xlabel(&quot;Time&quot;); plt.ylabel(&quot;Value&quot;)
+plt.legend(); plt.grid(True); plt.tight_layout(); plt.show()
+
+# 3. Validation-loss bar chart comparing all 3 trials
+plt.figure(figsize=(8, 4))
+lrs = [str(r[&quot;lr&quot;]) for r in results]
+val_losses = [r[&quot;val_loss&quot;] for r in results]
+colors = [&quot;#4472C4&quot; if r[&quot;lr&quot;] != best[&quot;lr&quot;] else &quot;#70AD47&quot; for r in results]
+plt.bar(lrs, val_losses, color=colors)
+plt.axhline(best[&quot;val_loss&quot;], color=&quot;red&quot;, linestyle=&quot;--&quot;, linewidth=1,
+            label=f&quot;Best Val Loss={best[&#x27;val_loss&#x27;]:.4f}&quot;)
+plt.title(&quot;Validation Loss Across 3 Learning Rates (green = best)&quot;)
+plt.xlabel(&quot;Learning Rate&quot;); plt.ylabel(&quot;Validation MSE Loss&quot;)
+plt.legend(); plt.grid(axis=&quot;y&quot;, alpha=0.4); plt.tight_layout(); plt.show()
+</code></pre>
+
+  <h2>在自己的电脑上运行</h2>
+  <p>
+    <a href="../../notes/downloads/Folder-AI-Forecast.zip" download>下载 zip 文件</a>并解压到一个
+    文件夹。zip 里有这个系列到目前为止的程序、<code>time_series.csv</code> 数据文件，以及
+    <code>pyproject.toml</code>。这篇笔记用的是 <code>time_09.py</code>。在 Visual Studio Code
+    中打开文件夹，然后在终端输入这三行：
+  </p>
+  <pre class="code-block"><code>uv python pin 3.12.10
+uv sync
+uv run time_09.py</code></pre>
+  <p>
+    第一行记录这个文件夹用哪个 Python 版本，第二行安装 <code>pyproject.toml</code> 列出的每一个
+    包。第三行依次训练三个模型，打印比较表，然后打开图表；关闭每个窗口以继续。
+  </p>
+  <p>
+    这三行只需要一次。下次想再运行程序，只输入 <code>uv run time_09.py</code>。
+  </p>
+  <p>
+    如果你还没有设置 uv，先看
+    <a href="/zh-CN/notes/ai-note05.html">如何安装 Visual Studio Code？</a>，然后看 uv 笔记的
+    <a href="/zh-CN/notes/ai-note03.html">Windows</a> 或 <a href="/zh-CN/notes/ai-note04.html">Mac</a>。
+  </p>
+
+  <h2>接下来是什么</h2>
+  <p>
+    手动试三个值已经很重复了。学习率只是众多设定中的一个 &mdash; 隐藏层的数量、它们的宽度、
+    优化器和窗口长度都是选择。下一个版本让程序自己尝试许多组合，并保留最好的。
+  </p>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&amp;hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', 'Copy code to clipboard');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', 'Copied to clipboard');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', 'Copy code to clipboard');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>
