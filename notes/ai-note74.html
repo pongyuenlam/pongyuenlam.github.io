@@ -85,8 +85,8 @@
     The last line of version 12's model section is
     <code>torch.save(best_trial["model"].state_dict(), "best_model_12.pt")</code>. A
     <code>state_dict</code> is a dictionary of numbers: the weights and biases of each layer, named
-    after the layer they belong to. It holds no program and no settings, and the file is a little over
-    half a megabyte.
+    after the layer they belong to. It holds no program and no settings, and with this winner the
+    file is only about eleven kilobytes &mdash; small enough to send by email.
   </p>
   <p>
     So the file cannot rebuild itself. Version 13 has to supply the shape &mdash; how many layers, how
@@ -105,7 +105,7 @@ MODEL_FILE   = "best_model_12.pt"
 BATCH_SIZE   = 32
 
 results  = pd.read_excel(RESULTS_FILE)
-best_row = results.sort_values("r2", ascending=False).iloc[0]
+best_row = results.sort_values("val_loss").iloc[0]
 
 BEST_CFG = {
     "window_size": int(best_row["window_size"]),
@@ -113,10 +113,11 @@ BEST_CFG = {
     "num_layers":  int(best_row["num_layers"]),
 }</code></pre>
   <p>
-    <code>read_excel</code> loads the 200-row table. Sorting it by <code>r2</code>, highest first,
-    and taking <code>.iloc[0]</code> picks the winning row, and the three settings that decide the
-    shape are copied out by column name. <code>int()</code> turns them into plain integers, because
-    layer sizes must be plain integers.
+    <code>read_excel</code> loads the 200-row table. Sorting it by <code>val_loss</code>, lowest
+    first, and taking <code>.iloc[0]</code> picks the winning row &mdash; the same rule the search
+    itself used in version 12 &mdash; and the three settings that decide the shape are copied out by
+    column name. <code>int()</code> turns them into plain integers, because layer sizes must be plain
+    integers.
   </p>
   <p>
     Only three of the six settings are needed. Epochs, learning rate and optimizer belong to a
@@ -188,7 +189,7 @@ with torch.no_grad():
   <p>
     Because the model is already trained, you can also use it on different data. Put the new sales
     values in a CSV file in the same format, keep the same window size, and run the program again. It
-    loads the saved weights and produces predictions for those new days instead of the 217 test days.
+    loads the saved weights and produces predictions for those new days instead of the 215 test days.
   </p>
 
   <h3>4. Compute the four measures</h3>
@@ -208,20 +209,20 @@ r2   = (1 - torch.sum((a - p) ** 2) / torch.sum((a - torch.mean(a)) ** 2)).item(
     The complete output of a real run, unedited:
   </p>
   <pre class="code-block no-copy"><code>Loaded: best_model_12.pt
-Config: {'window_size': 20, 'hidden_size': 256, 'num_layers': 3}
+Config: {'window_size': 30, 'hidden_size': 32, 'num_layers': 2}
 
 Test Set Metrics:
-  MAE:  4.1235
-  MSE:  26.7236
-  RMSE: 5.1695
-  R²:   0.4790
+  MAE:  4.4603
+  MSE:  31.7479
+  RMSE: 5.6345
+  R²:   0.3710
 Saved: best_model_predictions.png</code></pre>
   <p>
     The four numbers match what version 12 printed for its winner exactly, to the fourth decimal
     place. Nothing was trained, nothing was shuffled, and no random seed took part in the scoring. The
-    same weights on the same 217 days give the same answer, which is what a saved model is for.
+    same weights on the same 215 days give the same answer, which is what a saved model is for.
   </p>
-  <figure class="exhibit"><img src="/images/forecast-v13-predictions.png" alt="Actual daily sales in pale grey and the saved model's predictions as a red line that follows the upward trend while smoothing the day-to-day swings" style="max-width:100%; height:auto;"><figcaption>Actual (grey) and predicted (red) values over the 217 test days, produced by loading <code>best_model_12.pt</code> and running no training. The chart is titled with R&sup2; 0.4790 and RMSE 5.1695.</figcaption></figure>
+  <figure class="exhibit"><img src="/images/forecast-v13-predictions.png" alt="Actual daily sales in pale grey and the saved model's predictions as a red line that follows the upward trend while smoothing the day-to-day swings" style="max-width:100%; height:auto;"><figcaption>Actual (grey) and predicted (red) values over the 215 test days, produced by loading <code>best_model_12.pt</code> and running no training. The chart is titled with R&sup2; 0.3710 and RMSE 5.6345.</figcaption></figure>
 
   <h2>The series in one view</h2>
   <p>
@@ -236,10 +237,10 @@ Saved: best_model_predictions.png</code></pre>
   </p>
   <p>
     What the model can do is modest: it follows the level and the slow upward drift of the series,
-    turning 19 past values into one number in a fraction of a second. It cannot follow the daily
-    swings; an R&sup2; of about 0.48 means roughly half of the variation in the test days is still
-    unexplained. The network sees only the recent sales values, so it does not know the day of the
-    week, the month or a holiday.
+    turning 29 past values into one number in a fraction of a second. It cannot follow the daily
+    swings; an R&sup2; of about 0.37 means roughly two-thirds of the variation in the test days is
+    still unexplained. The network sees only the recent sales values, so it does not know the day of
+    the week, the month or a holiday.
   </p>
   <p>
     A better next step is not a bigger search but better inputs or a different kind of model, such as
@@ -253,7 +254,7 @@ Saved: best_model_predictions.png</code></pre>
     The pieces above, put back together. This is the complete file:
   </p>
   <pre class="code-block"><code>import os
-os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+os.environ[&quot;KMP_DUPLICATE_LIB_OK&quot;] = &quot;TRUE&quot;
 
 import torch
 import torch.nn as nn
@@ -262,26 +263,26 @@ import numpy as np
 import matplotlib.pyplot as plt
 from torch.utils.data import TensorDataset, DataLoader, Subset
 
-# ── Best config, read from search_results_12.xlsx (Rank 1) ───────────────────
-RESULTS_FILE = "search_results_12.xlsx"
-MODEL_FILE   = "best_model_12.pt"
+# ── Best config, selected by validation loss in search_results_12.xlsx ───────
+RESULTS_FILE = &quot;search_results_12.xlsx&quot;
+MODEL_FILE   = &quot;best_model_12.pt&quot;
 BATCH_SIZE   = 32
 
 results  = pd.read_excel(RESULTS_FILE)
-best_row = results.sort_values("r2", ascending=False).iloc[0]
+best_row = results.sort_values(&quot;val_loss&quot;).iloc[0]
 
 BEST_CFG = {
-    "window_size": int(best_row["window_size"]),
-    "hidden_size": int(best_row["hidden_size"]),
-    "num_layers":  int(best_row["num_layers"]),
+    &quot;window_size&quot;: int(best_row[&quot;window_size&quot;]),
+    &quot;hidden_size&quot;: int(best_row[&quot;hidden_size&quot;]),
+    &quot;num_layers&quot;:  int(best_row[&quot;num_layers&quot;]),
 }
 
 # ── Load data ─────────────────────────────────────────────────────────────────
-df = pd.read_csv("time_series.csv")
-series = df["series"].values
+df = pd.read_csv(&quot;time_series.csv&quot;)
+series = df[&quot;series&quot;].values
 series_tensor = torch.tensor(series, dtype=torch.float32)
 
-window_size = BEST_CFG["window_size"]
+window_size = BEST_CFG[&quot;window_size&quot;]
 windows     = series_tensor.unfold(0, window_size, 1)
 features    = windows[:, :-1]
 targets     = windows[:, -1:]
@@ -292,7 +293,7 @@ val_end = int(total * 0.85)
 test_loader = DataLoader(Subset(full_dataset, range(val_end, total)),
                          batch_size=BATCH_SIZE, shuffle=False)
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device(&quot;cuda&quot; if torch.cuda.is_available() else &quot;cpu&quot;)
 
 # ── Rebuild model architecture &amp; load weights ─────────────────────────────────
 def build_model(input_size, hidden_size, num_layers):
@@ -303,12 +304,12 @@ def build_model(input_size, hidden_size, num_layers):
     layers.append(nn.Linear(in_dim, 1))
     return nn.Sequential(*layers)
 
-model = build_model(window_size - 1, BEST_CFG["hidden_size"], BEST_CFG["num_layers"])
+model = build_model(window_size - 1, BEST_CFG[&quot;hidden_size&quot;], BEST_CFG[&quot;num_layers&quot;])
 model.load_state_dict(torch.load(MODEL_FILE, map_location=device))
 model.to(device)
 model.eval()
-print(f"Loaded: {MODEL_FILE}")
-print(f"Config: {BEST_CFG}\n")
+print(f&quot;Loaded: {MODEL_FILE}&quot;)
+print(f&quot;Config: {BEST_CFG}\n&quot;)
 
 # ── Evaluate ──────────────────────────────────────────────────────────────────
 preds, actuals = [], []
@@ -325,24 +326,25 @@ mse  = torch.mean((p - a) ** 2).item()
 rmse = torch.sqrt(torch.tensor(mse)).item()
 r2   = (1 - torch.sum((a - p) ** 2) / torch.sum((a - torch.mean(a)) ** 2)).item()
 
-print(f"Test Set Metrics:")
-print(f"  MAE:  {mae:.4f}")
-print(f"  MSE:  {mse:.4f}")
-print(f"  RMSE: {rmse:.4f}")
-print(f"  R²:   {r2:.4f}")
+print(f&quot;Test Set Metrics:&quot;)
+print(f&quot;  MAE:  {mae:.4f}&quot;)
+print(f&quot;  MSE:  {mse:.4f}&quot;)
+print(f&quot;  RMSE: {rmse:.4f}&quot;)
+print(f&quot;  R²:   {r2:.4f}&quot;)
 
 # ── Plots ─────────────────────────────────────────────────────────────────────
 # 1. Predictions vs actual
 plt.figure(figsize=(12, 5))
-plt.plot(actuals, label="Actual",    color="lightgrey", linewidth=1.5)
-plt.plot(preds,   label="Predicted", color="red",       linewidth=1.5)
-plt.title(f"Best Model — Predictions vs Actual (Test Set)\nR²={r2:.4f}  RMSE={rmse:.4f}", fontsize=11)
-plt.xlabel("Time"); plt.ylabel("Value")
+plt.plot(actuals, label=&quot;Actual&quot;,    color=&quot;lightgrey&quot;, linewidth=1.5)
+plt.plot(preds,   label=&quot;Predicted&quot;, color=&quot;red&quot;,       linewidth=1.5)
+plt.title(f&quot;Best Model — Predictions vs Actual (Test Set)\nR²={r2:.4f}  RMSE={rmse:.4f}&quot;, fontsize=11)
+plt.xlabel(&quot;Time&quot;); plt.ylabel(&quot;Value&quot;)
 plt.legend(); plt.grid(True)
 plt.tight_layout()
-plt.savefig("best_model_predictions.png", dpi=150)
+plt.savefig(&quot;best_model_predictions.png&quot;, dpi=150)
 plt.show()
-print("Saved: best_model_predictions.png")</code></pre>
+print(&quot;Saved: best_model_predictions.png&quot;)
+</code></pre>
 
   <h2>Running it on your own computer</h2>
   <p>
