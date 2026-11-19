@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>如何訓練你的第一個預測模型（預測，版本 7）？ | 林邦源博士</title>
+<meta name="description" content="版本 7 終於加入模型：一個 29 個輸入、兩層各 10 個隱藏單元、1 個輸出的細小網路，訓練 100 遍，並用一條損失曲線量度。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note68.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note68.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note68.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note68.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note68.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何訓練你的第一個預測模型（預測，版本 7）？">
+<meta property="og:description" content="版本 7 終於加入模型：一個 29 個輸入、兩層各 10 個隱藏單元、1 個輸出的細小網路，訓練 100 遍，並用一條損失曲線量度。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-HK/notes/ai-note68.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="../../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "如何訓練你的第一個預測模型（預測，版本 7）？",
+  "description": "版本 7 終於加入模型：一個 29 個輸入、兩層各 10 個隱藏單元、1 個輸出的細小網路，訓練 100 遍，並用一條損失曲線量度。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-13",
+  "dateModified": "2026-11-13",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-HK/notes/ai-note68.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../../index.html">首頁</a></li>
+        <li><a href="../../biography.html">個人簡介</a></li>
+        <li><a href="../../research.html">研究</a></li>
+        <li><a href="../../cases.html">案例</a></li>
+        <li><a href="../../books.html">著作</a></li>
+        <li><a href="../../ai-programs.html">AI 筆記</a></li>
+        <li><a href="../../links/">連結</a></li>
+        <li><a href="../../glossary/">詞彙表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <a href="/notes/ai-note68.html">English</a>
+  <span class="current">繁體中文</span>
+  <a href="/zh-CN/notes/ai-note68.html">简体中文</a>
+</div>
+
+<main>
+  <h1>如何訓練你的第一個預測模型（預測，版本 7）？</h1>
+  <p class="paper-meta">林邦源博士 &middot; AI 筆記 &middot; 2026 年 11 月 13 日 &middot; 約 6 分鐘閱讀</p>
+
+  <p>
+    這是預測系列的第 7 個版本。版本 6 準備並分割了資料；版本 7 加入一個細小的神經網路，並讓它在
+    訓練例子中走過 100 遍。
+  </p>
+
+  <h2>模型是甚麼</h2>
+  <p>
+    模型接收最近 29 天作為輸入，回傳一個數字：它對下一天的猜測。內部是一個神經網路模型。這篇筆記
+    不會詳細解釋神經網路。將來的 AI 筆記會解釋它們怎樣運作。
+  </p>
+
+  <h2>訓練怎樣運作</h2>
+  <p>
+    一個<strong>回合</strong>是完全走過所有訓練例子一次，意思是模型把每個例子都看過一次。每個
+    回合裡，程式對每一批 32 個例子做同樣四件事：
+  </p>
+  <ol>
+    <li>把 29 天給模型看，收集它的猜測。</li>
+    <li>把猜測與真實的下一天比較，算出誤差，稱為<strong>損失</strong>。</li>
+    <li>找出哪些權重令損失變差，以及差了多少。</li>
+    <li>把每個權重稍微調整，以減少損失。</li>
+  </ol>
+  <p>
+    一個<strong>批次</strong>是一起處理的一組訓練例子。在這個程式裡，一個完整批次有 32 個例子。
+    這裡的損失是<strong>均方誤差</strong>：把答案減去猜測，平方，再對整個批次取平均。平方令錯得遠
+    的猜測比接近的猜測計得更重。
+  </p>
+  <p>
+    走完訓練批次之後，程式在驗證例子 &mdash; 較後的日子，模型從未學習過 &mdash; 上量度損失。
+    兩個數字都會記錄下來，以便畫出來。
+  </p>
+
+  <h2>程式怎樣運作</h2>
+
+  <h3>1. 定義網路</h3>
+  <pre class="code-block"><code>class TimeSeriesModel(nn.Module):
+    def __init__(self, window_size):
+        super(TimeSeriesModel, self).__init__()
+        self.network = nn.Sequential(
+            nn.Linear(window_size-1, 10),  # window_size-1 because our features are window_size-1
+            nn.ReLU(),
+            nn.Linear(10, 10),
+            nn.ReLU(),
+            nn.Linear(10, 1)
+        )
+
+    def forward(self, x):
+        return self.network(x)</code></pre>
+  <p>
+    <code>class ... (nn.Module)</code> 是定義 PyTorch 模型的標準做法。<code>__init__</code>
+    一次過建立各個層，而 <code>nn.Sequential</code> 的意思是<em>按這個次序執行這些層</em>。
+    <code>forward</code> 是模型被呼叫時發生的事：一批輸入進去，一批預測出來。當
+    <code>window_size = 30</code>，第一層預期 29 個數字，而這正是特徵所裝着的。
+  </p>
+
+  <h3>2. 選擇損失和優化器</h3>
+  <pre class="code-block"><code>model = TimeSeriesModel(window_size)
+criterion = nn.MSELoss()
+optimizer = optim.Adam(model.parameters())</code></pre>
+  <p>
+    <code>criterion</code> 用均方誤差計算誤差。<code>optimizer</code> 用那個誤差調整模型的權重。
+    <code>model.parameters()</code> 把網路中每一個權重交給優化器，所以它知道自己可以改變哪些值。
+  </p>
+
+  <h3>3. 選擇運算在哪裡進行</h3>
+  <pre class="code-block"><code>num_epochs = 100
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model.to(device)</code></pre>
+  <p>
+    <code>cuda</code> 是 NVIDIA 用來借助其顯示卡更快做這些運算的技術。在 Mac 或沒有 NVIDIA
+    顯示卡的筆記型電腦上，程式會靜靜地改用 <code>cpu</code>。<code>model.to(device)</code>
+    把模型搬到那個地方，而各個批次也會被搬到相應的地方。
+  </p>
+
+  <h3>4. 訓練迴圈</h3>
+  <pre class="code-block"><code>for epoch in range(num_epochs):
+    model.train()
+    train_loss = 0
+    for batch_features, batch_targets in train_loader:
+        batch_features = batch_features.to(device)
+        batch_targets = batch_targets.to(device)
+        outputs = model(batch_features)
+        loss = criterion(outputs, batch_targets)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        train_loss += loss.item()</code></pre>
+  <p>
+    <code>model.train()</code> 把網路置於學習模式。內層迴圈走過各個訓練批次。對每一批，
+    <code>model(batch_features)</code> 作出猜測，而 <code>criterion</code> 把這些猜測變成一個損失。
+  </p>
+  <p>
+    接下來三行幫助模型從每一批學習。<code>optimizer.zero_grad()</code> 清除上一批留下的調整計算。
+    <code>loss.backward()</code> 算出每個權重應該怎樣改變才能減少誤差。<code>optimizer.step()</code>
+    套用那些改變。把這三行重複幾千次，就是模型學習的方式。
+  </p>
+
+  <h3>5. 在驗證日量度</h3>
+  <pre class="code-block"><code>    model.eval()
+    val_loss = 0
+    with torch.no_grad():
+        for batch_features, batch_targets in val_loader:
+            batch_features = batch_features.to(device)
+            batch_targets = batch_targets.to(device)
+            outputs = model(batch_features)
+            val_loss += criterion(outputs, batch_targets).item()</code></pre>
+  <p>
+    <code>model.eval()</code> 切換到量度模式，而 <code>torch.no_grad()</code> 說<em>不必費力算出
+    哪些權重要負責，我們在這裡不會改變它們</em>。這節省時間和記憶體。然後驗證損失會除以批次的
+    數目，令訓練損失和驗證損失處於同一個尺度，而這一對數字每十個回合印一次。
+  </p>
+
+  <h3>6. 畫兩張圖</h3>
+  <pre class="code-block"><code>plt.plot(train_losses, label='Training Loss')
+plt.plot(val_losses, label='Validation Loss')</code></pre>
+  <p>
+    第一張圖把兩個損失對回合數顯示出來：一條應該下降然後變平的線。第二張圖把模型的猜測與真實的
+    驗證日畫在一起，灰色是真實值，紅色是預測值，讓你可以看到兩條線是否疊在一起。
+  </p>
+
+  <figure class="exhibit"><img src="/images/forecast-loss-curve.png" alt="損失曲線在頭三十個回合急劇下降然後變平，訓練與驗證兩條線靠得很近" style="max-width:100%; height:auto;"><figcaption>100 個回合的訓練與驗證損失，由 time_07.py 畫出</figcaption></figure>
+
+  <h3>7. 把所有東西歸結為一個數字</h3>
+  <pre class="code-block"><code>mae_torch = torch.mean(torch.abs(val_predictions_tensor - val_targets_tensor))
+print(f"Validation MAE (PyTorch): {mae_torch:.4f}")</code></pre>
+  <p>
+    <strong>MAE</strong>，平均絕對誤差，是預測值與實際值之間的平均差距，不理會每個預測是偏高還是
+    偏低。在這次執行中，它大約是 HK$4.76。驗證部分的每日銷售額大約是 HK$140，所以
+    <code>(4.76 &divide; 140) &times; 100 &asymp; 3.4%</code>。換句話說，平均預測誤差大約是典型一日
+    銷售額的 3%。MAE 比平方損失更容易向經理解釋，因為它是以銷售金額的元為單位。
+  </p>
+
+  <h2>你應該會看到甚麼</h2>
+  <pre class="code-block no-copy"><code>Epoch [10/100], Train Loss: 49.7555, Val Loss: 41.7937
+Epoch [20/100], Train Loss: 46.6252, Val Loss: 38.8985
+Epoch [30/100], Train Loss: 36.4138, Val Loss: 30.9879
+Epoch [40/100], Train Loss: 35.3789, Val Loss: 34.1952
+Epoch [50/100], Train Loss: 35.3108, Val Loss: 31.5904
+Epoch [60/100], Train Loss: 33.8329, Val Loss: 30.1213
+Epoch [70/100], Train Loss: 34.6491, Val Loss: 31.5292
+Epoch [80/100], Train Loss: 32.7247, Val Loss: 34.9715
+Epoch [90/100], Train Loss: 32.6162, Val Loss: 29.7084
+Epoch [100/100], Train Loss: 33.7850, Val Loss: 34.0184
+Validation MAE (PyTorch): 4.7594</code></pre>
+  <p>
+    你的數字不會和這些完全一樣。權重由隨機值開始，所以每次執行都會走一條稍微不同的下坡路。應該
+    一樣的是形狀：兩個損失最初都快速下降，然後在同一個水平附近起伏。
+  </p>
+  <figure class="exhibit"><img src="/images/forecast-predictions.png" alt="實際銷售額以灰色顯示、預測銷售額以紅色顯示的折線圖，紅線緊貼灰線" style="max-width:100%; height:auto;"><figcaption>驗證日的實際值（灰）與預測值（紅）</figcaption></figure>
+
+  <h2>完整程式</h2>
+  <p>
+    把上面的各部分放回一起。這就是完整的檔案：
+  </p>
+  <pre class="code-block"><code>import torch
+from torch.utils.data import TensorDataset, DataLoader, Subset
+import pandas as pd
+import matplotlib.pyplot as plt
+def create_sliding_windows_with_target(data, window_size, shift=1):
+    windows = data.unfold(0, window_size, shift)
+    features = windows[:, :-1]  # All columns except the last
+    targets = windows[:, -1:]   # Just the last column
+    return features, targets
+
+df = pd.read_csv('time_series.csv')
+series = df['series'].values
+series_tensor = torch.tensor(series, dtype=torch.float32)
+window_size = 30
+features, targets = create_sliding_windows_with_target(series_tensor, window_size=window_size, shift=1)
+full_dataset = TensorDataset(features, targets)
+
+total_windows = len(full_dataset)
+train_size = int(total_windows * 0.8)  # 80% for training, 20% for validation
+train_indices = list(range(train_size))
+val_indices = list(range(train_size, total_windows))
+
+train_dataset = Subset(full_dataset, train_indices)
+val_dataset = Subset(full_dataset, val_indices)
+
+# Create DataLoaders
+batch_size = 32
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+
+# Define the model
+class TimeSeriesModel(nn.Module):
+    def __init__(self, window_size):
+        super(TimeSeriesModel, self).__init__()
+        self.network = nn.Sequential(
+            nn.Linear(window_size-1, 10),  # window_size-1 because our features are window_size-1
+            nn.ReLU(),
+            nn.Linear(10, 10),
+            nn.ReLU(),
+            nn.Linear(10, 1)
+        )
+
+    def forward(self, x):
+        return self.network(x)
+
+# Initialize model, loss function, and optimizer
+model = TimeSeriesModel(window_size)
+criterion = nn.MSELoss()
+optimizer = optim.Adam(model.parameters())
+
+# Training loop
+num_epochs = 100
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model.to(device)
+
+# Lists to store losses for plotting
+train_losses = []
+val_losses = []
+
+for epoch in range(num_epochs):
+    # Training phase
+    model.train()
+    train_loss = 0
+    for batch_features, batch_targets in train_loader:
+        batch_features = batch_features.to(device)
+        batch_targets = batch_targets.to(device)
+
+        # Forward pass
+        outputs = model(batch_features)
+        loss = criterion(outputs, batch_targets)
+
+        # Backward pass and optimize
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        train_loss += loss.item()
+
+    # Validation phase
+    model.eval()
+    val_loss = 0
+    with torch.no_grad():
+        for batch_features, batch_targets in val_loader:
+            batch_features = batch_features.to(device)
+            batch_targets = batch_targets.to(device)
+
+            outputs = model(batch_features)
+            val_loss += criterion(outputs, batch_targets).item()
+
+    # Calculate average losses
+    train_loss /= len(train_loader)
+    val_loss /= len(val_loader)
+
+    train_losses.append(train_loss)
+    val_losses.append(val_loss)
+
+    if (epoch + 1) % 10 == 0:
+        print(f'Epoch [{epoch+1}/{num_epochs}], '
+              f'Train Loss: {train_loss:.4f}, '
+              f'Val Loss: {val_loss:.4f}')
+
+# Plot training progress
+plt.figure(figsize=(10, 6))
+plt.plot(train_losses, label='Training Loss')
+plt.plot(val_losses, label='Validation Loss')
+plt.title('Model Loss Over Time')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# Make predictions
+model.eval()
+with torch.no_grad():
+    # Get predictions for validation set
+    val_predictions = []
+    val_targets = []
+    for batch_features, batch_targets in val_loader:
+        batch_features = batch_features.to(device)
+        outputs = model(batch_features)
+        val_predictions.extend(outputs.cpu().numpy())
+        val_targets.extend(batch_targets.numpy())
+
+# Plot predictions vs actual for validation set
+plt.plot(val_targets, label='Actual', color="lightgrey")
+plt.plot(val_predictions, label='Predicted', color="red")
+plt.title('Predictions vs Actual Values (Validation Set)')
+plt.xlabel('Time')
+plt.ylabel('Value')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+val_predictions_tensor = torch.tensor(val_predictions)
+val_targets_tensor = torch.tensor(val_targets)
+mae_torch = torch.mean(torch.abs(val_predictions_tensor - val_targets_tensor))
+print(f"Validation MAE (PyTorch): {mae_torch:.4f}")</code></pre>
+
+  <h2>在自己的電腦上執行</h2>
+  <p>
+    <a href="../../notes/downloads/Folder-AI-Forecast.zip" download>下載 zip 檔案</a>並解壓到一個
+    資料夾。zip 裡有這個系列到目前為止的程式、<code>time_series.csv</code> 資料檔，以及
+    <code>pyproject.toml</code>。這篇筆記用的是 <code>time_07.py</code>。在 Visual Studio Code
+    裡打開資料夾，然後在終端機輸入這三行：
+  </p>
+  <pre class="code-block"><code>uv python pin 3.12.10
+uv sync
+uv run time_07.py</code></pre>
+  <p>
+    第一行記錄這個資料夾用哪個 Python 版本，第二行安裝 <code>pyproject.toml</code> 列出的每一個
+    套件。第三行每十個回合印出一行，然後打開損失圖和預測圖；關閉每個視窗讓程式繼續。
+  </p>
+  <p>
+    這三行只需要一次。下次想再執行程式，只打 <code>uv run time_07.py</code>。
+  </p>
+  <p>
+    如果你還沒有設定 uv，先看
+    <a href="/zh-HK/notes/ai-note05.html">如何安裝 Visual Studio Code？</a>，然後看 uv 筆記的
+    <a href="/zh-HK/notes/ai-note03.html">Windows</a> 或 <a href="/zh-HK/notes/ai-note04.html">Mac</a>。
+  </p>
+
+  <h2>接下來是甚麼</h2>
+  <p>
+    有了模型，但它的品質只在驗證日上被評分，而驗證日是最後 20% 的資料。版本 8 加入第三個、從未
+    碰過的部分 &mdash; 一個測試集 &mdash; 並在上面報告四個量度：MAE、MSE、RMSE 和 R&sup2;。
+  </p>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&amp;hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', 'Copy code to clipboard');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', 'Copied to clipboard');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', 'Copy code to clipboard');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>

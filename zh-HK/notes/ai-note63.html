@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>如何把數列切成滑動視窗（預測，版本 2）？ | 林邦源博士</title>
+<meta name="description" content="預測系列的第 2 個版本：torch.unfold 把一行數字切成滑動視窗，這種安排把過去的數值變成訓練例子。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note63.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note63.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note63.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note63.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note63.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何把數列切成滑動視窗（預測，版本 2）？">
+<meta property="og:description" content="預測系列的第 2 個版本：torch.unfold 把一行數字切成滑動視窗，這種安排把過去的數值變成訓練例子。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-HK/notes/ai-note63.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="../../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "如何把數列切成滑動視窗（預測，版本 2）？",
+  "description": "預測系列的第 2 個版本：torch.unfold 把一行數字切成滑動視窗，這種安排把過去的數值變成訓練例子。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-13",
+  "dateModified": "2026-11-13",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-HK/notes/ai-note63.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../../index.html">首頁</a></li>
+        <li><a href="../../biography.html">個人簡介</a></li>
+        <li><a href="../../research.html">研究</a></li>
+        <li><a href="../../cases.html">案例</a></li>
+        <li><a href="../../books.html">著作</a></li>
+        <li><a href="../../ai-programs.html">AI 筆記</a></li>
+        <li><a href="../../links/">連結</a></li>
+        <li><a href="../../glossary/">詞彙表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <a href="/notes/ai-note63.html">English</a>
+  <span class="current">繁體中文</span>
+  <a href="/zh-CN/notes/ai-note63.html">简体中文</a>
+</div>
+
+<main>
+  <h1>如何把數列切成滑動視窗（預測，版本 2）？</h1>
+  <p class="paper-meta">林邦源博士 &middot; AI 筆記 &middot; 2026 年 11 月 13 日 &middot; 約 4 分鐘閱讀</p>
+
+  <p>
+    這是預測系列的第 2 個版本：這個系列每隔一小步，逐步建立一個能從過去銷售額預測未來銷售額的
+    程式。版本 1 看了資料。版本 2 踏出朝向預測的第一步，而它仍然沒有 AI：它只是重新排列數字。
+    為了讓輸出小得可以一眼看清，這個版本用 0 到 9 這十個數字來練習，而不是真實的銷售數列。
+  </p>
+
+  <h2>為什麼要用滑動視窗？</h2>
+  <p>
+    一個預測模型只學一個基本模式：<em>給定這些最近的數值，預測下一個值</em>。例如，用 10 個
+    時間段的銷售數字，我們可以用第 1 至第 4 段的值預測第 5 段，用第 2 至第 5 段的值預測第 6 段，
+    用第 3 至第 6 段的值預測第 7 段，如此類推。
+  </p>
+  <p>
+    這種製作訓練例子的方法叫做<strong>滑動視窗</strong>。取數列的一小段，向前移動一個時間段，
+    再取下一段，如此重複。每一段裡，除了最後一個之外的每個值，都是模型<em>被給予</em>的，
+    而最後一個值是它必須學懂預測的<em>答案</em>。有了許多這樣的例子，模型就學到最近的銷售額
+    與下一天銷售額之間的關係。
+  </p>
+
+  <h2>程式怎樣運作</h2>
+
+  <h3>1. 載入 torch</h3>
+  <pre class="code-block"><code>import torch</code></pre>
+  <p>
+    <strong>PyTorch</strong>，以 <code>torch</code> 名稱載入，是後面的版本用來建立和訓練模型的
+    函式庫。版本 2 只借用它的一個工具 <code>unfold</code>，它負責切割。
+  </p>
+
+  <h3>2. 建立一個小數列</h3>
+  <pre class="code-block"><code>data = torch.arange(10)
+print(data)</code></pre>
+  <p>
+    <code>torch.arange(10)</code> 建立由 0 到 9 的整數 —— 一個十天的時間序列的替身。
+    <code>print(data)</code> 把它顯示成一行，讓你在它被切開之前先檢查原材料。
+  </p>
+
+  <h3>3. 切出視窗</h3>
+  <pre class="code-block"><code># the unfold method extracts sliding windows along dimension 0 
+# (the only dimension here)
+# window length is 5, and the windows shift by 1 element
+windows = data.unfold(0, 5, 1)</code></pre>
+  <p>
+    <code>unfold</code> 接受三個參數。第一個 <code>0</code> 指出要沿哪個方向切 —— 第 0 維，
+    這條單行數列唯一的方向。第二個 <code>5</code> 是<strong>視窗長度</strong>：每一段有五個
+    數字。第三個 <code>1</code> 是<strong>步長</strong>：視窗每次向前滑一個位置。
+  </p>
+  <h3>4. 顯示每一個視窗</h3>
+  <pre class="code-block"><code>for window in windows:
+    print(window.numpy())</code></pre>
+  <p>
+    <code>for</code> 迴圈一次取一個視窗，縮排的那一行對每一個視窗執行一次。
+    <code>window.numpy()</code> 把目前的視窗轉成普通陣列，讓它印得整齊。
+  </p>
+
+  <p>
+    用十個數字、長度為五的視窗，我們可以造出 <code>[0 1 2 3 4]</code>、
+    <code>[1 2 3 4 5]</code>、<code>[2 3 4 5 6]</code>，如下所示。
+  </p>
+
+  <h2>你應該會看到</h2>
+  <pre class="code-block no-copy"><code>tensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+[0 1 2 3 4]
+[1 2 3 4 5]
+[2 3 4 5 6]
+[3 4 5 6 7]
+[4 5 6 7 8]
+[5 6 7 8 9]</code></pre>
+  <p>
+    第一行是原始的數列。如果一個視窗的前四個數字是<em>被給予</em>的日子，最後一個數字是要預測
+    的那一天，那麼這個程式已經用一條十個數字的數列，製造了六個訓練例子。
+  </p>
+
+  <h2>完整程式</h2>
+  <pre class="code-block"><code>import torch
+data = torch.arange(10)
+print(data)
+# the unfold method extracts sliding windows along dimension 0 
+# (the only dimension here)
+# window length is 5, and the windows shift by 1 element
+windows = data.unfold(0, 5, 1)
+for window in windows:
+    print(window.numpy())</code></pre>
+
+  <h2>在自己的電腦上執行</h2>
+  <p>
+    <a href="../../notes/downloads/Folder-AI-Forecast.zip" download>下載 zip 檔案</a>並解壓到
+    一個資料夾。zip 裡有這個系列到目前為止的程式、<code>time_series.csv</code> 資料檔，
+    以及 <code>pyproject.toml</code>。這篇筆記用的是 <code>time_02.py</code>。在 Visual Studio
+    Code 裡打開資料夾，然後在終端機輸入這三行：
+  </p>
+  <pre class="code-block"><code>uv python pin 3.12.10
+uv sync
+uv run time_02.py</code></pre>
+  <p>
+    第一行記錄這個資料夾用哪個 Python 版本，第二行安裝 <code>pyproject.toml</code> 列出的
+    每一個套件。第三行在終端機印出數列和它的視窗。
+  </p>
+  <p>
+    這三行只需要一次。下次想再執行程式，只打 <code>uv run time_02.py</code>。
+  </p>
+  <p>
+    如果你還沒有設定 uv，先看
+    <a href="/zh-HK/notes/ai-note05.html">如何安裝 Visual Studio Code？</a>，然後看 uv 筆記的
+    <a href="/zh-HK/notes/ai-note03.html">Windows</a> 或 <a href="/zh-HK/notes/ai-note04.html">Mac</a>。
+  </p>
+
+  <h2>接下來是甚麼</h2>
+  <p>
+    切割行得通，但三個參數是寫死在程式裡的，而且這些片段還沒有被標記為<em>輸入</em>和
+    <em>答案</em>。版本 3 把切割包進一個函式，視窗大小可以由你選擇。
+  </p>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&amp;hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', 'Copy code to clipboard');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', 'Copied to clipboard');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', 'Copy code to clipboard');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>

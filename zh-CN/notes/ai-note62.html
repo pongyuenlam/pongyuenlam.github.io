@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>如何在做预测之前先看你的销售数据（预测，版本 1）？ | 林邦源博士</title>
+<meta name="description" content="一个 10 行的程序，从 CSV 文件读入 1,460 天的每日销售额并画出折线图：任何预测项目的第一步。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note62.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note62.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note62.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note62.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note62.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何在做预测之前先看你的销售数据（预测，版本 1）？">
+<meta property="og:description" content="一个 10 行的程序，从 CSV 文件读入 1,460 天的每日销售额并画出折线图：任何预测项目的第一步。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-CN/notes/ai-note62.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="../../css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "如何在做预测之前先看你的销售数据（预测，版本 1）？",
+  "description": "一个 10 行的程序，从 CSV 文件读入 1,460 天的每日销售额并画出折线图：任何预测项目的第一步。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-13",
+  "dateModified": "2026-11-13",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-CN/notes/ai-note62.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="../../index.html">Howard Lam, PhD</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="../../index.html">首页</a></li>
+        <li><a href="../../biography.html">个人简介</a></li>
+        <li><a href="../../research.html">研究</a></li>
+        <li><a href="../../cases.html">案例</a></li>
+        <li><a href="../../books.html">著作</a></li>
+        <li><a href="../../ai-programs.html">AI 笔记</a></li>
+        <li><a href="../../links/">链接</a></li>
+        <li><a href="../../glossary/">词汇表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="lang-switcher">
+  <a href="/notes/ai-note62.html">English</a>
+  <a href="/zh-HK/notes/ai-note62.html">繁體中文</a>
+  <span class="current">简体中文</span>
+</div>
+
+<main>
+  <h1>如何在做预测之前先看你的销售数据（预测，版本 1）？</h1>
+  <p class="paper-meta">林邦源博士 &middot; AI 笔记 &middot; 2026 年 11 月 13 日 &middot; 约 4 分钟阅读</p>
+
+  <p>
+    这是预测系列的第 1 个版本。这个系列一小步一小步地搭建一个程序，用过去的销售额预测未来的
+    销售额。版本 1 完全不含 AI。它读入一个装着每日销售额数字的文件，画出一张折线图。
+    这是刻意的：在电脑能够预测任何事情之前，你必须先看看你要求它学习的数据。
+  </p>
+
+  <h2>数据从哪里来？</h2>
+  <p>
+    程序读入一个叫 <code>time_series.csv</code> 的文件。CSV 文件是一个纯文本表格：每一行是
+    一行数据，一行里的各个值用逗号分隔。这个文件有两列，<code>time</code> 和
+    <code>series</code>，共 4 &times; 365 = 1,460 行 &mdash; 每天一行，大约四年的每日
+    销售额，以港币计。
+  </p>
+  <pre class="code-block no-copy"><code>time,series
+1.0,29.395714
+2.0,33.40659
+3.0,37.858486
+4.0,29.14184</code></pre>
+  <p>
+    日期编号写成 <code>1.0</code>、<code>2.0</code> 这样，而不是 <code>1</code>、
+    <code>2</code>：<code>.0</code> 把它们标记为小数（浮点数），和销售额数字是同一种数，
+    所以整个文件使用统一的数字格式。
+  </p>
+  <p>
+    像这样按时间顺序排列的一串数字，叫做<strong>时间序列</strong>，文件名由此而来。预测，
+    就是用这样一段记录的前一部分，去预测接下来出现的值。
+  </p>
+
+  <h2>程序怎样运作</h2>
+
+  <h3>1. 载入两个库</h3>
+  <pre class="code-block"><code>import pandas as pd
+import matplotlib.pyplot as plt</code></pre>
+  <p>
+    <code>pandas</code> 是读表格的库，给它一个短名 <code>pd</code>，让代码保持紧凑。
+    <code>matplotlib</code> 是画图表的库，它的绘图部分被命名为 <code>plt</code>。这两行
+    都是几乎每个数据程序里都会看到的惯例。
+  </p>
+
+  <h3>2. 把文件读进一张表</h3>
+  <pre class="code-block"><code>df = pd.read_csv('time_series.csv')
+series = df['series'].values</code></pre>
+  <p>
+    第一行把 CSV 文件读进 <code>df</code>，一个 <strong>DataFrame</strong> &mdash;
+    pandas 对带列名的表格的叫法。第二行按名字取出一列，<code>df['series']</code>，而
+    <code>.values</code> 剥掉表格的外衣，只留下裸的数字：1,460 个销售额数字排成一行，
+    可以直接画出来，或者拿去计算。
+  </p>
+  <p>
+    注意程序对 <code>time</code> 这一列做了什么：什么也没做。在这个文件里，行已经按时间
+    顺序排好，所以一个数字在列表里的位置就是它的时间。下面的图只是画出第 1 天、第 2 天、
+    第 3 天，依此类推。
+  </p>
+
+  <h3>3. 画出图表</h3>
+  <pre class="code-block"><code>plt.plot(series)
+plt.title('Sales per day')
+plt.xlabel('Day')
+plt.ylabel('Sales-HK$')
+plt.grid(True)
+plt.show()</code></pre>
+  <p>
+    <code>plt.plot(series)</code> 用一条线穿过全部 1,460 个数字。接下来三行加的是收尾的
+    点缀：<code>plt.title('Sales per day')</code> 是标题，<code>plt.xlabel('Day')</code>
+    是横轴下方的标签，<code>plt.ylabel('Sales-HK$')</code> 是纵轴旁边的标签。
+    <code>plt.grid(True)</code> 加上浅色的背景线，让读数更容易。
+  </p>
+  <p>
+    最后一行，<code>plt.show()</code>，才是真正把窗口放到你屏幕上的那一行。
+  </p>
+
+  <h2>你应该会看到什么</h2>
+  <p>
+    一个窗口打开，里面有一条从左往右爬升的线：销售额从每天约 HK$30 开始，最后接近
+    HK$160，中间有小幅的起伏。
+  </p>
+  <figure class="exhibit"><img src="/images/sales-per-day-chart.png" alt="每日销售额折线图，从约 HK$30 爬升到约 HK$160" style="max-width:100%; height:auto;"><figcaption>每日销售额，由 time_01.py 画出</figcaption></figure>
+  <p>
+    在任何预测开始之前，有两件事值得注意。第一，这个序列<strong>有向上趋势</strong>
+    &mdash; 后面的日子系统性地高于前面的日子。第二，这些起伏是趋势周围<strong>看起来
+    随机的噪声</strong>。之后的版本必须同时处理这两个事实，而亲眼看到它们，正是先画这张图
+    的理由。
+  </p>
+
+  <h2>完整程序</h2>
+  <p>
+    把上面的各部分放回一起。这就是完整的文件，一共 10 行：
+  </p>
+  <pre class="code-block"><code>import pandas as pd
+import matplotlib.pyplot as plt
+df = pd.read_csv('time_series.csv')
+series = df['series'].values
+plt.plot(series)
+plt.title('Sales per day')
+plt.xlabel('Day')
+plt.ylabel('Sales-HK$')
+plt.grid(True)
+plt.show()</code></pre>
+
+  <h2>在自己的电脑上运行</h2>
+  <p>
+    <a href="../../notes/downloads/Folder-AI-Forecast.zip" download>下载 zip 文件</a>，解压到
+    一个文件夹。zip 里有 <code>time_01.py</code>、<code>time_series.csv</code> 数据文件，
+    以及 <code>pyproject.toml</code>。在 Visual Studio Code 中打开文件夹，然后在终端输入
+    这三行：
+  </p>
+  <pre class="code-block"><code>uv python pin 3.12.10
+uv sync
+uv run time_01.py</code></pre>
+  <p>
+    第一行记录这个文件夹用哪个 Python 版本，第二行安装 <code>pyproject.toml</code> 列出的
+    每一个包。第三行打开图表窗口；关闭它以让程序结束。
+  </p>
+  <p>
+    这三行只需要一次。下次想再运行程序，只输入 <code>uv run time_01.py</code>。
+  </p>
+  <p>
+    如果你还没有设置 uv，先看
+    <a href="/zh-CN/notes/ai-note05.html">如何安装 Visual Studio Code？</a>，然后看 uv 笔记的
+    <a href="/zh-CN/notes/ai-note03.html">Windows</a> 或 <a href="/zh-CN/notes/ai-note04.html">Mac</a>。
+  </p>
+
+  <h2>接下来是什么</h2>
+  <p>
+    版本 1 显示数据，但一张图不是预测。版本 2 朝预测迈出第一步：把序列切成
+    <strong>滑动窗口</strong>，这种排列把过去的销售额变成模型可以学习的训练例子。
+  </p>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">Email</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&amp;hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', 'Copy code to clipboard');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', 'Copied to clipboard');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', 'Copy code to clipboard');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>

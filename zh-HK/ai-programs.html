@@ -117,6 +117,54 @@
     <p>三個學習率、提前停止與存下的贏家：最好的一次在 37 個回合內達到 R&sup2; 0.44，而版本 8 是 0.24。</p>
   </div>
 
+  <div class="card" data-track="forecast">
+    <h3><a href="/zh-HK/notes/ai-note69.html">如何在模型從未見過的資料上量度它（預測，版本 8）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 閱讀時間約 6 分鐘</p>
+    <p>資料的第三部分完全不動，留給最後評分：MAE 5.03、RMSE 6.23、R&sup2; 0.24，一個誠實的結果，還有很多改善空間。</p>
+  </div>
+
+  <div class="card" data-track="forecast">
+    <h3><a href="/zh-HK/notes/ai-note68.html">如何訓練你的第一個預測模型（預測，版本 7）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 閱讀時間約 6 分鐘</p>
+    <p>一個 29 個輸入、兩層隱藏層、1 個輸出的迷你網路，用 1,144 個例子訓練 100 個回合，附上損失曲線，平均誤差約 HK$4.8。</p>
+  </div>
+
+  <div class="card" data-track="forecast">
+    <h3><a href="/zh-HK/notes/ai-note67.html">如何把例子分成訓練與驗證兩部分（預測，版本 6）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 閱讀時間約 5 分鐘</p>
+    <p>1,431 個例子按日期順序切成 1,144 個訓練、287 個驗證，模型永遠在它學過的日期之後的日子上被評分。</p>
+  </div>
+
+  <div class="card" data-track="forecast">
+    <h3><a href="/zh-HK/notes/ai-note66.html">如何用冒號縮短切片（預測，版本 5）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 閱讀時間約 4 分鐘</p>
+    <p>兩行取代四行：單一個冒號代表每一列，減一代表最後一欄，而印出來的數字完全一樣。</p>
+  </div>
+
+  <div class="card" data-track="forecast">
+    <h3><a href="/zh-HK/notes/ai-note65.html">如何把每個視窗拆成特徵與目標值（預測，版本 4）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 閱讀時間約 5 分鐘</p>
+    <p>一個 27 行的程式，把 1,460 天的銷售變成 1,431 個例子，每個例子有 29 個過去日子與要預測的那 1 天。</p>
+  </div>
+
+  <div class="card" data-track="forecast">
+    <h3><a href="/zh-HK/notes/ai-note64.html">如何把視窗長度變成一個設定（預測，版本 3）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 閱讀時間約 4 分鐘</p>
+    <p>一個 9 行的程式，把切片的動作包成函式，視窗長度從散落在程式碼裡的三個數值，變成一個可以改的數字。</p>
+  </div>
+
+  <div class="card" data-track="forecast">
+    <h3><a href="/zh-HK/notes/ai-note63.html">如何把數列切成滑動視窗（預測，版本 2）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 閱讀時間約 4 分鐘</p>
+    <p>一個 11 行的程式，用 <code>unfold</code> 把一條十個數字變成六個訓練例子，這是之後每個版本都在用的排列方式。</p>
+  </div>
+
+  <div class="card" data-track="forecast">
+    <h3><a href="/zh-HK/notes/ai-note62.html">如何在預測前先看你的銷售資料（預測，版本 1）？</a></h3>
+    <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 閱讀時間約 4 分鐘</p>
+    <p>一個 10 行的程式，從 CSV 檔載入 1,460 天的每日銷售並畫出折線圖：模型要預測之前，你得先看資料。</p>
+  </div>
+
   <div class="card" data-track="face">
     <h3><a href="/zh-HK/notes/ai-note61.html">人臉比對應有多嚴格（人臉辨識，版本 9）？</a></h3>
     <p class="meta">林邦源 &middot; 2026年11月13日 &middot; 閱讀時間約 6 分鐘</p>
