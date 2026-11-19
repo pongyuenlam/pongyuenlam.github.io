@@ -163,36 +163,52 @@
     window length.
   </p>
 
-  <h3>3. Train and grade each combination</h3>
+  <h3>3. Train each combination and keep its validation score</h3>
   <pre class="code-block"><code>for i, combo in enumerate(sampled):
     cfg = dict(zip(keys, combo))
-    model, t_losses, v_losses, test_loader = train_trial(cfg)
-    r2, mae, rmse, preds, actuals = evaluate(model, test_loader)</code></pre>
+    model, t_losses, v_losses, trial_val_loss, test_loader = train_trial(cfg)
+
+    row = {**cfg, "val_loss": trial_val_loss, "actual_epochs": len(t_losses)}
+    results.append(row)</code></pre>
   <p>
     The configuration now carries six values, for example
     <code>{"epochs": 50, "learning_rate": 0.001, ..., "window_size": 10}</code>. This dictionary is
     stored in <code>cfg</code>, short for <strong>configuration</strong>: one complete set of
-    settings for a single trial. Training works as in version 9: a trial stops early if the
-    validation error does not improve for 10 epochs, and the weights that gave the lowest validation
-    error are kept. A trial that stops improving therefore ends early instead of running to the
-    maximum number of epochs. The test loader comes back out of <code>train_trial</code> only
-    because it was built for that trial's window.
+    settings for a single trial. <code>train_trial</code> now returns <em>five</em> things: the
+    model, its training and validation loss curves, the best validation loss seen during training,
+    and the test loader built for that trial's window. We record the validation score in the
+    results row but do <em>not</em> call <code>evaluate</code> on the test set inside the loop. Each
+    trial is graded on validation data only, so the test set stays hidden until the winner is
+    chosen.
+  </p>
+  <p>
+    Training works as in version 9: a trial stops early if the validation error does not improve
+    for 15 epochs (<code>EARLY_STOP_PATIENCE = 15</code>), and the weights that gave the lowest
+    validation error are kept. A trial that stops improving therefore ends early instead of running
+    to the maximum number of epochs. The test loader comes back out of <code>train_trial</code> only
+    because it was built for that trial's window; it is not used yet.
   </p>
 
-  <h3>4. Keep the winner and write the files</h3>
-  <pre class="code-block"><code>if r2 &gt; best_r2:
-    best_r2    = r2
+  <h3>4. Pick the winner by validation loss, then grade it honestly</h3>
+  <pre class="code-block"><code>if trial_val_loss &lt; best_val_loss:
+    best_val_loss = trial_val_loss
     best_trial = {"cfg": cfg, "model": model, ...}
+
+# Evaluate once on the test set after the winner is chosen
+r2, mae, rmse, preds, actuals = evaluate(best_trial["model"], best_trial["test_loader"])
 
 torch.save(best_trial["model"].state_dict(), "best_model.pt")
 results_df.to_excel("search_results.xlsx", index_label="Rank")</code></pre>
   <p>
-    At the end, five files appear in the folder. <code>best_model.pt</code> holds the winning
-    weights, <code>search_results.xlsx</code> holds all twenty trials ranked by R&sup2; with a
-    <code>window_size</code> column that version 10 did not have, and three charts are saved as
-    <code>best_model_loss.png</code>, <code>best_model_predictions.png</code> and
-    <code>trial_r2_chart.png</code>. The spreadsheet is still the useful one, because it keeps
-    every trial, not only the winner.
+    <code>best_val_loss</code> starts at positive infinity, so the first trial always becomes the
+    benchmark and later trials must <em>lower</em> it to replace it. Only after that decision is
+    final does the script call <code>evaluate</code> once on the test set &mdash; the same test days
+    that no trial has looked at until now. At the end, five files appear in the folder.
+    <code>best_model.pt</code> holds the winning weights, <code>search_results.xlsx</code> holds all
+    twenty trials ranked by validation loss with a <code>window_size</code> column that version 10
+    did not have, and three charts are saved as <code>best_model_loss.png</code>,
+    <code>best_model_predictions.png</code> and <code>trial_val_loss_chart.png</code>. The
+    spreadsheet is still the useful one, because it keeps every trial, not only the winner.
   </p>
 
   <h2>What you should see</h2>
@@ -202,54 +218,61 @@ results_df.to_excel("search_results.xlsx", index_label="Rank")</code></pre>
   </p>
   <pre class="code-block no-copy"><code>Running 20 random trials...
 
-Trial   Win  Epochs      LR      Opt  Hidden  Layers        R2        RMSE
+Trial   Win  Epochs      LR      Opt  Hidden  Layers      Val Loss
 ------------------------------------------------------------------------------
-    1    30     200   0.001     Adam      10       2    0.4358      5.3364
-    2    30      50    0.01     Adam      10       2    0.4138      5.4394
-    3    20      50   0.001     Adam      64       1    0.4241      5.4350
-    4    50     200    0.01     Adam      10       1    0.4365      5.3207
-    5    20      50     0.1      SGD      64       2  -419.3689    146.8400
-    6    30      50     0.1     Adam      64       3   -86.7436     66.5462
-    7    10      50     0.1     Adam      32       1    0.4351      5.4060
-    8    30      50    0.01     Adam      64       3    0.4424      5.3048
-    9    30     200   0.001  RMSprop      64       3    0.3956      5.5230
-   10    10      50   0.001  RMSprop      64       3    0.4566      5.3021
-   11    10     200   0.001      SGD      10       3  -312.0232    127.2510
-   12    30     200    0.01     Adam      10       1    0.4389      5.3215
-   13    20     200     0.1      SGD      32       1  -835.4003    207.1267
-   14    30     100     0.1     Adam      32       2    0.4367      5.3317
-   15    20      50   0.001  RMSprop      32       2    0.4163      5.4716
-   16    10     100     0.1      SGD      64       2  -363.2989    137.2783
-   17    10     100    0.01     Adam      10       1    0.4372      5.3959
-   18    10      50   0.001     Adam      64       3    0.4573      5.2983
-   19    30      50   0.001     Adam      64       2    0.4389      5.3216
-   20    50      50   0.001  RMSprop      32       3    0.4393      5.3073
+    1    30     200   0.001     Adam      10       2       38.8653
+    2    30      50    0.01     Adam      10       2       38.1330
+    3    20      50   0.001     Adam      64       1       37.3501
+    4    50     200    0.01     Adam      10       1       39.2846
+    5    20      50     0.1      SGD      64       2           inf
+    6    30      50     0.1     Adam      64       3       38.4867
+    7    10      50     0.1     Adam      32       1       37.4087
+    8    30      50    0.01     Adam      64       3       38.1892
+    9    30     200   0.001  RMSprop      64       3       40.5453
+   10    10      50   0.001  RMSprop      64       3       36.7209
+   11    10     200   0.001      SGD      10       3           inf
+   12    30     200    0.01     Adam      10       1       37.9963
+   13    20     200     0.1      SGD      32       1     2929.5016
+   14    30     100     0.1     Adam      32       2       38.3152
+   15    20      50   0.001  RMSprop      32       2       38.1311
+   16    10     100     0.1      SGD      64       2           inf
+   17    10     100    0.01     Adam      10       1       37.3275
+   18    10      50   0.001     Adam      64       3       35.7390
+   19    30      50   0.001     Adam      64       2       38.3012
+   20    50      50   0.001  RMSprop      32       3       40.7830
 
 Best model saved → best_model.pt
 Best config : {'epochs': 50, 'learning_rate': 0.001, 'optimizer': 'Adam', 'hidden_size': 64, 'num_layers': 3, 'window_size': 10}
-Best R²     : 0.4573  |  MAE: 4.2199  |  RMSE: 5.2983
+Best validation MSE: 35.7390
+Test R²: 0.4542  |  MAE: 4.2441  |  RMSE: 5.3134
 Results table saved → search_results.xlsx</code></pre>
   <p>
     <strong>The winner looks back only ten days.</strong> Trial 18 &mdash; 50 epochs, learning rate
-    0.001, Adam, 64 hidden units, 3 layers, window 10 &mdash; scored R&sup2; 0.4573 with MAE 4.2199
-    and RMSE 5.2983. The runner-up, trial 10, also used a window of 10 and was almost identical:
-    0.4566. That is our first real answer to the question the search was asked. On this data, the
-    short look-back wins.
+    0.001, Adam, 64 hidden units, 3 layers, window 10 &mdash; gave the lowest validation loss,
+    35.7390. The runner-up, trial 10, also used a window of 10 (validation loss 36.7209). That is
+    our first real answer to the question the search was asked. On this data, the short look-back
+    wins.
   </p>
   <p>
-    <strong>The gain over version 10 is small.</strong> Version 10's best was 0.4511 and version
-    11's is 0.4573, and part of that difference is luck of the draw rather than a better idea.
+    Only after the winner is fixed does the script touch the test days: R&sup2; 0.4542, MAE 4.2441
+    and RMSE 5.3134. Those numbers are the honest score, because no trial competed on them.
   </p>
-  <figure class="exhibit"><img src="/images/forecast-v11-loss.png" alt="Loss curves of the winning trial, dropping sharply at the first epoch and then flattening with the training and validation lines almost on top of each other" style="max-width:100%; height:auto;"><figcaption>Loss curves of the winning trial. Training ended at epoch 23 of the 50 allowed, because early stopping had seen no improvement for 15 epochs.</figcaption></figure>
-  <figure class="exhibit"><img src="/images/forecast-v11-predictions.png" alt="Actual test-day sales in pale grey and predicted values as a smooth red line following the upward trend but missing the daily swings" style="max-width:100%; height:auto;"><figcaption>Actual (grey) and predicted (red) values over the 218 test days with a window of 10. The model tracks the trend and smooths away the noise.</figcaption></figure>
-  <figure class="exhibit"><img src="/images/forecast-v11-r2-bar.png" alt="Bar chart of R squared across twenty trials sorted from best to worst, the positive bars squeezed against the zero line and a red dashed line marking the best score" style="max-width:100%; height:auto;"><figcaption>R&sup2; across all twenty trials, sorted best to worst. The five bars that plunge far below zero on the right are drawn to scale, which is why the good trials are squeezed against the zero line.</figcaption></figure>
+  <p>
+    <strong>The gain over version 10 is small.</strong> Version 10's best test score was R&sup2;
+    0.4471 and version 11's is 0.4542, and part of that difference is luck of the draw rather than a
+    better idea. Three trials report <code>inf</code>: the loss exploded and never came back, so
+    there is nothing to rank.
+  </p>
+  <figure class="exhibit"><img src="/images/forecast-v11-loss.png" alt="Loss curves of the winning trial, dropping sharply at the first epoch and then flattening with the training and validation lines almost on top of each other" style="max-width:100%; height:auto;"><figcaption>Loss curves of the winning trial. Training ended at epoch 29 of the 50 allowed, because early stopping had seen no improvement for 15 epochs.</figcaption></figure>
+  <figure class="exhibit"><img src="/images/forecast-v11-predictions.png" alt="Actual test-day sales in pale grey and predicted values as a smooth red line following the trend but missing the daily swings" style="max-width:100%; height:auto;"><figcaption>Actual (grey) and predicted (red) values over the 218 test days with a window of 10. The model tracks the trend and smooths away the noise.</figcaption></figure>
+  <figure class="exhibit"><img src="/images/forecast-v11-r2-bar.png" alt="Bar chart of validation loss across twenty trials, all the good trials almost invisible against the bottom because one diverged trial rises to nearly three thousand" style="max-width:100%; height:auto;"><figcaption>Validation loss across all twenty trials, sorted best to worst, with the best marked green. One diverged trial on the right reaches almost 3,000, which flattens every good trial against the red best-score line; the three trials with infinite loss have no bar at all.</figcaption></figure>
 
   <h2>The whole program</h2>
   <p>
     The pieces above, put back together. This is the complete file:
   </p>
   <pre class="code-block"><code>import os
-os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+os.environ[&quot;KMP_DUPLICATE_LIB_OK&quot;] = &quot;TRUE&quot;
 
 import torch
 import torch.nn as nn
@@ -269,20 +292,20 @@ torch.manual_seed(SEED)
 
 # ── Search space ─────────────────────────────────────────────────────────────
 SEARCH_SPACE = {
-    "epochs":       [50, 100, 200],
-    "learning_rate":[0.001, 0.01, 0.1],
-    "optimizer":    ["Adam", "SGD", "RMSprop"],
-    "hidden_size":  [10, 32, 64],
-    "num_layers":   [1, 2, 3],
-    "window_size":  [10, 20, 30, 50],
+    &quot;epochs&quot;:       [50, 100, 200],
+    &quot;learning_rate&quot;:[0.001, 0.01, 0.1],
+    &quot;optimizer&quot;:    [&quot;Adam&quot;, &quot;SGD&quot;, &quot;RMSprop&quot;],
+    &quot;hidden_size&quot;:  [10, 32, 64],
+    &quot;num_layers&quot;:   [1, 2, 3],
+    &quot;window_size&quot;:  [10, 20, 30, 50],
 }
 N_TRIALS            = 20
 EARLY_STOP_PATIENCE = 15
 BATCH_SIZE          = 32
 
 # ── Data ─────────────────────────────────────────────────────────────────────
-df = pd.read_csv("time_series.csv")
-series = df["series"].values
+df = pd.read_csv(&quot;time_series.csv&quot;)
+series = df[&quot;series&quot;].values
 series_tensor = torch.tensor(series, dtype=torch.float32)
 
 def make_loaders(window_size):
@@ -298,7 +321,7 @@ def make_loaders(window_size):
     test_loader  = DataLoader(Subset(full_dataset, range(val_end, total)),   batch_size=BATCH_SIZE, shuffle=False)
     return train_loader, val_loader, test_loader
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device(&quot;cuda&quot; if torch.cuda.is_available() else &quot;cpu&quot;)
 
 # ── Model factory ─────────────────────────────────────────────────────────────
 def build_model(input_size, hidden_size, num_layers):
@@ -311,21 +334,21 @@ def build_model(input_size, hidden_size, num_layers):
     return nn.Sequential(*layers).to(device)
 
 def get_optimizer(name, params, lr):
-    return {"Adam": optim.Adam, "SGD": optim.SGD, "RMSprop": optim.RMSprop}[name](params, lr=lr)
+    return {&quot;Adam&quot;: optim.Adam, &quot;SGD&quot;: optim.SGD, &quot;RMSprop&quot;: optim.RMSprop}[name](params, lr=lr)
 
 # ── Train one trial ───────────────────────────────────────────────────────────
 def train_trial(cfg):
-    train_loader, val_loader, test_loader = make_loaders(cfg["window_size"])
-    model     = build_model(cfg["window_size"] - 1, cfg["hidden_size"], cfg["num_layers"])
+    train_loader, val_loader, test_loader = make_loaders(cfg[&quot;window_size&quot;])
+    model     = build_model(cfg[&quot;window_size&quot;] - 1, cfg[&quot;hidden_size&quot;], cfg[&quot;num_layers&quot;])
     criterion = nn.MSELoss()
-    optimizer = get_optimizer(cfg["optimizer"], model.parameters(), cfg["learning_rate"])
+    optimizer = get_optimizer(cfg[&quot;optimizer&quot;], model.parameters(), cfg[&quot;learning_rate&quot;])
 
-    best_val_loss = float("inf")
+    best_val_loss = float(&quot;inf&quot;)
     best_state    = {k: v.clone() for k, v in model.state_dict().items()}
     patience_ctr  = 0
     train_losses, val_losses = [], []
 
-    for epoch in range(cfg["epochs"]):
+    for epoch in range(cfg[&quot;epochs&quot;]):
         # train
         model.train()
         t_loss = 0
@@ -360,7 +383,7 @@ def train_trial(cfg):
                 break
 
     model.load_state_dict(best_state)
-    return model, train_losses, val_losses, test_loader
+    return model, train_losses, val_losses, best_val_loss, test_loader
 
 # ── Evaluate on test set ──────────────────────────────────────────────────────
 def evaluate(model, test_loader):
@@ -379,84 +402,90 @@ def evaluate(model, test_loader):
     r2 = (1 - ss_res / ss_tot).item()
     return r2, mae, rmse, preds, actuals
 
-# ── Random search ─────────────────────────────────────────────────────────────
+# ── Random search; select by validation loss ──────────────────────────────────
 keys   = list(SEARCH_SPACE.keys())
 combos = list(itertools.product(*SEARCH_SPACE.values()))
 sampled = random.sample(combos, min(N_TRIALS, len(combos)))
 
 results = []
-best_r2    = -float("inf")
+best_val_loss = float(&quot;inf&quot;)
 best_trial = None
 
-print(f"Running {N_TRIALS} random trials...\n")
-print(f"{'Trial':&gt;5}  {'Win':&gt;4}  {'Epochs':&gt;6}  {'LR':&gt;6}  {'Opt':&gt;7}  {'Hidden':&gt;6}  {'Layers':&gt;6}  {'R2':&gt;8}  {'RMSE':&gt;10}")
-print("-" * 78)
+print(f&quot;Running {N_TRIALS} random trials...\n&quot;)
+print(f&quot;{&#x27;Trial&#x27;:&gt;5}  {&#x27;Win&#x27;:&gt;4}  {&#x27;Epochs&#x27;:&gt;6}  {&#x27;LR&#x27;:&gt;6}  {&#x27;Opt&#x27;:&gt;7}  {&#x27;Hidden&#x27;:&gt;6}  {&#x27;Layers&#x27;:&gt;6}  {&#x27;Val Loss&#x27;:&gt;12}&quot;)
+print(&quot;-&quot; * 78)
 
 for i, combo in enumerate(sampled):
     cfg = dict(zip(keys, combo))
-    model, t_losses, v_losses, test_loader = train_trial(cfg)
-    r2, mae, rmse, preds, actuals = evaluate(model, test_loader)
+    model, t_losses, v_losses, trial_val_loss, test_loader = train_trial(cfg)
 
-    row = {**cfg, "r2": round(r2, 4), "mae": round(mae, 4), "rmse": round(rmse, 4),
-           "actual_epochs": len(t_losses)}
+    row = {**cfg, &quot;val_loss&quot;: trial_val_loss, &quot;actual_epochs&quot;: len(t_losses)}
     results.append(row)
 
-    print(f"{i+1:&gt;5}  {cfg['window_size']:&gt;4}  {cfg['epochs']:&gt;6}  {cfg['learning_rate']:&gt;6}  "
-          f"{cfg['optimizer']:&gt;7}  {cfg['hidden_size']:&gt;6}  {cfg['num_layers']:&gt;6}  "
-          f"{r2:&gt;8.4f}  {rmse:&gt;10.4f}")
+    print(f&quot;{i+1:&gt;5}  {cfg[&#x27;window_size&#x27;]:&gt;4}  {cfg[&#x27;epochs&#x27;]:&gt;6}  {cfg[&#x27;learning_rate&#x27;]:&gt;6}  &quot;
+          f&quot;{cfg[&#x27;optimizer&#x27;]:&gt;7}  {cfg[&#x27;hidden_size&#x27;]:&gt;6}  {cfg[&#x27;num_layers&#x27;]:&gt;6}  &quot;
+          f&quot;{trial_val_loss:&gt;12.4f}&quot;)
 
-    if r2 &gt; best_r2:
-        best_r2    = r2
-        best_trial = {"cfg": cfg, "model": model, "t_losses": t_losses,
-                      "v_losses": v_losses, "preds": preds, "actuals": actuals,
-                      "r2": r2, "mae": mae, "rmse": rmse}
+    if trial_val_loss &lt; best_val_loss:
+        best_val_loss = trial_val_loss
+        best_trial = {&quot;cfg&quot;: cfg, &quot;model&quot;: model, &quot;t_losses&quot;: t_losses,
+                      &quot;v_losses&quot;: v_losses, &quot;val_loss&quot;: trial_val_loss,
+                      &quot;test_loader&quot;: test_loader}
+
+# ── Evaluate the selected model on the test set once ─────────────────────────
+r2, mae, rmse, preds, actuals = evaluate(best_trial[&quot;model&quot;], best_trial[&quot;test_loader&quot;])
+best_trial.update({&quot;r2&quot;: r2, &quot;mae&quot;: mae, &quot;rmse&quot;: rmse,
+                   &quot;preds&quot;: preds, &quot;actuals&quot;: actuals})
 
 # ── Save best model ───────────────────────────────────────────────────────────
-torch.save(best_trial["model"].state_dict(), "best_model.pt")
-print(f"\nBest model saved → best_model.pt")
-print(f"Best config : {best_trial['cfg']}")
-print(f"Best R²     : {best_trial['r2']:.4f}  |  MAE: {best_trial['mae']:.4f}  |  RMSE: {best_trial['rmse']:.4f}")
+torch.save(best_trial[&quot;model&quot;].state_dict(), &quot;best_model.pt&quot;)
+print(f&quot;\nBest model saved → best_model.pt&quot;)
+print(f&quot;Best config : {best_trial[&#x27;cfg&#x27;]}&quot;)
+print(f&quot;Best validation MSE: {best_val_loss:.4f}&quot;)
+print(f&quot;Test R²: {r2:.4f}  |  MAE: {mae:.4f}  |  RMSE: {rmse:.4f}&quot;)
 
-# ── Save results table ────────────────────────────────────────────────────────
-results_df = pd.DataFrame(results).sort_values("r2", ascending=False).reset_index(drop=True)
+# ── Save results table ranked by validation loss ─────────────────────────────
+results_df = pd.DataFrame(results).sort_values(&quot;val_loss&quot;).reset_index(drop=True)
 results_df.index += 1
-results_df.to_excel("search_results.xlsx", index_label="Rank")
-print("Results table saved → search_results.xlsx")
+results_df.to_excel(&quot;search_results.xlsx&quot;, index_label=&quot;Rank&quot;)
+print(&quot;Results table saved → search_results.xlsx&quot;)
 
 # ── Plots for best model only ─────────────────────────────────────────────────
 # 1. Loss curves
 plt.figure(figsize=(10, 5))
-plt.plot(best_trial["t_losses"], label="Train Loss")
-plt.plot(best_trial["v_losses"], label="Val Loss")
-plt.title(f"Best Model — Loss Curves\n{best_trial['cfg']}", fontsize=11)
-plt.xlabel("Epoch"); plt.ylabel("MSE Loss")
+plt.plot(best_trial[&quot;t_losses&quot;], label=&quot;Train Loss&quot;)
+plt.plot(best_trial[&quot;v_losses&quot;], label=&quot;Val Loss&quot;)
+plt.title(f&quot;Best Model — Loss Curves\n{best_trial[&#x27;cfg&#x27;]}&quot;, fontsize=11)
+plt.xlabel(&quot;Epoch&quot;); plt.ylabel(&quot;MSE Loss&quot;)
 plt.legend(); plt.grid(True)
 plt.tight_layout()
-plt.savefig("best_model_loss.png", dpi=150)
+plt.savefig(&quot;best_model_loss.png&quot;, dpi=150)
 plt.show()
 
 # 2. Predictions vs actual
 plt.figure(figsize=(12, 5))
-plt.plot(best_trial["actuals"], label="Actual",    color="lightgrey", linewidth=1.5)
-plt.plot(best_trial["preds"],   label="Predicted", color="red",       linewidth=1.5)
-plt.title(f"Best Model — Predictions vs Actual (Test Set)\nR²={best_trial['r2']:.4f}  RMSE={best_trial['rmse']:.4f}", fontsize=11)
-plt.xlabel("Time"); plt.ylabel("Value")
+plt.plot(best_trial[&quot;actuals&quot;], label=&quot;Actual&quot;,    color=&quot;lightgrey&quot;, linewidth=1.5)
+plt.plot(best_trial[&quot;preds&quot;],   label=&quot;Predicted&quot;, color=&quot;red&quot;,       linewidth=1.5)
+plt.title(f&quot;Best Model — Predictions vs Actual (Test Set)\nR²={best_trial[&#x27;r2&#x27;]:.4f}  RMSE={best_trial[&#x27;rmse&#x27;]:.4f}&quot;, fontsize=11)
+plt.xlabel(&quot;Time&quot;); plt.ylabel(&quot;Value&quot;)
 plt.legend(); plt.grid(True)
 plt.tight_layout()
-plt.savefig("best_model_predictions.png", dpi=150)
+plt.savefig(&quot;best_model_predictions.png&quot;, dpi=150)
 plt.show()
 
-# 3. R² bar chart across all trials
+# 3. Validation-loss bar chart across all trials
 plt.figure(figsize=(12, 4))
-colors = ["#4472C4" if r &lt; best_r2 else "#70AD47" for r in results_df["r2"]]
-plt.bar(results_df.index, results_df["r2"], color=colors)
-plt.axhline(best_r2, color="red", linestyle="--", linewidth=1, label=f"Best R²={best_r2:.4f}")
-plt.title("R² Across All Trials (green = best)")
-plt.xlabel("Rank"); plt.ylabel("R²")
-plt.legend(); plt.grid(axis="y", alpha=0.4)
+colors = [&quot;#70AD47&quot; if rank == 1 else &quot;#4472C4&quot; for rank in results_df.index]
+plt.bar(results_df.index, results_df[&quot;val_loss&quot;], color=colors)
+plt.axhline(best_val_loss, color=&quot;red&quot;, linestyle=&quot;--&quot;, linewidth=1,
+            label=f&quot;Best Val Loss={best_val_loss:.4f}&quot;)
+plt.title(&quot;Validation Loss Across All Trials (green = best)&quot;)
+plt.xlabel(&quot;Rank&quot;); plt.ylabel(&quot;Validation MSE Loss&quot;)
+plt.legend(); plt.grid(axis=&quot;y&quot;, alpha=0.4)
 plt.tight_layout()
-plt.savefig("trial_r2_chart.png", dpi=150)
-plt.show()</code></pre>
+plt.savefig(&quot;trial_val_loss_chart.png&quot;, dpi=150)
+plt.show()
+</code></pre>
 
   <h2>Running it on your own computer</h2>
   <p>
