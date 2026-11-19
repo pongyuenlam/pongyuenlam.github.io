@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>How wide should the search be (Forecast, version 12)? | Howard Lam, PhD</title>
-<meta name="description" content="Version 12 widens every dial and runs 200 trials over 5,760 combinations. Eighty-one of those trials collapsed, and the winner took only a small step.">
+<meta name="description" content="Version 12 widens every dial and runs 200 trials over 5,760 combinations. Fifty-three of those trials collapsed, and ten times the search did not beat version 11 on the test set.">
 <link rel="canonical" href="https://pongyuenlam.github.io/notes/ai-note73.html">
 <link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note73.html">
 <link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note73.html">
@@ -22,7 +22,7 @@
 
 <meta property="og:type" content="article">
 <meta property="og:title" content="How wide should the search be (Forecast, version 12)?">
-<meta property="og:description" content="Version 12 widens every dial and runs 200 trials over 5,760 combinations. Eighty-one of those trials collapsed, and the winner took only a small step.">
+<meta property="og:description" content="Version 12 widens every dial and runs 200 trials over 5,760 combinations. Fifty-three of those trials collapsed, and ten times the search did not beat version 11 on the test set.">
 <meta property="og:url" content="https://pongyuenlam.github.io/notes/ai-note73.html">
 <meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
 <meta property="og:image:alt" content="Howard Lam, PhD">
@@ -34,7 +34,7 @@
   "@context": "https://schema.org",
   "@type": "BlogPosting",
   "headline": "How wide should the search be (Forecast, version 12)?",
-  "description": "Version 12 widens every dial and runs 200 trials over 5,760 combinations. Eighty-one of those trials collapsed, and the winner took only a small step.",
+  "description": "Version 12 widens every dial and runs 200 trials over 5,760 combinations. Fifty-three of those trials collapsed, and ten times the search did not beat version 11 on the test set.",
   "author": {
     "@type": "Person",
     "name": "Howard Pong Yuen Lam"
@@ -109,7 +109,9 @@
     prediction. A negative score is worse. So a large negative number is not a near miss. It means
     the model's guesses were further from the truth than a flat average line would have been. In
     practice, the weights changed too much during training and the errors did not become smaller. The
-    program does not treat this as an error. It records the score and moves on to the next trial.
+    program does not treat this as an error. It records the score and moves on to the next trial. In
+    this version the ranking is by validation loss, so a trial that runs away ends with
+    <code>inf</code> and sinks to the bottom of the table.
   </p>
 
   <h2>What you should see</h2>
@@ -120,62 +122,69 @@
   </p>
   <pre class="code-block no-copy"><code>Running 200 random trials...
 
-Trial   Win  Epochs      LR      Opt  Hidden  Layers        R2        RMSE
+Trial   Win  Epochs      LR      Opt  Hidden  Layers      Val Loss
 ------------------------------------------------------------------------------
-    1    30     500    0.01  RMSprop      64       2    0.4421      5.3064
-    2    10     100    0.01  RMSprop      64       1    0.4529      5.3201
-    4    20     200    0.01      SGD      10       4  -341.2371    132.4929
-    9    50     500     0.1     Adam      32       2   -91.9151     68.3195
-   14    10     100   0.001     Adam      32       2    0.4612      5.2795
-   27    10     300   0.005     Adam     256       4    0.4616      5.2777
-   32    20     100  0.0001     Adam     128       2    0.4646      5.2406
-   70    20     300  0.0001  RMSprop     256       3    0.4790      5.1695
-   89    20     200   0.005      SGD      10       2  -465.9302    154.7587
-   95    20     500     0.1      SGD      64       2  -470.9389    155.5865
-  168    10     200    0.05     Adam      64       4    0.4660      5.2561
-  185    30     100   0.001  RMSprop     256       3    0.4733      5.1559
+    1    30     500    0.01  RMSprop      64       2       38.6746
+    2    10     100    0.01  RMSprop      64       1       37.1127
+    4    20     200    0.01      SGD      10       4           inf
+    8    50     100    0.01      SGD      64       2           inf
+   12    20     500   0.005     Adam      64       2       37.1015
+   31    30     200    0.01      SGD      64       2           inf
+   60    20     500   0.001  RMSprop      10       3       37.2799
+  102    30     100   0.001     Adam      32       2       35.5082
+  131    10     100    0.01     Adam      32       3       37.1468
+  134    10     100     0.1     Adam     128       2       37.1898
+  142    30     300   0.001     Adam      10       2       37.2805
+  148    30     100  0.0001      SGD      10       4     7775.1705
 
 Best model saved → best_model_12.pt
-Best config : {'epochs': 300, 'learning_rate': 0.0001, 'optimizer': 'RMSprop', 'hidden_size': 256, 'num_layers': 3, 'window_size': 20}
+Best config : {'epochs': 100, 'learning_rate': 0.001, 'optimizer': 'Adam', 'hidden_size': 32, 'num_layers': 2, 'window_size': 30}
+Best validation MSE: 35.5082
 
 Test Set Metrics:
-  MAE:  4.1235
-  MSE:  26.7236
-  RMSE: 5.1695
-  R²:   0.4790
+  MAE:  4.4603
+  MSE:  31.7479
+  RMSE: 5.6345
+  R²:   0.3710
 
 Results table saved → search_results_12.xlsx</code></pre>
   <p>
-    Trial 70 is the winner: 300 epochs, learning rate 0.0001, RMSprop, 256 hidden units, 3 layers and
-    a window of 20. Early stopping ended its training after 80 of the 300 allowed epochs, so the extra
+    Trial 102 is the winner: 100 epochs, learning rate 0.001, Adam, 32 hidden units, 2 layers and a
+    window of 30. Early stopping ended its training after 83 of the 100 allowed epochs, so the extra
     epochs in the setting were never used.
   </p>
   <p>
-    <strong>Two hundred trials bought 0.0217 of R&sup2;.</strong> Version 11's best was 0.4573 and
-    this one is 0.4790, so ten times the computing moved the score by 0.0217.
+    <strong>Ten times the search made the test score worse.</strong> Version 11's winner scored
+    R&sup2; 0.4542 on the test days. This winner scores 0.3710, even though its validation loss
+    (35.5082) is better than version 11's (35.7390). This is the price of choosing by validation:
+    with 200 draws there are simply more chances to find a configuration that fits the validation
+    days by luck. The winner overfitted the validation set, and the test set called it out.
   </p>
   <p>
     <strong>Best-of-20 and best-of-200 are not the same measurement.</strong> A larger draw has more
-    chances of catching a lucky configuration.
+    chances of catching a lucky configuration. The version 11 winner would not even be the best
+    choice here, because a different trial happened to look better on the validation days.
   </p>
   <p>
-    <strong>The winner takes very small steps.</strong> The smallest learning rate on offer, 0.0001,
-    won with 0.4790.
+    <strong>Every collapse uses SGD.</strong> Fifty-three of the 200 trials report <code>inf</code>:
+    the loss ran away and never came back. All fifty-three use SGD with no momentum, and most are
+    the larger hidden layers. Adam and RMSprop, which scale each step by recent gradient history,
+    survived every learning rate on offer.
   </p>
   <p>
-    The window answer also moved: version 11 pointed at a window of 10, while this larger search
-    points at 20.
+    The window answer also moved again: version 11 pointed at a window of 10, and this larger search
+    points at 30. A choice that shifts when the search widens is not a stable answer.
   </p>
-  <figure class="exhibit"><img src="/images/forecast-v12-loss.png" alt="Loss curves of the winning trial, with a training line and a validation line drawn by the program" style="max-width:100%; height:auto;"><figcaption>Loss curves of the winning trial, drawn by the program's own plotting code. Training stopped after 80 of the 300 allowed epochs, when early stopping had seen no improvement for 30 epochs.</figcaption></figure>
-  <figure class="exhibit"><img src="/images/forecast-v12-predictions.png" alt="Actual values in pale grey and predicted values as a red line across the test days of the winning trial" style="max-width:100%; height:auto;"><figcaption>Actual (grey) and predicted (red) values on the 217 test days of the winning trial, with a window of 20.</figcaption></figure>
-  <figure class="exhibit"><img src="/images/forecast-v12-r2-bar.png" alt="Bar chart of R squared for all two hundred trials sorted best to worst, with a red dashed line at the best score" style="max-width:100%; height:auto;"><figcaption>R&sup2; for all 200 trials, sorted best to worst, with the best score marked. The negative bars are drawn to scale, which squeezes the good ones against the zero line.</figcaption></figure>
+  <figure class="exhibit"><img src="/images/forecast-v12-loss.png" alt="Loss curves of the winning trial, with a training line and a validation line drawn by the program" style="max-width:100%; height:auto;"><figcaption>Loss curves of the winning trial, drawn by the program's own plotting code. Training stopped after 83 of the 100 allowed epochs, when early stopping had seen no improvement for 30 epochs.</figcaption></figure>
+  <figure class="exhibit"><img src="/images/forecast-v12-predictions.png" alt="Actual values in pale grey and predicted values as a red line across the test days of the winning trial" style="max-width:100%; height:auto;"><figcaption>Actual (grey) and predicted (red) values on the 215 test days of the winning trial, with a window of 30.</figcaption></figure>
+  <figure class="exhibit"><img src="/images/forecast-v12-r2-bar.png" alt="Bar chart of validation loss for all two hundred trials sorted best to worst, with one red dashed line at the best score and a single bar reaching into the millions" style="max-width:100%; height:auto;"><figcaption>Validation loss for all 200 trials, sorted best to worst, with the best score marked. Two runaway trials near the right reach into the millions, which crushes every ordinary trial flat against the red line; the fifty-three trials that diverged entirely have no bar at all.</figcaption></figure>
 
   <h2>The whole program</h2>
   <p>
     The file below is the complete <code>time_12.py</code>, unedited:
   </p>
   <pre class="code-block"><code>import os
-os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+os.environ[&quot;KMP_DUPLICATE_LIB_OK&quot;] = &quot;TRUE&quot;
 
 import torch
 import torch.nn as nn
@@ -195,20 +204,20 @@ torch.manual_seed(SEED)
 
 # ── Search space ─────────────────────────────────────────────────────────────
 SEARCH_SPACE = {
-    "epochs":       [100, 200, 300, 500],
-    "learning_rate":[0.0001, 0.001, 0.005, 0.01, 0.05, 0.1],
-    "optimizer":    ["Adam", "SGD", "RMSprop"],
-    "hidden_size":  [10, 32, 64, 128, 256],
-    "num_layers":   [1, 2, 3, 4],
-    "window_size":  [10, 20, 30, 50],
+    &quot;epochs&quot;:       [100, 200, 300, 500],
+    &quot;learning_rate&quot;:[0.0001, 0.001, 0.005, 0.01, 0.05, 0.1],
+    &quot;optimizer&quot;:    [&quot;Adam&quot;, &quot;SGD&quot;, &quot;RMSprop&quot;],
+    &quot;hidden_size&quot;:  [10, 32, 64, 128, 256],
+    &quot;num_layers&quot;:   [1, 2, 3, 4],
+    &quot;window_size&quot;:  [10, 20, 30, 50],
 }
 N_TRIALS            = 200
 EARLY_STOP_PATIENCE = 30
 BATCH_SIZE          = 32
 
 # ── Data ─────────────────────────────────────────────────────────────────────
-df = pd.read_csv("time_series.csv")
-series = df["series"].values
+df = pd.read_csv(&quot;time_series.csv&quot;)
+series = df[&quot;series&quot;].values
 series_tensor = torch.tensor(series, dtype=torch.float32)
 
 def make_loaders(window_size):
@@ -224,7 +233,7 @@ def make_loaders(window_size):
     test_loader  = DataLoader(Subset(full_dataset, range(val_end, total)),   batch_size=BATCH_SIZE, shuffle=False)
     return train_loader, val_loader, test_loader
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device(&quot;cuda&quot; if torch.cuda.is_available() else &quot;cpu&quot;)
 
 # ── Model factory ─────────────────────────────────────────────────────────────
 def build_model(input_size, hidden_size, num_layers):
@@ -237,21 +246,21 @@ def build_model(input_size, hidden_size, num_layers):
     return nn.Sequential(*layers).to(device)
 
 def get_optimizer(name, params, lr):
-    return {"Adam": optim.Adam, "SGD": optim.SGD, "RMSprop": optim.RMSprop}[name](params, lr=lr)
+    return {&quot;Adam&quot;: optim.Adam, &quot;SGD&quot;: optim.SGD, &quot;RMSprop&quot;: optim.RMSprop}[name](params, lr=lr)
 
 # ── Train one trial ───────────────────────────────────────────────────────────
 def train_trial(cfg):
-    train_loader, val_loader, test_loader = make_loaders(cfg["window_size"])
-    model     = build_model(cfg["window_size"] - 1, cfg["hidden_size"], cfg["num_layers"])
+    train_loader, val_loader, test_loader = make_loaders(cfg[&quot;window_size&quot;])
+    model     = build_model(cfg[&quot;window_size&quot;] - 1, cfg[&quot;hidden_size&quot;], cfg[&quot;num_layers&quot;])
     criterion = nn.MSELoss()
-    optimizer = get_optimizer(cfg["optimizer"], model.parameters(), cfg["learning_rate"])
+    optimizer = get_optimizer(cfg[&quot;optimizer&quot;], model.parameters(), cfg[&quot;learning_rate&quot;])
 
-    best_val_loss = float("inf")
+    best_val_loss = float(&quot;inf&quot;)
     best_state    = {k: v.clone() for k, v in model.state_dict().items()}
     patience_ctr  = 0
     train_losses, val_losses = [], []
 
-    for epoch in range(cfg["epochs"]):
+    for epoch in range(cfg[&quot;epochs&quot;]):
         # train
         model.train()
         t_loss = 0
@@ -286,7 +295,7 @@ def train_trial(cfg):
                 break
 
     model.load_state_dict(best_state)
-    return model, train_losses, val_losses, test_loader
+    return model, train_losses, val_losses, best_val_loss, test_loader
 
 # ── Evaluate on test set ──────────────────────────────────────────────────────
 def evaluate(model, test_loader):
@@ -306,87 +315,92 @@ def evaluate(model, test_loader):
     r2 = (1 - ss_res / ss_tot).item()
     return r2, mae, mse, rmse, preds, actuals
 
-# ── Random search ─────────────────────────────────────────────────────────────
+# ── Random search; select by validation loss ──────────────────────────────────
 keys   = list(SEARCH_SPACE.keys())
 combos = list(itertools.product(*SEARCH_SPACE.values()))
 sampled = random.sample(combos, min(N_TRIALS, len(combos)))
 
 results = []
-best_r2    = -float("inf")
+best_val_loss = float(&quot;inf&quot;)
 best_trial = None
 
-print(f"Running {N_TRIALS} random trials...\n")
-print(f"{'Trial':&gt;5}  {'Win':&gt;4}  {'Epochs':&gt;6}  {'LR':&gt;6}  {'Opt':&gt;7}  {'Hidden':&gt;6}  {'Layers':&gt;6}  {'R2':&gt;8}  {'RMSE':&gt;10}")
-print("-" * 78)
+print(f&quot;Running {N_TRIALS} random trials...\n&quot;)
+print(f&quot;{&#x27;Trial&#x27;:&gt;5}  {&#x27;Win&#x27;:&gt;4}  {&#x27;Epochs&#x27;:&gt;6}  {&#x27;LR&#x27;:&gt;6}  {&#x27;Opt&#x27;:&gt;7}  {&#x27;Hidden&#x27;:&gt;6}  {&#x27;Layers&#x27;:&gt;6}  {&#x27;Val Loss&#x27;:&gt;12}&quot;)
+print(&quot;-&quot; * 78)
 
 for i, combo in enumerate(sampled):
     cfg = dict(zip(keys, combo))
-    model, t_losses, v_losses, test_loader = train_trial(cfg)
-    r2, mae, mse, rmse, preds, actuals = evaluate(model, test_loader)
+    model, t_losses, v_losses, trial_val_loss, test_loader = train_trial(cfg)
 
-    row = {**cfg, "r2": round(r2, 4), "mae": round(mae, 4), "rmse": round(rmse, 4),
-           "actual_epochs": len(t_losses)}
+    row = {**cfg, &quot;val_loss&quot;: trial_val_loss, &quot;actual_epochs&quot;: len(t_losses)}
     results.append(row)
 
-    print(f"{i+1:&gt;5}  {cfg['window_size']:&gt;4}  {cfg['epochs']:&gt;6}  {cfg['learning_rate']:&gt;6}  "
-          f"{cfg['optimizer']:&gt;7}  {cfg['hidden_size']:&gt;6}  {cfg['num_layers']:&gt;6}  "
-          f"{r2:&gt;8.4f}  {rmse:&gt;10.4f}")
+    print(f&quot;{i+1:&gt;5}  {cfg[&#x27;window_size&#x27;]:&gt;4}  {cfg[&#x27;epochs&#x27;]:&gt;6}  {cfg[&#x27;learning_rate&#x27;]:&gt;6}  &quot;
+          f&quot;{cfg[&#x27;optimizer&#x27;]:&gt;7}  {cfg[&#x27;hidden_size&#x27;]:&gt;6}  {cfg[&#x27;num_layers&#x27;]:&gt;6}  &quot;
+          f&quot;{trial_val_loss:&gt;12.4f}&quot;)
 
-    if r2 &gt; best_r2:
-        best_r2    = r2
-        best_trial = {"cfg": cfg, "model": model, "t_losses": t_losses,
-                      "v_losses": v_losses, "preds": preds, "actuals": actuals,
-                      "r2": r2, "mae": mae, "mse": mse, "rmse": rmse}
+    if trial_val_loss &lt; best_val_loss:
+        best_val_loss = trial_val_loss
+        best_trial = {&quot;cfg&quot;: cfg, &quot;model&quot;: model, &quot;t_losses&quot;: t_losses,
+                      &quot;v_losses&quot;: v_losses, &quot;val_loss&quot;: trial_val_loss,
+                      &quot;test_loader&quot;: test_loader}
+
+# ── Evaluate the selected model on the test set once ─────────────────────────
+r2, mae, mse, rmse, preds, actuals = evaluate(best_trial[&quot;model&quot;], best_trial[&quot;test_loader&quot;])
+best_trial.update({&quot;r2&quot;: r2, &quot;mae&quot;: mae, &quot;mse&quot;: mse, &quot;rmse&quot;: rmse,
+                   &quot;preds&quot;: preds, &quot;actuals&quot;: actuals})
 
 # ── Save best model ───────────────────────────────────────────────────────────
-torch.save(best_trial["model"].state_dict(), "best_model_12.pt")
-print(f"\nBest model saved → best_model_12.pt")
-print(f"Best config : {best_trial['cfg']}")
-print(f"\nTest Set Metrics:")
-print(f"  MAE:  {best_trial['mae']:.4f}")
-print(f"  MSE:  {best_trial['mse']:.4f}")
-print(f"  RMSE: {best_trial['rmse']:.4f}")
-print(f"  R²:   {best_trial['r2']:.4f}")
+torch.save(best_trial[&quot;model&quot;].state_dict(), &quot;best_model_12.pt&quot;)
+print(f&quot;\nBest model saved → best_model_12.pt&quot;)
+print(f&quot;Best config : {best_trial[&#x27;cfg&#x27;]}&quot;)
+print(f&quot;Best validation MSE: {best_val_loss:.4f}&quot;)
+print(f&quot;\nTest Set Metrics:&quot;)
+print(f&quot;  MAE:  {mae:.4f}&quot;)
+print(f&quot;  MSE:  {mse:.4f}&quot;)
+print(f&quot;  RMSE: {rmse:.4f}&quot;)
+print(f&quot;  R²:   {r2:.4f}&quot;)
 
-# ── Save results table ────────────────────────────────────────────────────────
-results_df = pd.DataFrame(results).sort_values("r2", ascending=False).reset_index(drop=True)
+# ── Save results table ranked by validation loss ─────────────────────────────
+results_df = pd.DataFrame(results).sort_values(&quot;val_loss&quot;).reset_index(drop=True)
 results_df.index += 1
-results_df.to_excel("search_results_12.xlsx", index_label="Rank")
-print("Results table saved → search_results_12.xlsx")
+results_df.to_excel(&quot;search_results_12.xlsx&quot;, index_label=&quot;Rank&quot;)
+print(&quot;Results table saved → search_results_12.xlsx&quot;)
 
 # ── Plots for best model only ─────────────────────────────────────────────────
 # 1. Loss curves
 plt.figure(figsize=(10, 5))
-plt.plot(best_trial["t_losses"], label="Train Loss")
-plt.plot(best_trial["v_losses"], label="Val Loss")
-plt.title(f"Best Model — Loss Curves\n{best_trial['cfg']}", fontsize=11)
-plt.xlabel("Epoch"); plt.ylabel("MSE Loss")
+plt.plot(best_trial[&quot;t_losses&quot;], label=&quot;Train Loss&quot;)
+plt.plot(best_trial[&quot;v_losses&quot;], label=&quot;Val Loss&quot;)
+plt.title(f&quot;Best Model — Loss Curves\n{best_trial[&#x27;cfg&#x27;]}&quot;, fontsize=11)
+plt.xlabel(&quot;Epoch&quot;); plt.ylabel(&quot;MSE Loss&quot;)
 plt.legend(); plt.grid(True)
 plt.tight_layout()
-plt.savefig("best_model_loss.png", dpi=150)
+plt.savefig(&quot;best_model_loss.png&quot;, dpi=150)
 plt.show()
 
 # 2. Predictions vs actual
 plt.figure(figsize=(12, 5))
-plt.plot(best_trial["actuals"], label="Actual",    color="lightgrey", linewidth=1.5)
-plt.plot(best_trial["preds"],   label="Predicted", color="red",       linewidth=1.5)
-plt.title(f"Best Model — Predictions vs Actual (Test Set)\nR²={best_trial['r2']:.4f}  RMSE={best_trial['rmse']:.4f}", fontsize=11)
-plt.xlabel("Time"); plt.ylabel("Value")
+plt.plot(best_trial[&quot;actuals&quot;], label=&quot;Actual&quot;,    color=&quot;lightgrey&quot;, linewidth=1.5)
+plt.plot(best_trial[&quot;preds&quot;],   label=&quot;Predicted&quot;, color=&quot;red&quot;,       linewidth=1.5)
+plt.title(f&quot;Best Model — Predictions vs Actual (Test Set)\nR²={best_trial[&#x27;r2&#x27;]:.4f}  RMSE={best_trial[&#x27;rmse&#x27;]:.4f}&quot;, fontsize=11)
+plt.xlabel(&quot;Time&quot;); plt.ylabel(&quot;Value&quot;)
 plt.legend(); plt.grid(True)
 plt.tight_layout()
-plt.savefig("best_model_predictions.png", dpi=150)
+plt.savefig(&quot;best_model_predictions.png&quot;, dpi=150)
 plt.show()
 
-# 3. R² bar chart across all trials
+# 3. Validation-loss bar chart across all trials
 plt.figure(figsize=(12, 4))
-colors = ["#4472C4" if r &lt; best_r2 else "#70AD47" for r in results_df["r2"]]
-plt.bar(results_df.index, results_df["r2"], color=colors)
-plt.axhline(best_r2, color="red", linestyle="--", linewidth=1, label=f"Best R²={best_r2:.4f}")
-plt.title("R² Across All Trials (green = best)")
-plt.xlabel("Rank"); plt.ylabel("R²")
-plt.legend(); plt.grid(axis="y", alpha=0.4)
+colors = [&quot;#70AD47&quot; if rank == 1 else &quot;#4472C4&quot; for rank in results_df.index]
+plt.bar(results_df.index, results_df[&quot;val_loss&quot;], color=colors)
+plt.axhline(best_val_loss, color=&quot;red&quot;, linestyle=&quot;--&quot;, linewidth=1,
+            label=f&quot;Best Val Loss={best_val_loss:.4f}&quot;)
+plt.title(&quot;Validation Loss Across All Trials (green = best)&quot;)
+plt.xlabel(&quot;Rank&quot;); plt.ylabel(&quot;Validation MSE Loss&quot;)
+plt.legend(); plt.grid(axis=&quot;y&quot;, alpha=0.4)
 plt.tight_layout()
-plt.savefig("trial_r2_chart.png", dpi=150)
+plt.savefig(&quot;trial_val_loss_chart.png&quot;, dpi=150)
 plt.show()
 </code></pre>
 
