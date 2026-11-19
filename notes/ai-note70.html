@@ -162,57 +162,67 @@
   <pre class="code-block"><code>learning_rates = [0.001, 0.01, 0.1]
 
 for lr in learning_rates:
-    model, t_losses, v_losses, epochs = train_one_model(lr)
-    r2, rmse, mae, preds, actuals = evaluate_on_test(model)</code></pre>
+    model, t_losses, v_losses, epochs, val_loss = train_one_model(lr)</code></pre>
   <p>
-    Each pass of the loop trains a complete model and grades it on the test days with version 8's
-    four measures. The results are collected in a list so they can be compared and sorted
-    afterwards.
+    Each pass of the loop trains a complete model. The function now returns five values instead
+    of four: the model, its training and validation loss curves, the actual number of epochs run,
+    and the best validation loss seen during training. We collect just that validation-loss score
+    from each run &mdash; R&sup2; on the test days is only evaluated once, after the winner is picked.
+    The results go into a list so they can be compared and sorted afterwards.
   </p>
 
   <h3>5. Keep the winner</h3>
-  <pre class="code-block"><code>best = max(results, key=lambda r: r["r2"])
+  <pre class="code-block"><code>best = min(results, key=lambda r: r["val_loss"])
 torch.save(best["model"].state_dict(), "best_model.pt")</code></pre>
   <p>
-    <code>max</code> selects a result from the <code>results</code> list. The
-    <code>key=lambda r: r["r2"]</code> part tells Python to compare the results by their R&sup2;
-    values, so the result with the highest R&sup2; is stored in <code>best</code>.
+    <code>min</code> selects a result from the <code>results</code> list. The
+    <code>key=lambda r: r["val_loss"]</code> part tells Python to compare the results by their
+    validation-loss scores, so the result with the <em>lowest</em> validation loss &mdash; the
+    winner &mdash; is stored in <code>best</code>. We use validation loss (from days the model was
+    never trained on) rather than the test set, because looking at the test set before choosing
+    would be "cheating" with data we should only use for a final honest check.
     <code>torch.save</code> then writes that model's learned weights to a file called
     <code>best_model.pt</code>. A later program can load this file and reuse the model without
     training it again.
   </p>
 
   <h2>What you should see</h2>
-  <pre class="code-block no-copy"><code>      lr   epochs        R²        RMSE         MAE
---------------------------------------------------
-   0.001       68    0.4384      5.3538      4.2973
-    0.01       37    0.4394      5.3491      4.2547
-     0.1       12    0.0881      6.8221      5.3624
+  <pre class="code-block no-copy"><code>      lr   epochs      Val Loss
+--------------------------------
+   0.001       73       39.9478
+    0.01       26       40.9754
+     0.1       73     3136.5420
 
-Best learning rate: 0.01  (R² = 0.4394)
+Best learning rate: 0.001  (Validation MSE = 39.9478)
+
+Test Set Metrics:
+  MAE:  4.3036
+  RMSE: 5.3494
+  R²:   0.4393
 Best model saved → best_model.pt</code></pre>
   <p>
     Your numbers will differ, but the pattern is what matters. The two smaller learning rates reach
-    a similar quality, and 0.01 reaches it in 37 epochs rather than 68. Both give a similar result,
-    but 0.01 needs fewer epochs. The large rate of 0.1 stops after 12 epochs with an R&sup2; of
-    0.09, because each adjustment is too large for the errors to become smaller steadily.
+    a similar low validation loss around 40, and 0.01 reaches it in 26 epochs rather than 73. Both
+    give a similar test-set R&sup2; of about 0.44, but 0.01 needs fewer epochs. The large rate of
+    0.1 has a validation loss thirty times higher, because each adjustment is too large for the
+    errors to become smaller steadily.
   </p>
   <p>
     Two things improved since version 8. R&sup2; moved from 0.24 to about 0.44, and much of that
     improvement came from early stopping rather than from the learning rate: keeping the best
-    weights instead of the final ones raises the score noticeably. Training also finishes in 37
+    weights instead of the final ones raises the score noticeably. Training also finishes in 26
     epochs instead of 100.
   </p>
-  <figure class="exhibit"><img src="/images/forecast-v9-loss.png" alt="Loss curves for the best run, falling and then flattening, with training and validation lines close together" style="max-width:100%; height:auto;"><figcaption>Loss curves of the winning run, stopped at epoch 37</figcaption></figure>
+  <figure class="exhibit"><img src="/images/forecast-v9-loss.png" alt="Loss curves for the best run, falling and then flattening, with training and validation lines close together" style="max-width:100%; height:auto;"><figcaption>Loss curves of the winning run, stopped at epoch 26</figcaption></figure>
   <figure class="exhibit"><img src="/images/forecast-v9-predictions.png" alt="Actual test-day sales in grey and predicted values in red, the red line tracking the grey more closely than before" style="max-width:100%; height:auto;"><figcaption>Actual (grey) and predicted (red) values for the test days, best run</figcaption></figure>
-  <figure class="exhibit"><img src="/images/forecast-v9-r2-bar.png" alt="Bar chart of R squared for the three learning rates, the middle bar green as the best" style="max-width:100%; height:auto;"><figcaption>R&sup2; for the three learning rates, green for the winner</figcaption></figure>
+  <figure class="exhibit"><img src="/images/forecast-v9-r2-bar.png" alt="Bar chart of validation loss for the three learning rates, the shortest bar green as the best" style="max-width:100%; height:auto;"><figcaption>Validation loss for the three learning rates, green for the winner</figcaption></figure>
 
   <h2>The whole program</h2>
   <p>
     The pieces above, put back together. This is the complete file:
   </p>
   <pre class="code-block"><code>import os
-os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+os.environ[&quot;KMP_DUPLICATE_LIB_OK&quot;] = &quot;TRUE&quot;
 
 import torch
 import torch.nn as nn
@@ -229,8 +239,8 @@ def create_sliding_windows_with_target(data, window_size, shift=1):
     targets = windows[:, -1:]
     return features, targets
 
-df = pd.read_csv('time_series.csv')
-series = df['series'].values
+df = pd.read_csv(&#x27;time_series.csv&#x27;)
+series = df[&#x27;series&#x27;].values
 series_tensor = torch.tensor(series, dtype=torch.float32)
 window_size = 30
 features, targets = create_sliding_windows_with_target(series_tensor, window_size=window_size, shift=1)
@@ -252,19 +262,19 @@ val_loader   = DataLoader(Subset(full_dataset, val_indices),
 test_loader  = DataLoader(Subset(full_dataset, test_indices),
                          batch_size=32, shuffle=False)
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device(&#x27;cuda&#x27; if torch.cuda.is_available() else &#x27;cpu&#x27;)
 
 # ── Visualize train/val/test split (same as time_08) ─────────────────────────
 val_start = train_size
 test_start = train_size + val_size
 plt.figure(figsize=(12, 4))
-plt.plot(range(val_start), series[:val_start], 'b-', label='Training Data')
-plt.plot(range(val_start, test_start), series[val_start:test_start], 'r-', label='Validation Data')
-plt.plot(range(test_start, len(series)), series[test_start:], 'g-', label='Test Data')
-plt.axvline(x=val_start, color='k', linestyle='--', label='Train/Val Split')
-plt.axvline(x=test_start, color='purple', linestyle='--', label='Val/Test Split')
-plt.title('Time Series Train/Validation/Test Split')
-plt.xlabel('Time'); plt.ylabel('Value')
+plt.plot(range(val_start), series[:val_start], &#x27;b-&#x27;, label=&#x27;Training Data&#x27;)
+plt.plot(range(val_start, test_start), series[val_start:test_start], &#x27;r-&#x27;, label=&#x27;Validation Data&#x27;)
+plt.plot(range(test_start, len(series)), series[test_start:], &#x27;g-&#x27;, label=&#x27;Test Data&#x27;)
+plt.axvline(x=val_start, color=&#x27;k&#x27;, linestyle=&#x27;--&#x27;, label=&#x27;Train/Val Split&#x27;)
+plt.axvline(x=test_start, color=&#x27;purple&#x27;, linestyle=&#x27;--&#x27;, label=&#x27;Val/Test Split&#x27;)
+plt.title(&#x27;Time Series Train/Validation/Test Split&#x27;)
+plt.xlabel(&#x27;Time&#x27;); plt.ylabel(&#x27;Value&#x27;)
 plt.legend(); plt.grid(True); plt.show()
 
 # ── Model (same as time_07/08) ────────────────────────────────────────────────
@@ -293,7 +303,7 @@ def train_one_model(lr):
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
-    best_val_loss = float('inf')
+    best_val_loss = float(&#x27;inf&#x27;)
     best_state    = {k: v.clone() for k, v in model.state_dict().items()}
     patience_ctr  = 0
     train_losses, val_losses = [], []
@@ -338,7 +348,7 @@ def train_one_model(lr):
     # restore the best weights
     model.load_state_dict(best_state)
     actual_epochs = len(train_losses)
-    return model, train_losses, val_losses, actual_epochs
+    return model, train_losses, val_losses, actual_epochs, best_val_loss
 
 # ── NEW: evaluate on test set (returns R², RMSE, MAE) ────────────────────────
 def evaluate_on_test(model):
@@ -359,61 +369,65 @@ def evaluate_on_test(model):
     r2 = (1 - ss_res / ss_tot).item()
     return r2, rmse, mae, preds, actuals
 
-# ── NEW: manually try 3 learning rates ────────────────────────────────────────
-# Instead of picking one optimizer and one learning rate, we run the same
-# training procedure three times with different learning rates and compare.
+# ── Manually try 3 learning rates; select by validation loss ─────────────────
 learning_rates = [0.001, 0.01, 0.1]
 results = []
 
-print(f"{'lr':&gt;8}  {'epochs':&gt;7}  {'R²':&gt;8}  {'RMSE':&gt;10}  {'MAE':&gt;10}")
-print("-" * 50)
+print(f&quot;{&#x27;lr&#x27;:&gt;8}  {&#x27;epochs&#x27;:&gt;7}  {&#x27;Val Loss&#x27;:&gt;12}&quot;)
+print(&quot;-&quot; * 32)
 
 for lr in learning_rates:
-    model, t_losses, v_losses, epochs = train_one_model(lr)
-    r2, rmse, mae, preds, actuals = evaluate_on_test(model)
-
+    model, t_losses, v_losses, epochs, val_loss = train_one_model(lr)
     results.append({
-        "lr": lr, "epochs": epochs,
-        "r2": round(r2, 4), "rmse": round(rmse, 4), "mae": round(mae, 4),
-        "model": model, "t_losses": t_losses, "v_losses": v_losses,
-        "preds": preds, "actuals": actuals,
+        &quot;lr&quot;: lr, &quot;epochs&quot;: epochs, &quot;val_loss&quot;: val_loss,
+        &quot;model&quot;: model, &quot;t_losses&quot;: t_losses, &quot;v_losses&quot;: v_losses,
     })
-    print(f"{lr:&gt;8}  {epochs:&gt;7}  {r2:&gt;8.4f}  {rmse:&gt;10.4f}  {mae:&gt;10.4f}")
+    print(f&quot;{lr:&gt;8}  {epochs:&gt;7}  {val_loss:&gt;12.4f}&quot;)
 
-# ── Pick the best trial and save ──────────────────────────────────────────────
-best = max(results, key=lambda r: r["r2"])
-print(f"\nBest learning rate: {best['lr']}  (R² = {best['r2']:.4f})")
+# ── Select on validation data, then evaluate the test set once ───────────────
+best = min(results, key=lambda r: r[&quot;val_loss&quot;])
+print(f&quot;\nBest learning rate: {best[&#x27;lr&#x27;]}  (Validation MSE = {best[&#x27;val_loss&#x27;]:.4f})&quot;)
 
-torch.save(best["model"].state_dict(), "best_model.pt")
-print("Best model saved → best_model.pt")
+r2, rmse, mae, preds, actuals = evaluate_on_test(best[&quot;model&quot;])
+best.update({&quot;r2&quot;: r2, &quot;rmse&quot;: rmse, &quot;mae&quot;: mae, &quot;preds&quot;: preds, &quot;actuals&quot;: actuals})
+
+print(f&quot;\nTest Set Metrics:&quot;)
+print(f&quot;  MAE:  {mae:.4f}&quot;)
+print(f&quot;  RMSE: {rmse:.4f}&quot;)
+print(f&quot;  R²:   {r2:.4f}&quot;)
+
+torch.save(best[&quot;model&quot;].state_dict(), &quot;best_model.pt&quot;)
+print(&quot;Best model saved → best_model.pt&quot;)
 
 # ── Plots ──────────────────────────────────────────────────────────────────────
 # 1. Loss curves for the best trial
 plt.figure(figsize=(10, 5))
-plt.plot(best["t_losses"], label="Train Loss")
-plt.plot(best["v_losses"], label="Val Loss")
-plt.title(f"Best Model — Loss Curves\nlr={best['lr']}  (stopped at epoch {best['epochs']})")
-plt.xlabel("Epoch"); plt.ylabel("MSE Loss")
+plt.plot(best[&quot;t_losses&quot;], label=&quot;Train Loss&quot;)
+plt.plot(best[&quot;v_losses&quot;], label=&quot;Val Loss&quot;)
+plt.title(f&quot;Best Model — Loss Curves\nlr={best[&#x27;lr&#x27;]}  (stopped at epoch {best[&#x27;epochs&#x27;]})&quot;)
+plt.xlabel(&quot;Epoch&quot;); plt.ylabel(&quot;MSE Loss&quot;)
 plt.legend(); plt.grid(True); plt.tight_layout(); plt.show()
 
 # 2. Predictions vs actual on test set (best trial)
 plt.figure(figsize=(12, 5))
-plt.plot(best["actuals"], label="Actual",    color="lightgrey", linewidth=1.5)
-plt.plot(best["preds"],   label="Predicted", color="red",       linewidth=1.5)
-plt.title(f"Best Model — Predictions vs Actual (Test Set)\nR²={best['r2']:.4f}  RMSE={best['rmse']:.4f}")
-plt.xlabel("Time"); plt.ylabel("Value")
+plt.plot(best[&quot;actuals&quot;], label=&quot;Actual&quot;,    color=&quot;lightgrey&quot;, linewidth=1.5)
+plt.plot(best[&quot;preds&quot;],   label=&quot;Predicted&quot;, color=&quot;red&quot;,       linewidth=1.5)
+plt.title(f&quot;Best Model — Predictions vs Actual (Test Set)\nR²={best[&#x27;r2&#x27;]:.4f}  RMSE={best[&#x27;rmse&#x27;]:.4f}&quot;)
+plt.xlabel(&quot;Time&quot;); plt.ylabel(&quot;Value&quot;)
 plt.legend(); plt.grid(True); plt.tight_layout(); plt.show()
 
-# 3. R² bar chart comparing all 3 trials
+# 3. Validation-loss bar chart comparing all 3 trials
 plt.figure(figsize=(8, 4))
-lrs = [str(r["lr"]) for r in results]
-r2s = [r["r2"] for r in results]
-colors = ["#4472C4" if r["lr"] != best["lr"] else "#70AD47" for r in results]
-plt.bar(lrs, r2s, color=colors)
-plt.axhline(best["r2"], color="red", linestyle="--", linewidth=1, label=f"Best R²={best['r2']:.4f}")
-plt.title("R² Across 3 Learning Rates (green = best)")
-plt.xlabel("Learning Rate"); plt.ylabel("R²")
-plt.legend(); plt.grid(axis="y", alpha=0.4); plt.tight_layout(); plt.show()</code></pre>
+lrs = [str(r[&quot;lr&quot;]) for r in results]
+val_losses = [r[&quot;val_loss&quot;] for r in results]
+colors = [&quot;#4472C4&quot; if r[&quot;lr&quot;] != best[&quot;lr&quot;] else &quot;#70AD47&quot; for r in results]
+plt.bar(lrs, val_losses, color=colors)
+plt.axhline(best[&quot;val_loss&quot;], color=&quot;red&quot;, linestyle=&quot;--&quot;, linewidth=1,
+            label=f&quot;Best Val Loss={best[&#x27;val_loss&#x27;]:.4f}&quot;)
+plt.title(&quot;Validation Loss Across 3 Learning Rates (green = best)&quot;)
+plt.xlabel(&quot;Learning Rate&quot;); plt.ylabel(&quot;Validation MSE Loss&quot;)
+plt.legend(); plt.grid(axis=&quot;y&quot;, alpha=0.4); plt.tight_layout(); plt.show()
+</code></pre>
 
   <h2>Running it on your own computer</h2>
   <p>
