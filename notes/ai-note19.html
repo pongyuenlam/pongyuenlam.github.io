@@ -249,7 +249,7 @@ async def lookup_weather(
 ):
     """
     Look up weather information. If the user mentions a specific city or
-    place (e.g. "Tokyo", "Mountain View"), pass it in. Otherwise - when the
+    place (e.g. "Hong Kong", "Mountain View"), pass it in. Otherwise - when the
     user says "here", "my city", "where I am", or does not name any place -
     call this tool with no location argument. It will automatically detect
     the user's approximate city from their IP address.
@@ -309,7 +309,7 @@ async def entrypoint(ctx: JobContext):
             "user which city they are in - if they do not name a specific "
             "city, just call lookup_weather() with no arguments and it will "
             "auto-detect their location. Only pass a location when the user "
-            "explicitly names one (e.g. 'what's the weather in Tokyo?'). "
+            "explicitly names one (e.g. 'what's the weather in Hong Kong?'). "
             "Never ask 'which city?' - always try to answer directly first."
         ),
         tools=[lookup_weather],
