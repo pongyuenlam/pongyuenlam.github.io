@@ -12,7 +12,7 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>如何使用带天气工具的 LiveKit 语音代理？ | 林邦源博士</title>
+<title>如何使用带天气工具的 LiveKit 语音代理（英文）？ | 林邦源博士</title>
 <meta name="description" content="用几分钟跑起你的第一个语音 AI 代理：语音识别、LLM、文字转语音，一个 Python 程序配合终端四条指令即可完成。">
 <link rel="canonical" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note19.html">
 <link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note19.html">
@@ -21,7 +21,7 @@
 <link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note19.html">
 
 <meta property="og:type" content="article">
-<meta property="og:title" content="如何使用带天气工具的 LiveKit 语音代理？">
+<meta property="og:title" content="如何使用带天气工具的 LiveKit 语音代理（英文）？">
 <meta property="og:description" content="用几分钟跑起你的第一个语音 AI 代理：语音识别、LLM、文字转语音，一个 Python 程序即可完成。">
 <meta property="og:url" content="https://pongyuenlam.github.io/zh-CN/notes/ai-note19.html">
 <meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
@@ -35,7 +35,7 @@
 {
   "@context": "https://schema.org",
   "@type": "BlogPosting",
-  "headline": "如何使用 LiveKit 语音代理？",
+  "headline": "如何使用带天气工具的 LiveKit 语音代理（英文）？",
   "description": "用几分钟跑起你的第一个语音 AI 代理：语音识别、LLM、文字转语音，一个 Python 程序即可完成。",
   "author": {
     "@type": "Person",
@@ -73,7 +73,7 @@
 </div>
 
 <main>
-  <h1>如何使用带天气工具的 LiveKit 语音代理？</h1>
+  <h1>如何使用带天气工具的 LiveKit 语音代理（英文）？</h1>
   <p class="paper-meta">林邦源 · AI 笔记 · 2026年11月4日 · 阅读时间约 6 分钟</p>
 
   <p>
@@ -83,10 +83,17 @@
     本笔记带你跑起一个精简但完整的语音代理 Python 程序。代理会先问候你、可以告诉你天气（示例工具）。
   </p>
 
+  <h2>观看操作演示</h2>
+  <p>
+    <a class="video-link" href="https://drive.google.com/file/d/14TPewW9TpAE5wHLKPz95hkc1rktIX5pB/view?usp=sharing" target="_blank" rel="noopener">
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:-4px; margin-right:0.35em;"><circle cx="12" cy="12" r="10.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9.5 7.2v9.6l8.2-4.8z" fill="currentColor"/></svg>在 Google Drive 打开</a>
+    （无需账户）。
+  </p>
+
   <h2>你需要准备什么</h2>
   <ul>
     <li>一台 Mac（同样步骤也适用于 Windows 和 Linux）。</li>
-    <li><a href="https://pongyuenlam.github.io/notes/ai-note18.html">已安装 Homebrew</a> 以及 <code>uv</code> 包管理器——若尚未安装 <code>uv</code>，执行 <code>brew install uv</code>。</li>
+    <li><a href="https://pongyuenlam.github.io/zh-CN/notes/ai-note18.html">已安装 Homebrew</a> 以及 <code>uv</code> 包管理器——若尚未安装 <code>uv</code>，执行 <code>brew install uv</code>。</li>
     <li>一个 <a href="https://cloud.livekit.io/" target="_blank" rel="noopener">LiveKit Cloud</a> 账号（免费的 <strong>Build</strong> 计划就够）。</li>
     <li>LiveKit Cloud 的 API 凭证，复制到一个名为 <code>.env</code> 的文件——见下方步骤。</li>
   </ul>
@@ -110,7 +117,7 @@ LIVEKIT_API_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code><
 
   <h2>在自己电脑上运行</h2>
   <p>
-    <a href="/downloads/Folder-AI-LiveKit-Agent.zip" download>下载 zip 文件</a>，解压到一个文件夹里。zip 里包含程序和 <code>pyproject.toml</code> 项目配置文件。把你的 <code>.env</code> 凭证文件放到同一文件夹（如上面「设置 LiveKit Cloud」步骤所示）。然后在 Visual Studio Code 里打开这个文件夹，在终端逐条输入以下两行：
+    <a href="../../notes/downloads/Folder-AI-LiveKit-Agent.zip" download>下载 zip 文件</a>，解压到一个文件夹里。zip 里包含程序和 <code>pyproject.toml</code> 项目配置文件。把你的 <code>.env</code> 凭证文件放到同一文件夹（如上面「设置 LiveKit Cloud」步骤所示）。然后在 Visual Studio Code 里打开这个文件夹，在终端逐条输入以下两行：
   </p>
   <pre class="code-block"><code>uv sync</code></pre>
   <pre class="code-block"><code>uv run main.py console</code></pre>
@@ -139,7 +146,8 @@ requires = ["uv_build>=0.13.6,<0.14.0"]
 build-backend = "uv_build"</code></pre>
 
   <h3><code>main.py</code></h3>
-  <pre class="code-block no-copy"><code>from dotenv import load_dotenv
+  <pre class="code-block no-copy"><code>import requests
+from dotenv import load_dotenv
 from livekit.agents import (
     Agent,
     AgentServer,
@@ -153,14 +161,117 @@ from livekit.agents import (
 
 load_dotenv()
 
+
+def _geocode(city: str) -&gt; tuple[float, float, str] | None:
+    """Resolve a city name to (lat, lon, resolved_label) using Open-Meteo geocoding."""
+    r = requests.get(
+        "https://geocoding-api.open-meteo.com/v1/search",
+        params={"name": city, "count": 1, "language": "en", "format": "json"},
+        timeout=10,
+    )
+    results = r.json().get("results")
+    if not results:
+        return None
+    best = results[0]
+    name = best.get("name", city)
+    country = best.get("country")
+    label = f"{name}, {country}" if country else name
+    return best["latitude"], best["longitude"], label
+
+
+def _ip_location() -&gt; tuple[float, float, str] | None:
+    """Resolve lat/lon AND a human-readable city/region label from the caller's IP."""
+    try:
+        info = requests.get("https://ipinfo.io/json", timeout=10).json()
+        lat_str, lon_str = info["loc"].split(",")
+        parts = [p for p in (info.get("city"), info.get("region"), info.get("country")) if p]
+        label = ", ".join(parts) if parts else "your current location"
+        return float(lat_str), float(lon_str), label
+    except Exception:
+        return None
+
+
+def _fetch_weather(latitude: float, longitude: float) -&gt; dict:
+    params = {
+        "latitude": latitude,
+        "longitude": longitude,
+        "current": "temperature_2m,weather_code,relative_humidity_2m,apparent_temperature",
+        "daily": "temperature_2m_max,temperature_2m_min,weather_code",
+        "temperature_unit": "celsius",
+        "timezone": "auto",
+        "forecast_days": 1,
+    }
+    data = requests.get(
+        "https://api.open-meteo.com/v1/forecast",
+        params=params,
+        timeout=10,
+    ).json()
+    return data
+
+
+# WMO weather code -&gt; short English description
+_WMO_CODES = {
+    0: "clear sky",
+    1: "mainly clear", 2: "partly cloudy", 3: "overcast",
+    45: "fog", 48: "freezing fog",
+    51: "light drizzle", 53: "moderate drizzle", 55: "dense drizzle",
+    56: "light freezing drizzle", 57: "dense freezing drizzle",
+    61: "slight rain", 63: "moderate rain", 65: "heavy rain",
+    66: "light freezing rain", 67: "heavy freezing rain",
+    71: "slight snow fall", 73: "moderate snow fall", 75: "heavy snow fall",
+    77: "snow grains",
+    80: "slight rain showers", 81: "moderate rain showers", 82: "violent rain showers",
+    85: "slight snow showers", 86: "heavy snow showers",
+    95: "thunderstorm", 96: "thunderstorm with slight hail", 99: "thunderstorm with heavy hail",
+}
+
+
 @function_tool
 async def lookup_weather(
     context: RunContext,
-    location: str,
+    location: str = "",
 ):
-    """Used to look up weather information."""
+    """
+    Look up weather information. If the user mentions a specific city or
+    place (e.g. "Hong Kong", "Mountain View"), pass it in. Otherwise - when the
+    user says "here", "my city", "where I am", or does not name any place -
+    call this tool with no location argument. It will automatically detect
+    the user's approximate city from their IP address.
+    """
 
-    return {"weather": "sunny", "temperature": 70}
+    lat = lon = None
+    resolved = ""
+
+    if location and location.strip():
+        geo = _geocode(location.strip())
+        if geo:
+            lat, lon, resolved = geo
+
+    if lat is None:
+        ip = _ip_location()
+        if ip is None:
+            return {"error": "Could not detect your location automatically."}
+        lat, lon, resolved = ip
+
+    try:
+        data = _fetch_weather(lat, lon)
+    except Exception as e:
+        return {"error": f"Weather service unavailable: {e}"}
+
+    cur = data.get("current", {}) or {}
+    daily = data.get("daily", {}) or {}
+    code = cur.get("weather_code")
+    condition = _WMO_CODES.get(code, f"code {code}") if code is not None else "unknown"
+
+    return {
+        "location": resolved,
+        "temperature_c": cur.get("temperature_2m"),
+        "feels_like_c": cur.get("apparent_temperature"),
+        "condition": condition,
+        "humidity_percent": cur.get("relative_humidity_2m"),
+        "today_high_c": (daily.get("temperature_2m_max") or [None])[0],
+        "today_low_c": (daily.get("temperature_2m_min") or [None])[0],
+    }
 
 
 server = AgentServer()
@@ -176,7 +287,15 @@ async def entrypoint(ctx: JobContext):
     )
 
     agent = Agent(
-        instructions="You are a friendly voice assistant built by LiveKit.",
+        instructions=(
+            "You are a friendly voice assistant built by LiveKit. "
+            "You can answer weather questions. You do NOT need to ask the "
+            "user which city they are in - if they do not name a specific "
+            "city, just call lookup_weather() with no arguments and it will "
+            "auto-detect their location. Only pass a location when the user "
+            "explicitly names one (e.g. 'what's the weather in Hong Kong?'). "
+            "Never ask 'which city?' - always try to answer directly first."
+        ),
         tools=[lookup_weather],
     )
 
@@ -189,13 +308,33 @@ if __name__ == "__main__":
 
   <h3><code>main.py</code> 的运作原理（白话版）</h3>
   <p>
-    <strong>STT、LLM、TTS。</strong><code>AgentSession</code> 那行把三个部件串起来：Deepgram（<code>deepgram/nova-3</code>）把语音转文字，Google Gemma 4（<code>google/gemma-4-31b-it</code>）回答问题，Cartesia（<code>cartesia/sonic-3</code>）把答案念出来。三者都跑在 LiveKit Cloud 上，所以你不用分别向三家模型商申请 key——一个 LiveKit 账号就搞定。
+    <strong>语音活动检测、STT、LLM、TTS。</strong><code>AgentSession</code> 这一行把四个组件串起来。
+    <code>vad=inference.VAD()</code> 是语音活动检测——它监听麦克风的音频流，告诉代理你何时开始和停止
+    说话，让 LLM 只处理真正的语音，而不是背景噪音。Deepgram（<code>deepgram/nova-3</code>）把语音
+    转成文字，Google Gemma 4（<code>google/gemma-4-31b-it</code>）回答文字内容，Cartesia
+    （<code>cartesia/sonic-3</code>）把答案说出来。四者都在 LiveKit Cloud 上运行，所以不必向各供应商
+    分别申请 API key——一个 LiveKit 账户已涵盖它们。
   </p>
   <p>
-    <strong>工具函数。</strong><code>lookup_weather</code> 函数前的 <code>@function_tool</code> 告诉 LLM：「用户问天气时可以调用这个函数」。目前它只会硬编码回答 <code>"sunny", 70°F</code>；真正的代理应该去调用 <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> 之类的天气 API。
+    <strong>真正的天气工具。</strong><code>lookup_weather</code> 函数以 <code>@function_tool</code>
+    包装，告诉 LLM：「用户问天气时，你可以调用这个函数。」这个函数可以完整运行：它调用两个免费的
+    <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> 端点（一个把城市名称
+    转成经纬度，另一个获取实际天气预报）；若用户没有说出地点，就改用
+    <a href="https://ipinfo.io/" target="_blank" rel="noopener">ipinfo.io</a>，从调用者的 IP 推测其大致
+    城市。它会返回温度（当前温度及今日最高／最低温，均以摄氏计）、体感温度、湿度、天气状况描述
+    （由 WMO 天气代码映射，例如 <code>65 &rarr; "heavy rain"</code>），以及解析后的城市名称。
+    如果任何 API 失败，它会返回 <code>"error"</code> 键，让 LLM 可以致歉，而不是编造数字。
   </p>
   <p>
-    <strong>主动问候。</strong>会话开始后，<code>generate_reply(instructions="greet the user and ask about their day")</code> 会让代理先说一句话，所以打电话进来的人听到的是问候，而不是沉默。
+    <strong>提示词工程节省一次工具调用。</strong>代理指令刻意写得较长：「你不需要问用户在哪个城市——
+    如果对方没有指明城市，就直接在不带参数的情况下调用 <code>lookup_weather()</code>，它会自动检测位置。
+    永远不要问『哪个城市？』——总是先尝试直接回答。」没有这段指示，LLM 往往会浪费一轮对话要求澄清，
+    听起来生硬，也拖慢对话。
+  </p>
+  <p>
+    <strong>亲切的问候。</strong>会话开始后，
+    <code>generate_reply(instructions="greet the user and ask about their day")</code> 会让代理先说话，
+    所以来电者听到的是问候，而不是沉默。
   </p>
 
   <h2>跟你的代理对话</h2>
@@ -208,9 +347,13 @@ if __name__ == "__main__":
 
   <h2>局限</h2>
   <ul>
-    <li><strong>需要 LiveKit Cloud 账号和正确的 <code>.env</code> 凭证。</strong>没有它们程序不会启动。</li>
-    <li><strong>免费 Build 计划的限制（截至撰写本 AI 笔记之时）：</strong>每月 1,000 分钟通话、$2.50 LiveKit Inference 额度（约 50 分钟通话）、以及冷启动——闲置一阵子后第一次通话可能要等几秒才回应。付费计划每月 $50 起。</li>
-    <li><strong>示例天气工具是假的。</strong>永远回 <code>sunny</code> 和 <code>70°F</code>。要让代理能真正查天气，请改写成调用真实的 API。</li>
+    <li><strong>你需要 LiveKit Cloud 账户，并在 <code>.env</code> 放入真实凭证。</strong>
+      没有它们程序不会启动。</li>
+    <li><strong>免费 Build 计划有上限（2026-11-04 查核）：</strong>每月 1,000 分钟会话、
+      $2.50 LiveKit Inference 额度（约 50 分钟通话）、冷启动——闲置一段时间后第一次通话可能
+      要等几秒才回应——以及只可部署一个代理。付费计划每月 $50 起。</li>
+    <li><strong>天气 API 免费但有限流。</strong>Open-Meteo 和 ipinfo.io 均供个人免费使用，但若
+      大量运行代理，可能需要付费方案或改用其他供应商。</li>
   </ul>
 
   <h2>延伸阅读</h2>
@@ -218,8 +361,12 @@ if __name__ == "__main__":
     <li><a href="https://livekit.io/" target="_blank" rel="noopener">livekit.io</a> — LiveKit 官方首页，含定价与文档。</li>
     <li><a href="https://github.com/livekit/agents" target="_blank" rel="noopener">livekit/agents</a> — LiveKit Agents Python 示例仓库。</li>
     <li><a href="https://cloud.livekit.io/docs/agents/" target="_blank" rel="noopener">LiveKit Cloud Agents 文档</a> — 构建与部署代理的官方指南。</li>
-    <li><a href="https://pongyuenlam.github.io/notes/ai-note18.html">如何在 macOS 安装 Homebrew 包管理器？</a> — 若尚未安装 <code>uv</code>，用这篇的一条命令就能装好。</li>
-    <li><a href="https://pongyuenlam.github.io/notes/ai-note17.html">如何用检索增强生成（RAG）在没有幻觉的情况下回答问题？</a> — 语音代理的 LLM 同样会幻觉；RAG 就是解决方案。</li>
+    <li><a href="https://pongyuenlam.github.io/zh-CN/notes/ai-note18.html">如何在 macOS 安装 Homebrew 包管理器？</a> — 若尚未安装 <code>uv</code>，用这篇的一条命令就能装好。</li>
+    <li><a href="https://pongyuenlam.github.io/zh-CN/notes/ai-note17.html">如何用检索增强生成（RAG）在没有幻觉的情况下回答问题？</a> — 语音代理的 LLM 同样会幻觉；RAG 就是解决方案。</li>
+    <li><a href="ai-note76.html">如何使用带天气工具的 LiveKit 语音代理（普通话）？</a>
+      — 同一个代理，改用普通话聆听与回答。</li>
+    <li><a href="ai-note77.html">如何使用带天气工具的 LiveKit 语音代理（粤语）？</a>
+      — 同一个代理改用粤语，文字转语音模型也需要更换。</li>
   </ul>
 </main>
 
