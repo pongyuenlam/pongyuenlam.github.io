@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-HK">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VWT5M8VSD6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VWT5M8VSD6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>如何使用帶天氣工具的 LiveKit 語音代理（粵語）？ | 林邦源博士</title>
+<meta name="description" content="與英文版相同的 LiveKit 天氣代理，但改用粵語聆聽與回答。粵語還迫使一個更大的改動：文字轉語音模型必須更換。">
+<link rel="canonical" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note77.html">
+<link rel="alternate" hreflang="en" href="https://pongyuenlam.github.io/notes/ai-note77.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pongyuenlam.github.io/zh-HK/notes/ai-note77.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://pongyuenlam.github.io/zh-CN/notes/ai-note77.html">
+<link rel="alternate" hreflang="x-default" href="https://pongyuenlam.github.io/notes/ai-note77.html">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何使用帶天氣工具的 LiveKit 語音代理（粵語）？">
+<meta property="og:description" content="與英文版相同的 LiveKit 天氣代理，但改用粵語聆聽與回答。">
+<meta property="og:url" content="https://pongyuenlam.github.io/zh-HK/notes/ai-note77.html">
+<meta property="og:image" content="https://pongyuenlam.github.io/images/howard-lam-profile.jpg">
+<meta property="og:image:width" content="495">
+<meta property="og:image:height" content="495">
+<meta property="og:image:alt" content="林邦源博士">
+
+<link rel="stylesheet" href="/css/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "如何使用帶天氣工具的 LiveKit 語音代理（粵語）？",
+  "description": "與英文版相同的 LiveKit 天氣代理，但改用粵語聆聽與回答。",
+  "author": {
+    "@type": "Person",
+    "name": "Howard Pong Yuen Lam"
+  },
+  "datePublished": "2026-11-20",
+  "dateModified": "2026-11-20",
+  "mainEntityOfPage": "https://pongyuenlam.github.io/zh-HK/notes/ai-note77.html"
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="site-name" href="/">林邦源博士</a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="/">首頁</a></li>
+        <li><a href="/biography.html">個人簡介</a></li>
+        <li><a href="/research.html">研究</a></li>
+        <li><a href="/cases.html">案例</a></li>
+        <li><a href="/books.html">書籍</a></li>
+        <li><a href="/zh-HK/ai-programs.html">AI 筆記</a></li>
+        <li><a href="/links/">連結</a></li>
+        <li><a href="/glossary/">詞彙表</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1>如何使用帶天氣工具的 LiveKit 語音代理（粵語）？</h1>
+  <p class="paper-meta">林邦源 &middot; AI 筆記 &middot; 2026年11月20日 &middot; 閱讀時間約 6 分鐘</p>
+  <p class="lang-switcher">
+    <a href="/notes/ai-note77.html">English</a>
+    <span class="current">繁體中文</span>
+    <a href="/zh-CN/notes/ai-note77.html">简体中文</a>
+  </p>
+
+  <p>
+    <a href="ai-note19.html">如何使用帶天氣工具的 LiveKit 語音代理（英文）？</a>
+    建立一個用英語聆聽、呼叫免費天氣 API，並以聲音回答的語音代理。
+    <a href="ai-note76.html">普通話版本</a>只改語言，其餘不變。本文再走一步：代理用
+    <strong>粵語</strong>聆聽與回答，而這迫使了一個前兩版都不需要的改動——更換文字轉語音模型。
+  </p>
+  <p>
+    粵語不只是讀音不同的普通話，書面形式也不同：「他不在」在書面中文是這樣寫，在書面粵語
+    則是「佢唔喺度」。只懂普通話的語音引擎會用普通話讀音去讀粵語字，結果並不是粵語。所以
+    聲音必須配合語言來選。
+  </p>
+
+  <h2>粵語版本改了甚麼</h2>
+  <ul>
+    <li><strong>辨識。</strong>由 <code>language="multi"</code> 改為
+      <code>inference.STT("deepgram/nova-3", language="zh-HK")</code>。Nova-3 的語言清單包含
+      <code>zh-HK</code>，說出的粵語會轉成中文字。</li>
+    <li><strong>發音，更換模型。</strong>前兩版使用的 Cartesia Sonic 3 只列出 <code>zh</code>，
+      沒有 <code>yue</code>，因此沒有粵語聲音。會話改用
+      <code>inference.TTS("inworld/inworld-tts-2", voice="Ashley", language="yue")</code>，
+      它支援粵語。</li>
+    <li><strong>指令。</strong>代理被要求用粵語、繁體字、口語化粵語措辭回答，而非書面普通話；
+      即使用戶說英語或普通話亦然。</li>
+    <li><strong>問候。</strong><code>generate_reply</code> 收到粵語指令，使用者第一句聽到的
+      就是粵語。</li>
+    <li><strong>地名。</strong>地理編碼請求改用 <code>language: "zh"</code>，於是
+      「Hong Kong」會以 <code>香港</code> 回傳。</li>
+    <li><strong>天氣詞彙。</strong>WMO 代碼表回傳繁體粵語描述，例如 <code>65 &rarr; 大雨</code>、
+      <code>80 &rarr; 驟雨</code>。</li>
+  </ul>
+  <p>
+    管線仍是同樣四件組件——語音活動偵測、語音辨識、大型語言模型、文字轉語音——而且全部仍在
+    LiveKit Cloud 上執行，不需要另外申請各供應商的帳戶。
+  </p>
+
+  <h2>你需要甚麼</h2>
+  <ul>
+    <li>一部 Mac（同樣步驟也適用於 Windows 與 Linux）。</li>
+    <li>已安裝 <a href="https://pongyuenlam.github.io/zh-HK/notes/ai-note18.html">Homebrew</a> 與 <code>uv</code> 套件管理程式——若沒有 <code>uv</code>，執行 <code>brew install uv</code>。</li>
+    <li>一個 <a href="https://cloud.livekit.io/" target="_blank" rel="noopener">LiveKit Cloud</a> 帳戶（免費 <strong>Build</strong> 計劃已足夠）。</li>
+    <li>你的 LiveKit Cloud 憑證，複製到名為 <code>.env</code> 的檔案——見下文。</li>
+  </ul>
+
+  <h2>設定 LiveKit Cloud</h2>
+  <p>
+    在 <a href="https://cloud.livekit.io/" target="_blank" rel="noopener">cloud.livekit.io</a>
+    註冊。在儀表板按 <strong>Projects</strong> &rarr; <strong>Create Project</strong>，開啟
+    該專案並前往 <strong>Keys</strong>，複製三個值：
+  </p>
+  <ul>
+    <li><code>LIVEKIT_URL</code> &mdash; 形如 <code>wss://your-project.livekit.cloud</code>。</li>
+    <li><code>LIVEKIT_API_KEY</code> &mdash; 短字串，形如 <code>APIxxxxxxxxxxxxx</code>。</li>
+    <li><code>LIVEKIT_API_SECRET</code> &mdash; 較長的字串，只顯示一次。</li>
+  </ul>
+  <p>
+    在專案資料夾中建立名為 <code>.env</code> 的檔案，寫入這三行：
+  </p>
+<pre class="code-block no-copy"><code>LIVEKIT_URL=wss://your-project.livekit.cloud
+LIVEKIT_API_KEY=APIxxxxxxxxxxxxx
+LIVEKIT_API_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code></pre>
+  <p><strong>重要：</strong>切勿把 <code>.env</code> 放上 GitHub 或任何公開網站——它包含你的實際憑證。</p>
+
+  <h2>在自己的電腦上執行</h2>
+  <p>
+    <a href="../../notes/downloads/Folder-AI-LiveKit-Agent-Cantonese.zip" download>下載 zip 檔案</a>，解壓到
+    一個資料夾。zip 內有程式與 <code>pyproject.toml</code> 專案檔。加入你自己的
+    <code>.env</code> 檔案（如上）。然後在 Visual Studio Code 開啟該資料夾，在終端機逐行輸入：
+  </p>
+<pre class="code-block"><code>uv sync</code></pre>
+<pre class="code-block"><code>uv run main.py console</code></pre>
+  <p>
+    <code>uv sync</code> 讀取 <code>pyproject.toml</code>，若沒有 Python 3.13 會先下載，然後
+    安裝代理所需的所有套件。接着 <code>uv run main.py console</code> 會在終端機啟動代理，讓你
+    直接對它說話。<code>uv sync</code> 只需執行一次——之後只有改動 <code>main.py</code> 或
+    相依套件時才需要再執行。
+  </p>
+
+  <h2>Python 檔案</h2>
+  <p>
+    zip 內有兩個檔案：<code>pyproject.toml</code> 與 <code>main.py</code>。以下列作參考。
+  </p>
+
+  <h3><code>pyproject.toml</code></h3>
+<pre class="code-block no-copy"><code>[project]
+name = &quot;folder-ai-livekit-agent&quot;
+version = &quot;0.1.0&quot;
+description = &quot;LiveKit voice agent with a weather tool&quot;
+requires-python = &quot;&gt;=3.13&quot;
+dependencies = [
+    &quot;livekit-agents&gt;=1.8.4,&lt;2&quot;,
+    &quot;python-dotenv&quot;,
+    &quot;requests&quot;,
+]
+</code></pre>
+
+  <h3><code>main.py</code></h3>
+<pre class="code-block no-copy"><code>import requests
+from dotenv import load_dotenv
+from livekit.agents import (
+    Agent,
+    AgentServer,
+    AgentSession,
+    JobContext,
+    RunContext,
+    cli,
+    function_tool,
+    inference,
+)
+
+load_dotenv()
+
+
+def _geocode(city: str) -&gt; tuple[float, float, str] | None:
+    &quot;&quot;&quot;Resolve a city name to (lat, lon, resolved_label) using Open-Meteo geocoding.&quot;&quot;&quot;
+    r = requests.get(
+        &quot;https://geocoding-api.open-meteo.com/v1/search&quot;,
+        params={&quot;name&quot;: city, &quot;count&quot;: 1, &quot;language&quot;: &quot;zh&quot;, &quot;format&quot;: &quot;json&quot;},
+        timeout=10,
+    )
+    results = r.json().get(&quot;results&quot;)
+    if not results:
+        return None
+    best = results[0]
+    name = best.get(&quot;name&quot;, city)
+    country = best.get(&quot;country&quot;)
+    label = f&quot;{name}，{country}&quot; if country else name
+    return best[&quot;latitude&quot;], best[&quot;longitude&quot;], label
+
+
+def _ip_location() -&gt; tuple[float, float, str] | None:
+    &quot;&quot;&quot;Resolve lat/lon AND a human-readable city/region label from the caller&#x27;s IP.&quot;&quot;&quot;
+    try:
+        info = requests.get(&quot;https://ipinfo.io/json&quot;, timeout=10).json()
+        lat_str, lon_str = info[&quot;loc&quot;].split(&quot;,&quot;)
+        parts = [p for p in (info.get(&quot;city&quot;), info.get(&quot;region&quot;), info.get(&quot;country&quot;)) if p]
+        label = &quot;，&quot;.join(parts) if parts else &quot;你所在嘅位置&quot;
+        return float(lat_str), float(lon_str), label
+    except Exception:
+        return None
+
+
+def _fetch_weather(latitude: float, longitude: float) -&gt; dict:
+    params = {
+        &quot;latitude&quot;: latitude,
+        &quot;longitude&quot;: longitude,
+        &quot;current&quot;: &quot;temperature_2m,weather_code,relative_humidity_2m,apparent_temperature&quot;,
+        &quot;daily&quot;: &quot;temperature_2m_max,temperature_2m_min,weather_code&quot;,
+        &quot;temperature_unit&quot;: &quot;celsius&quot;,
+        &quot;timezone&quot;: &quot;auto&quot;,
+        &quot;forecast_days&quot;: 1,
+    }
+    data = requests.get(
+        &quot;https://api.open-meteo.com/v1/forecast&quot;,
+        params=params,
+        timeout=10,
+    ).json()
+    return data
+
+
+# WMO weather code -&gt; short Cantonese description (traditional characters)
+_WMO_CODES = {
+    0: &quot;天晴&quot;,
+    1: &quot;大致天晴&quot;, 2: &quot;部分多雲&quot;, 3: &quot;陰天&quot;,
+    45: &quot;有霧&quot;, 48: &quot;凍霧&quot;,
+    51: &quot;微雨&quot;, 53: &quot;細雨&quot;, 55: &quot;密雨&quot;,
+    56: &quot;凍微雨&quot;, 57: &quot;凍密雨&quot;,
+    61: &quot;小雨&quot;, 63: &quot;中雨&quot;, 65: &quot;大雨&quot;,
+    66: &quot;凍雨&quot;, 67: &quot;大凍雨&quot;,
+    71: &quot;小雪&quot;, 73: &quot;中雪&quot;, 75: &quot;大雪&quot;,
+    77: &quot;雪粒&quot;,
+    80: &quot;驟雨&quot;, 81: &quot;大驟雨&quot;, 82: &quot;暴驟雨&quot;,
+    85: &quot;小陣雪&quot;, 86: &quot;大陣雪&quot;,
+    95: &quot;雷暴&quot;, 96: &quot;雷暴夾小冰雹&quot;, 99: &quot;雷暴夾大冰雹&quot;,
+}
+
+
+@function_tool
+async def lookup_weather(
+    context: RunContext,
+    location: str = &quot;&quot;,
+):
+    &quot;&quot;&quot;
+    Look up weather information. If the user mentions a specific city or
+    place (e.g. &quot;香港&quot;, &quot;Hong Kong&quot;, &quot;Mountain View&quot;), pass it in. Otherwise —
+    when the user says &quot;呢度&quot;, &quot;我這邊&quot;, &quot;where I am&quot;, or does not name any
+    place — call this tool with no location argument. It will automatically
+    detect the user&#x27;s approximate city from their IP address.
+    &quot;&quot;&quot;
+
+    lat = lon = None
+    resolved = &quot;&quot;
+
+    if location and location.strip():
+        geo = _geocode(location.strip())
+        if geo:
+            lat, lon, resolved = geo
+
+    if lat is None:
+        ip = _ip_location()
+        if ip is None:
+            return {&quot;error&quot;: &quot;自動判斷唔到你嘅位置。&quot;}
+        lat, lon, resolved = ip
+
+    try:
+        data = _fetch_weather(lat, lon)
+    except Exception as e:
+        return {&quot;error&quot;: f&quot;天氣服務暫時用唔到：{e}&quot;}
+
+    cur = data.get(&quot;current&quot;, {}) or {}
+    daily = data.get(&quot;daily&quot;, {}) or {}
+    code = cur.get(&quot;weather_code&quot;)
+    condition = _WMO_CODES.get(code, f&quot;代碼 {code}&quot;) if code is not None else &quot;未知&quot;
+
+    return {
+        &quot;location&quot;: resolved,
+        &quot;temperature_c&quot;: cur.get(&quot;temperature_2m&quot;),
+        &quot;feels_like_c&quot;: cur.get(&quot;apparent_temperature&quot;),
+        &quot;condition&quot;: condition,
+        &quot;humidity_percent&quot;: cur.get(&quot;relative_humidity_2m&quot;),
+        &quot;today_high_c&quot;: (daily.get(&quot;temperature_2m_max&quot;) or [None])[0],
+        &quot;today_low_c&quot;: (daily.get(&quot;temperature_2m_min&quot;) or [None])[0],
+    }
+
+
+server = AgentServer()
+
+
+@server.rtc_session()
+async def entrypoint(ctx: JobContext):
+    session = AgentSession(
+        vad=inference.VAD(),
+        # any combination of STT, LLM, TTS, or realtime API can be used
+        # this example shows LiveKit Inference, a unified API to access different models via LiveKit Cloud
+        # to use model provider keys directly, replace with the following:
+        # from livekit.plugins import deepgram, openai, inworld
+        # stt=deepgram.STT(model=&quot;nova-3&quot;),
+        # llm=openai.LLM(model=&quot;gpt-4.1-mini&quot;),
+        # tts=inworld.TTS(model=&quot;inworld-tts-2&quot;, voice=&quot;Ashley&quot;, language=&quot;yue&quot;),
+        stt=inference.STT(&quot;deepgram/nova-3&quot;, language=&quot;zh-HK&quot;),
+        llm=inference.LLM(&quot;google/gemma-4-31b-it&quot;),  # low-latency gemma, hosted on LiveKit
+        # Cartesia Sonic 3 has no Cantonese, so the voice comes from Inworld instead
+        tts=inference.TTS(
+            &quot;inworld/inworld-tts-2&quot;,
+            voice=&quot;Ashley&quot;,
+            language=&quot;yue&quot;,
+        ),
+    )
+
+    agent = Agent(
+        instructions=(
+            &quot;You are a friendly voice assistant built by LiveKit. &quot;
+            &quot;You always reply in Cantonese (廣東話), in traditional Chinese &quot;
+            &quot;characters, even when the user speaks English or Putonghua. &quot;
+            &quot;Use spoken Cantonese wording, not written Mandarin. &quot;
+            &quot;You can answer weather questions. You do NOT need to ask the &quot;
+            &quot;user which city they are in — if they do not name a specific &quot;
+            &quot;city, just call lookup_weather() with no arguments and it will &quot;
+            &quot;auto-detect their location. Only pass a location when the user &quot;
+            &quot;explicitly names one (e.g. &#x27;香港今日天氣點呀？&#x27;). &quot;
+            &quot;Never ask &#x27;which city?&#x27; — always try to answer directly first. &quot;
+            &quot;Keep answers short, because they will be spoken aloud.&quot;
+        ),
+        tools=[lookup_weather],
+    )
+
+    await session.start(agent=agent, room=ctx.room)
+    await session.generate_reply(
+        instructions=&quot;用廣東話同用戶打招呼，問佢今日過成點。&quot;
+    )
+
+
+if __name__ == &quot;__main__&quot;:
+    cli.run_app(server)
+</code></pre>
+
+  <h3><code>main.py</code> 如何運作（用簡單的話說）</h3>
+  <p>
+    <strong>辨識就是一個語言代碼。</strong><code>inference.STT("deepgram/nova-3",
+    language="zh-HK")</code> 告訴 Deepgram 預期哪一種中文。<code>zh-HK</code> 是香港標籤，
+    Nova-3 與 <code>zh-CN</code>、<code>zh-TW</code>、<code>multi</code> 一樣支援它。對着設為
+    <code>zh-CN</code> 的辨識器說粵語，會得出看似合理但往往與你說的不符的字。
+  </p>
+  <p>
+    <strong>聲音必須更換。</strong>Cartesia Sonic 3 是多語言模型，涵蓋中文，但語言清單只有
+    <code>zh</code>，沒有 <code>yue</code>；沒有粵語聲音可選。Inworld TTS 2.0 列出
+    <code>yue</code>，所以會話改用
+    <code>inference.TTS("inworld/inworld-tts-2", voice="Ashley", language="yue")</code>。
+    其餘寫法不變：模型、音色與語言仍然交給 LiveKit Inference，不需要 Inworld 帳戶或金鑰。
+  </p>
+  <p>
+    <strong>音色名稱只是起點。</strong><code>Ashley</code> 是 LiveKit 列出的示例音色之一，屬於
+    英語音色。它產生的粵語可辨，但略帶口音。Inworld 有更大的音色庫；把 Inworld TTS playground
+    中粵語音色的名稱複製到同一個 <code>voice=</code> 參數，其餘不用改。
+  </p>
+  <p>
+    <strong>指令仍然是方向盤。</strong><code>Agent(instructions=...)</code> 內的段落寫着
+    「always reply in Cantonese, in traditional Chinese characters, using spoken Cantonese
+    wording, not written Mandarin」。沒有最後一句，雙語模型往往用標準書面中文回答，看起來正確，
+    說出來卻生硬。
+  </p>
+  <p>
+    <strong>工具也說粵語。</strong>工具結果會原樣送回模型，所以英文的
+    <code>"heavy rain"</code> 很容易在粵語回答中重新出現為英文。工具內的兩處改動——粵語 WMO
+    描述與地理編碼請求的 <code>language: "zh"</code>——讓整個迴圈保持同一種語言。
+  </p>
+  <p>
+    <strong>粵語的親切問候。</strong>會話開始後，
+    <code>generate_reply</code> 收到指令「用廣東話同用戶打招呼，問佢今日過成點。」，
+    所以使用者聽到的是粵語問候，而不是沉默。
+  </p>
+
+  <h2>與你的代理對話</h2>
+  <p>
+    在終端機執行 <code>uv run main.py console</code> 後，程式會向你的 Mac 要求麥克風權限——
+    按 <strong>Allow</strong>。然後用粵語對麥克風說話：你應該聽到代理用粵語回應，並可以問
+    某個城市的天氣，例如「香港今日天氣點呀？」。想停止時按 <code>Ctrl</code>+<code>C</code>。
+  </p>
+  <p>
+    若按下播放後終端機沒有任何輸出，或顯示缺少憑證的錯誤，先停止伺服器
+    （<code>Ctrl</code>+<code>C</code>），確認 <code>.env</code> 在專案資料夾內，再執行
+    <code>uv run main.py console</code>。
+  </p>
+
+  <h2>限制</h2>
+  <ul>
+    <li><strong>你需要 LiveKit Cloud 帳戶，並在 <code>.env</code> 放入真實憑證。</strong>
+      沒有它們程式不會啟動。</li>
+    <li><strong>免費 Build 計劃有上限（2026-11-20 查核）：</strong>每月 1,000 分鐘會話、
+      $2.50 LiveKit Inference 額度（約 50 分鐘通話）、冷啟動——閒置一段時間後第一次通話可能
+      要等幾秒才回應——以及只可部署一個代理。付費計劃每月 $50 起。</li>
+    <li><strong>聲音是示例，不是母語者。</strong><code>Ashley</code> 是英語音色說粵語。它示範
+      整條管線，但 Inworld 音色庫的粵語音色會好聽得多，而替換只需一行。</li>
+    <li><strong>模型覆蓋範圍會變。</strong>哪些供應商提供粵語、接受哪些語言標籤，變化很快。
+      若 <code>yue</code> 被拒絕，先查閱 LiveKit 最新的 TTS 模型語言清單，不要立刻假設程式
+      寫錯。</li>
+    <li><strong>天氣 API 免費但有限流。</strong>Open-Meteo 與 ipinfo.io 對個人使用免費，但若
+      大量執行代理，可能需要付費方案或改用其他供應商。</li>
+  </ul>
+
+  <h2>延伸閱讀</h2>
+  <ul>
+    <li><a href="ai-note19.html">如何使用帶天氣工具的 LiveKit 語音代理（英文）？</a>
+      &mdash; 這支程式的英文版，逐行完整解釋。</li>
+    <li><a href="ai-note76.html">如何使用帶天氣工具的 LiveKit 語音代理（普通話）？</a>
+      &mdash; 同一代理說普通話，當時不必更換語音模型。</li>
+    <li><a href="https://livekit.io/" target="_blank" rel="noopener">livekit.io</a> &mdash;
+      LiveKit 官方網站，含價格與文件。</li>
+    <li><a href="https://github.com/livekit/agents" target="_blank" rel="noopener">livekit/agents</a>
+      &mdash; LiveKit Agents 的 Python 程式庫，內有更多範例。</li>
+    <li><a href="https://cloud.livekit.io/docs/agents/" target="_blank" rel="noopener">LiveKit Cloud Agents 文件</a>
+      &mdash; 建立與部署代理的官方指南。</li>
+  </ul>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Howard Pong Yuen LAM, PhD</p>
+    <ul>
+      <li><a href="mailto:pongyuenlam@gmail.com">電郵</a></li>
+      <li><a href="https://github.com/pongyuenlam">GitHub</a></li>
+      <li><a href="https://scholar.google.com/citations?user=zYs5orEAAAAJ&hl=en">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0002-8226-2252">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/lampongyuen/">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+document.querySelectorAll('pre.code-block:not(.no-copy)').forEach(function (block) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy-btn';
+  btn.innerHTML = copyIcon;
+  btn.setAttribute('aria-label', '複製程式碼到剪貼簿');
+  btn.addEventListener('click', function () {
+    var code = block.querySelector('code');
+    var text = code ? code.innerText : block.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.innerHTML = checkIcon;
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', '已複製到剪貼簿');
+      setTimeout(function () {
+        btn.innerHTML = copyIcon;
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', '複製程式碼到剪貼簿');
+      }, 1500);
+    });
+  });
+  block.appendChild(btn);
+});
+</script>
+</body>
+</html>
