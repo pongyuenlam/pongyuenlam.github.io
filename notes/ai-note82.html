@@ -42,7 +42,7 @@
     "name": "Howard Pong Yuen Lam"
   },
   "datePublished": "2026-11-26",
-  "dateModified": "2026-11-26",
+  "dateModified": "2026-11-27",
   "mainEntityOfPage": "https://pongyuenlam.github.io/notes/ai-note82.html"
 }
 </script>
@@ -68,7 +68,7 @@
 
 <main>
   <h1>How to make a web page speak a reply after it hears you (version 3)?</h1>
-  <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 26, 2026 &middot; 5 min read</p>
+  <p class="paper-meta">Howard Pong Yuen Lam &middot; AI Notes &middot; November 27, 2026 &middot; 5 min read</p>
   <p class="lang-switcher">
     <span class="current">English</span>
     <a href="/zh-HK/notes/ai-note82.html">繁體中文</a>
@@ -86,9 +86,9 @@
     Chrome and Edge include both. Firefox includes neither.
   </p>
   <p>
-    The page needs the <strong>microphone</strong>, and browsers only lend the microphone to a
-    page opened at a web address or at <code>localhost</code>. A file opened by double-clicking
-    gets no microphone, so this page is opened from a website or from a local preview instead.
+    The page needs the <strong>microphone</strong>. The first time you click
+    <strong>Start listening</strong>, the browser asks whether the page may use it; choose
+    <strong>Allow</strong>.
   </p>
 
   <h2>What you need before you start</h2>
@@ -98,9 +98,6 @@
     <li><strong>Speakers or headphones, with the sound on.</strong> The reply comes out of them.</li>
     <li><strong>An internet connection.</strong> Chrome sends the recorded sound to its speech
       service, which sends back the words.</li>
-    <li><strong>A web address for the file.</strong> Either your free GitHub website, described
-      in <a href="ai-note25.html">How to create a free website at your-username.github.io?</a>,
-      or a local preview, described in Step 2.</li>
     <li><strong>A text editor.</strong> Visual Studio Code if you have it. If not, start with
       <a href="ai-note05.html">How to install Visual Studio Code?</a>.</li>
   </ul>
@@ -113,22 +110,33 @@
     <code>Folder-AI-Speech-03-Speak-Reply</code>, holding <code>index.html</code>.
   </p>
 
-  <h2>Step 2: Open the page at a web address</h2>
+  <h2>Step 2: Open the page</h2>
   <p>
-    <strong>Option 1: your free website.</strong> Copy <code>index.html</code> into the folder
-    for your free GitHub website and upload the change. Then open the page at its
-    <code>https://</code> address in Chrome.
+    <strong>Option 1: this computer.</strong> Double-click <code>index.html</code>. It opens in
+    your browser. No server is needed.
   </p>
   <p>
-    <strong>Option 2: a local preview.</strong> Open a terminal in the folder that holds
-    <code>index.html</code> and start a small web server. On a Mac, type this line:
+    <strong>Option 2: your free website.</strong> Copy the HTML file into the folder for your
+    free GitHub website, described in
+    <a href="ai-note25.html">How to create a free website at your-username.github.io?</a>, and
+    upload the change. If the folder already holds a page called <code>index.html</code>, rename
+    this file first, for example to <code>speak-reply.html</code>, so the upload does not replace
+    the home page of your website. Then open the page at its <code>https://</code> address in
+    Chrome.
   </p>
-  <pre class="code-block"><code>python3 -m http.server 8000</code></pre>
-  <p>On Windows, type this line instead:</p>
-  <pre class="code-block"><code>py -m http.server 8000</code></pre>
   <p>
-    Then open <code>http://localhost:8000</code> in Chrome. Leave the terminal open while you
-    use the page; it is what serves the file.
+    <strong>Option 3: this website.</strong> Open
+    <a href="speak-reply.html">the same page on this website</a> and click
+    <strong>Start listening</strong>. It runs straight away, with nothing to download.
+  </p>
+  <p>
+    The file does not have to be named <code>index.html</code>. Any name works, and the name
+    becomes the end of the link: a file called <code>speak-reply.html</code> is reached at
+    <code>https://your-username.github.io/speak-reply.html</code>.
+  </p>
+  <p>
+    A file called <code>index.html</code> is special. It is the page a visitor sees first.
+    So a file with that name would replace the home page of your website.
   </p>
 
   <h2>Step 3: The whole file</h2>
@@ -198,9 +206,8 @@ function speak(text) {
 
   <h2>Step 5: Try it</h2>
   <p>
-    Open the page at its <code>https://</code> address or at <code>http://localhost:8000</code>
-    in Chrome. Click <strong>Start listening</strong>, choose <strong>Allow</strong> when the
-    browser asks for the microphone, and say an English sentence, such as
+    Open the page in Chrome. Click <strong>Start listening</strong>, choose <strong>Allow</strong>
+    when the browser asks for the microphone, and say an English sentence, such as
     <em>Hello, World!</em>.
   </p>
   <p>
@@ -211,11 +218,9 @@ function speak(text) {
 
   <h2>Limitations</h2>
   <ul>
-    <li><strong>A double-clicked file does not work.</strong> The microphone stays closed, so
-      the page never hears anything. It must be opened from <code>https://</code> or
-      <code>localhost</code>.</li>
-    <li><strong>The microphone must be allowed.</strong> If the answer was <em>Block</em>, the
-      page hears nothing. Allow the microphone in the browser's site settings and reload.</li>
+    <li><strong>The microphone must be allowed.</strong> If the browser will not offer the
+      microphone for a file on your computer, upload the page to your free website and open it
+      there.</li>
     <li><strong>The reply is an echo, not a conversation.</strong> The page repeats your words
       with a phrase in front. It does not understand them and has no AI model inside.</li>
     <li><strong>It needs the internet for the listening half.</strong> Chrome sends the sound to

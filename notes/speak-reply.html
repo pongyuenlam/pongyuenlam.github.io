@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Speak and reply</title>
+</head>
+<body>
+<p><a href="ai-note82.html">&larr; Back to the AI Note</a></p>
+<h1>Answer</h1>
+<button onclick="startListening()">Start listening</button>
+<button onclick="stopListening()">Stop</button>
+<p>You said: <span id="heard">nothing yet</span></p>
+<p>Reply: <span id="reply">nothing yet</span></p>
+<script>
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = new SpeechRecognition();
+recognition.lang = 'en-US';
+recognition.onresult = function (event) {
+  const heard = event.results[0][0].transcript;
+  document.getElementById('heard').textContent = heard;
+  const reply = 'I heard you say: ' + heard;
+  document.getElementById('reply').textContent = reply;
+  speak(reply);
+};
+function startListening() {
+  recognition.start();
+}
+function stopListening() {
+  recognition.stop();
+}
+function speak(text) {
+  speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  speechSynthesis.speak(utterance);
+}
+</script>
+</body>
+</html>
