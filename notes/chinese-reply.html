@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Answer</title>
+</head>
+<body>
+<p><a href="ai-note84.html">&larr; Back to the AI Note</a></p>
+<h1>答案</h1>
+<button onclick="startListening()">开始听</button>
+<button onclick="stopListening()">停止</button>
+<p>你说：<span id="heard">还没有</span></p>
+<p>回答：<span id="reply">还没有</span></p>
+<script>
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = new SpeechRecognition();
+recognition.lang = 'zh-CN';
+recognition.onresult = function (event) {
+  const heard = event.results[0][0].transcript;
+  document.getElementById('heard').textContent = heard;
+  const reply = '你说的是：' + heard;
+  document.getElementById('reply').textContent = reply;
+  speak(reply);
+};
+function startListening() {
+  recognition.start();
+}
+function stopListening() {
+  recognition.stop();
+}
+function speak(text) {
+  speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'zh-CN';
+  speechSynthesis.speak(utterance);
+}
+</script>
+</body>
+</html>
